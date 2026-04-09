@@ -49,7 +49,7 @@ git clone https://github.com/emmahyde/dotfiles.git
 
 The toolbar in the top-right corner also has clickable tool buttons and a color picker:
 
-<img width="489" height="88" alt="Screenshot 2026-04-09 at 11 36 26 AM" src="https://github.com/user-attachments/assets/8e92015f-31c6-493a-bc4b-f57aad39c200" />
+<img width="750" alt="Screenshot 2026-04-09 at 11 36 26 AM" src="https://github.com/user-attachments/assets/8e92015f-31c6-493a-bc4b-f57aad39c200" />
 
 ### Implicit Move
 
