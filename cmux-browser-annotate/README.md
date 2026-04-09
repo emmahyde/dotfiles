@@ -4,6 +4,9 @@
 
 A drawing and annotation overlay for [cmux](https://cmux.dev) browser surfaces. Draw on any webpage, select DOM elements, and pass references back to your AI assistant.
 
+> [!NOTE]
+> _This script works on all ACTIVE "surfaces"; I haven't found a way to have it automatically apply to browser surfaces on instantiation._
+
 ## Quick Install
 
 ```sh
