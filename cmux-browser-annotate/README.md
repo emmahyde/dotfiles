@@ -1,5 +1,7 @@
 # cmux-browser-annotate
 
+![](https://github.com/user-attachments/assets/3a565fae-34aa-4b67-8de6-c13c1130d79d)
+
 A drawing and annotation overlay for [cmux](https://cmux.dev) browser surfaces. Draw on any webpage, select DOM elements, and pass references back to your AI assistant.
 
 ## Quick Install
@@ -34,7 +36,17 @@ git clone https://github.com/emmahyde/dotfiles.git
 | C | Copy selected elements to clipboard |
 | Q | Clear all annotations |
 
-The toolbar in the top-right corner also has clickable tool buttons and a color picker.
+```
+# example [C]opy from above video scenario - copies the refs to the "Highlighted" eleements.
+
+[sel 1] <rect> selector="div#eligibility > svg > g > rect:nth-of-type(3)" text="" rect=67,353,680x119
+[sel 2] <rect> selector="div#eligibility > svg > g > rect:nth-of-type(2)" text="" rect=67,420,864x265
+[sel 3] <rect> selector="div#eligibility > svg > g > rect:nth-of-type(1)" text="" rect=737,427,657x261
+```
+
+The toolbar in the top-right corner also has clickable tool buttons and a color picker:
+
+<img width="489" height="88" alt="Screenshot 2026-04-09 at 11 36 26 AM" src="https://github.com/user-attachments/assets/8e92015f-31c6-493a-bc4b-f57aad39c200" />
 
 ### Implicit Move
 
