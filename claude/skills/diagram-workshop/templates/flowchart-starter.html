@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Flowchart</title>
+<style>
+  /* ← Replace tokens with your chosen aesthetic direction */
+  :root {
+    --bg: #f7f4f2; --surface: #ffffff; --surface-dim: #eee9e5;
+    --primary: #0a8080; --blue: #2563eb; --green: #059669;
+    --amber: #d97706; --gray: #6b7280; --highlight: #f45d48;
+    --text: #1a2a2a; --text-dim: #6b7280; --text-faint: #9ca3af;
+    --font: "DM Sans", -apple-system, sans-serif;
+    --mono: "JetBrains Mono", "SF Mono", monospace;
+  }
+  body { margin: 0; background: var(--bg); font-family: var(--font); }
+  .wrap { padding: 32px; overflow: auto; }
+  svg { display: block; }
+  .tip {
+    position: fixed; background: #222525; color: #e0e4ea;
+    font-size: 12px; line-height: 1.5; padding: 10px 14px;
+    border-radius: 6px; max-width: 320px; pointer-events: none;
+    opacity: 0; transition: opacity .12s; z-index: 10;
+  }
+  .tip b { color: #f0f2f5; display: block; }
+</style>
+<div class="tip" id="tip"></div>
+<div class="wrap" id="flow"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/elkjs@0.9.3/lib/elk.bundled.js"></script>
+<script type="module">
+import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
+
+// ============================================================
+// DATA — Define steps, edges, and visual properties
+// ============================================================
+
+const COLORS = {
+  process:  { fill: "rgba(37,99,235,.1)",   stroke: "#2563eb" },
+  start:    { fill: "rgba(10,128,128,.1)",  stroke: "#0a8080" },
+  decision: { fill: "rgba(244,93,72,.1)",   stroke: "#f45d48" },
+  end:      { fill: "rgba(5,150,105,.1)",   stroke: "#059669" },
+  io:       { fill: "rgba(217,119,6,.1)",   stroke: "#d97706" },
+};
+
+const steps = [
+  { id: "start",  label: "Start",           sub: "trigger event", type: "start", w: 120, h: 44 },
+  { id: "step1",  label: "Process A",       sub: "description",   type: "process", w: 140, h: 48 },
+  { id: "check",  label: "Condition?",      sub: "",              type: "decision", w: 120, h: 50 },
+  { id: "step2a", label: "Yes Path",        sub: "do this",       type: "process", w: 130, h: 44 },
+  { id: "step2b", label: "No Path",         sub: "do that",       type: "process", w: 130, h: 44 },
+  { id: "output", label: "Write Output",    sub: "to storage",    type: "io", w: 130, h: 44 },
+  { id: "done",   label: "Done",            sub: "",              type: "end", w: 100, h: 38 },
+];
+
+const edges = [
+  { id: "e1", from: "start",  to: "step1" },
+  { id: "e2", from: "step1",  to: "check" },
+  { id: "e3", from: "check",  to: "step2a", label: "yes" },
+  { id: "e4", from: "check",  to: "step2b", label: "no" },
+  { id: "e5", from: "step2a", to: "output" },
+  { id: "e6", from: "step2b", to: "output" },
+  { id: "e7", from: "output", to: "done" },
+];
+
+// ============================================================
+// ELK LAYOUT — computes positions and edge routes
+// ============================================================
+
+const ElkClass = (typeof ELK === "function") ? ELK : ELK.default;
+const elk = new ElkClass();
+
+const graph = {
+  id: "root",
+  layoutOptions: {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",             // LEFT, RIGHT, DOWN, UP
+    "elk.spacing.nodeNode": "16",
+    "elk.layered.spacing.nodeNodeBetweenLayers": "55",
+    "elk.spacing.edgeEdge": "12",
+    "elk.spacing.edgeNode": "18",
+    "elk.edgeRouting": "ORTHOGONAL",
+    "elk.layered.nodePlacement.strategy": "BRANDES_KOEPF",
+    "elk.layered.nodePlacement.bk.fixedAlignment": "BALANCED",
+    "elk.layered.crossingMinimization.strategy": "LAYER_SWEEP",
+    "elk.layered.mergeEdges": "true",
+  },
+  children: steps.map(s => ({
+    id: s.id, width: s.w, height: s.h, _meta: s,
+    layoutOptions: { "elk.portConstraints": "FIXED_SIDE" },
+  })),
+  edges: edges.map(e => ({
+    id: e.id, sources: [e.from], targets: [e.to],
+  })),
+};
+
+// Edge meta for labels and colors
+const edgeMeta = {};
+edges.forEach(e => { edgeMeta[e.id] = e; });
+
+// ============================================================
+// RENDER
+// ============================================================
+
+// Rounded-corner path from ELK sections
+function sectionsToPath(sections) {
+  let d = "";
+  for (const sec of sections) {
+    const all = [sec.startPoint, ...(sec.bendPoints || []), sec.endPoint];
+    d += `M${all[0].x},${all[0].y}`;
+    for (let i = 1; i < all.length; i++) {
+      const prev = all[i - 1], curr = all[i];
+      if (i < all.length - 1) {
+        const next = all[i + 1];
+        const r = 6;
+        const dx1 = curr.x - prev.x, dy1 = curr.y - prev.y;
+        const dx2 = next.x - curr.x, dy2 = next.y - curr.y;
+        const l1 = Math.sqrt(dx1*dx1 + dy1*dy1);
+        const l2 = Math.sqrt(dx2*dx2 + dy2*dy2);
+        const rr = Math.min(r, l1/2, l2/2);
+        d += `L${curr.x - (dx1/l1)*rr},${curr.y - (dy1/l1)*rr}`;
+        d += `Q${curr.x},${curr.y},${curr.x + (dx2/l2)*rr},${curr.y + (dy2/l2)*rr}`;
+      } else {
+        d += `L${curr.x},${curr.y}`;
+      }
+    }
+  }
+  return d;
+}
+
+// Tooltip
+const tip = document.getElementById("tip");
+function showTip(e, html) { tip.innerHTML = html; tip.style.opacity = 1; moveTip(e); }
+function moveTip(e) { tip.style.left = (e.clientX + 14) + "px"; tip.style.top = (e.clientY + 14) + "px"; }
+function hideTip() { tip.style.opacity = 0; }
+
+const laid = await elk.layout(graph);
+const W = laid.width + 40, H = laid.height + 40;
+
+const svg = d3.select("#flow").append("svg")
+  .attr("viewBox", `0 0 ${W} ${H}`)
+  .attr("width", Math.min(W, 1200))
+  .attr("height", Math.min(H, 700));
+
+const g = svg.append("g").attr("transform", "translate(20,20)");
+
+// Arrowhead
+svg.append("defs").append("marker")
+  .attr("id", "arrow").attr("viewBox", "0 0 8 6")
+  .attr("refX", 8).attr("refY", 3)
+  .attr("markerWidth", 7).attr("markerHeight", 5).attr("orient", "auto")
+  .append("path").attr("d", "M0,0.5 L8,3 L0,5.5").attr("fill", "rgba(10,128,128,.5)");
+
+// Edges
+(laid.edges || []).forEach(edge => {
+  const em = edgeMeta[edge.id] || {};
+  g.append("path")
+    .attr("d", sectionsToPath(edge.sections))
+    .attr("fill", "none")
+    .attr("stroke", "rgba(10,128,128,.3)")
+    .attr("stroke-width", 1.4)
+    .attr("marker-end", "url(#arrow)");
+
+  // Label
+  if (em.label && edge.sections?.[0]) {
+    const sec = edge.sections[0];
+    const pts = [sec.startPoint, ...(sec.bendPoints || []), sec.endPoint];
+    // Longest segment
+    let bestLen = 0, mx = 0, my = 0, vert = false;
+    for (let j = 0; j < pts.length - 1; j++) {
+      const dx = pts[j+1].x - pts[j].x, dy = pts[j+1].y - pts[j].y;
+      const len = Math.sqrt(dx*dx + dy*dy);
+      if (len > bestLen) {
+        bestLen = len;
+        mx = (pts[j].x + pts[j+1].x) / 2;
+        my = (pts[j].y + pts[j+1].y) / 2;
+        vert = Math.abs(dy) > Math.abs(dx);
+      }
+    }
+    const lx = vert ? mx - 10 : mx;
+    const ly = vert ? my : my - 10;
+    const lg = g.append("g");
+    if (vert) lg.attr("transform", `translate(${lx},${ly}) rotate(-90)`);
+    else lg.attr("transform", `translate(${lx},${ly})`);
+
+    const pw = em.label.length * 5.5 + 10;
+    lg.append("rect").attr("x", -pw/2).attr("y", -8).attr("width", pw).attr("height", 16)
+      .attr("rx", 3).attr("fill", "var(--bg)").attr("stroke", "var(--surface-dim)").attr("stroke-width", 0.5);
+    lg.append("text").attr("text-anchor", "middle").attr("dominant-baseline", "middle")
+      .attr("font-family", "var(--mono)").attr("font-size", "8.5px")
+      .attr("fill", "rgba(10,128,128,.7)").attr("font-weight", 600)
+      .text(em.label);
+  }
+});
+
+// Nodes
+(laid.children || []).forEach(n => {
+  const meta = n._meta;
+  const c = COLORS[meta.type] || COLORS.process;
+  const ng = g.append("g").attr("transform", `translate(${n.x},${n.y})`);
+
+  if (meta.type === "decision") {
+    // Diamond shape
+    const cx = n.width / 2, cy = n.height / 2;
+    ng.append("polygon")
+      .attr("points", `${cx},0 ${n.width},${cy} ${cx},${n.height} 0,${cy}`)
+      .attr("fill", c.fill).attr("stroke", c.stroke).attr("stroke-width", 1.5);
+  } else {
+    // Rounded rect
+    const rx = meta.type === "start" || meta.type === "end" ? n.height / 2 : 6;
+    ng.append("rect")
+      .attr("width", n.width).attr("height", n.height).attr("rx", rx)
+      .attr("fill", c.fill).attr("stroke", c.stroke).attr("stroke-width", 1.5);
+  }
+
+  // Label
+  ng.append("text")
+    .attr("x", n.width / 2).attr("y", meta.sub ? n.height / 2 - 5 : n.height / 2 + 1)
+    .attr("text-anchor", "middle").attr("dominant-baseline", "middle")
+    .attr("font-size", "11px").attr("font-weight", 600).attr("fill", "var(--text)")
+    .text(meta.label);
+
+  if (meta.sub) {
+    ng.append("text")
+      .attr("x", n.width / 2).attr("y", n.height / 2 + 10)
+      .attr("text-anchor", "middle").attr("dominant-baseline", "middle")
+      .attr("font-size", "9px").attr("fill", "var(--text-faint)")
+      .attr("font-family", "var(--mono)")
+      .text(meta.sub);
+  }
+
+  // Tooltip on hover
+  ng.style("cursor", "pointer")
+    .on("mouseenter", e => showTip(e, `<b>${meta.label}</b>${meta.sub || ""}`))
+    .on("mousemove", moveTip)
+    .on("mouseleave", hideTip);
+});
+</script>
