@@ -1,0 +1,11 @@
+{
+  "hooks": [
+    {
+      "name": "protect-schema-rb",
+      "description": "Prevent direct edits to db/schema.rb",
+      "events": ["before-edit"],
+      "files": ["**/db/schema.rb"],
+      "run": "echo '❌ Error: Direct edits to db/schema.rb are not allowed\n\nschema.rb is an auto-generated file. It should only be modified by:\n  1. Running Rails migrations: bundle exec rails db:migrate\n  2. Loading the schema: bundle exec rails db:schema:load\n\nTo fix:\n  1. Undo the edit\n  2. Create and run a migration instead: bundle exec rails generate migration YourMigrationName\n\nUse /force-edit to override this protection if absolutely necessary.' && exit 1"
+    }
+  ]
+}

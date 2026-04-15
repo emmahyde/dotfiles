@@ -1,0 +1,510 @@
+{
+  "env": {
+    "CLAUDE_CODE_NO_FLICKER": "1",
+    "CLAUDE_CODE_AUTOCOMPACT_PCT_OVERRIDE": "40",
+    "ANTHROPIC_CUSTOM_MODEL_OPTION": "claude-opus-4-5-20251101",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "claude-opus-4-6[1m]"
+  },
+  "includeCoAuthoredBy": false,
+  "permissions": {
+    "allow": [
+      "Bash(bundle exec rake:*)",
+      "Bash(git worktree:*)",
+      "Bash(gh pr view:*)",
+      "Bash(gh pr diff:*)",
+      "Bash(bundle exec m:*)",
+      "Bash(RAILS_ENV=test bundle exec rake:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(npm install:*)",
+      "Bash(claude-flow --help)",
+      "Bash(cat:*)",
+      "WebFetch(domain:code.claude.com)",
+      "mcp__bamboo__bamboo_get_build_log_from_url",
+      "Bash(bundle show:*)",
+      "Bash(ruby:*)",
+      "WebFetch(domain:www.irs.gov)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git checkout:*)",
+      "Bash(bundle exec rubocop:*)",
+      "Bash(git log:*)",
+      "Bash(git restore:*)",
+      "Bash(claude-flow mcp:*)",
+      "mcp__task-master-ai__parse_prd",
+      "mcp__task-master-ai__get_tasks",
+      "mcp__task-master-ai__analyze_project_complexity",
+      "mcp__task-master-ai__complexity_report",
+      "mcp__task-master-ai__expand_task",
+      "mcp__task-master-ai__next_task",
+      "Bash(npm view:*)",
+      "Bash(test:*)",
+      "mcp__claude-flow__swarm_init",
+      "mcp__claude-flow__agents_spawn_parallel",
+      "mcp__task-master-ai__set_task_status",
+      "mcp__claude-flow__task_orchestrate",
+      "Bash(git stash:*)",
+      "Bash(git rm:*)",
+      "Bash(git reset:*)",
+      "mcp__task-master-ai__update_subtask",
+      "Bash(bundle exec rails test:*)",
+      "Bash(bundle exec rails runner:*)",
+      "Bash(FIXTURY_RESET=1 bundle exec rails test:*)",
+      "Bash(mkdir:*)",
+      "Bash(chmod:*)",
+      "Bash(echo:*)",
+      "Bash(bash:*)",
+      "Bash(bundle exec ruby:*)",
+      "Bash(test_owner_can_select_any_member)",
+      "Bash(test_regular_advisor_can_only_select_themselves/)",
+      "mcp__claude-flow__agent_list",
+      "mcp__task-master-ai__research",
+      "mcp__task-master-ai__update_task",
+      "Bash(claude-flow config:*)",
+      "Bash(env)",
+      "Bash(claude-flow:*)",
+      "Bash(aws:*)",
+      "mcp__agentic-flow__agentic_flow_agent",
+      "Bash(npx agentic-flow:*)",
+      "mcp__claude-flow__swarm_status",
+      "Bash(claude mcp list:*)",
+      "mcp__claude-flow__agent_spawn",
+      "mcp__claude-flow__task_status",
+      "mcp__claude-flow__task_results",
+      "mcp__claude-flow__agent_metrics",
+      "mcp__task-master-ai__add_task",
+      "mcp__task-master-ai__validate_dependencies",
+      "mcp__claude-flow__swarm_destroy",
+      "mcp__task-master-ai__remove_task",
+      "Bash(/Users/emma.hyde/work/app/bin/bootstrap_files/functions/kbash)",
+      "Bash(export PATH=\"/Users/emma.hyde/work/app/bin/bootstrap_files/functions:$PATH\")",
+      "Bash(fish:*)",
+      "Bash(tide configure:*)",
+      "Bash(/tmp:*)",
+      "Bash(/tmp/format_only_test.rb:*)",
+      "Bash(lua -e \"dofile(''/Users/emma.hyde/.config/nvim/lua/plugins/claude-code.lua'')\")",
+      "Bash(gh api:*)",
+      "Bash(npm test:*)",
+      "Bash(npm run test:*)",
+      "Bash(npx nx test:*)",
+      "Bash(npx vitest run:*)",
+      "Skill(customaize-agent:create-hook)",
+      "Skill(superpowers:using-git-worktrees)",
+      "Skill(auto-memory:memory-processor)",
+      "Bash(grep:*)",
+      "Bash(gh pr edit:*)",
+      "Bash(git cherry-pick:*)",
+      "Bash(git branch:*)",
+      "Bash(git push:*)",
+      "Skill(superpowers:writing-plans)",
+      "Bash(npx tsc:*)",
+      "Skill(tech-stack:add-typescript-best-practices)",
+      "Bash(xargs:*)",
+      "Bash(gh search repos:*)",
+      "Bash(ls:*)",
+      "Bash(# Find the current session''s transcript find ~/.claude -name \"\"*.jsonl\"\" -newer /tmp -type f)",
+      "Bash(# Check the most recent transcript for Write/Edit entries grep -l \"\"Write\\\\|Edit\"\" ~/.claude/projects/-Users-emma-hyde-work-app/*.jsonl)",
+      "Bash(# Find a Write or Edit tool_use entry in the transcript grep -o ''\"\"type\"\":\"\"tool_use\"\"[^}]*\"\"name\"\":\"\"[^\"\"]*\"\"'' ~/.claude/projects/-Users-emma-hyde-work-app/*.jsonl)",
+      "Bash(python3:*)",
+      "Bash(git check-ignore:*)",
+      "Bash(npx nx run-many:*)",
+      "Bash(git fetch:*)",
+      "mcp__jira-confluencegusto__getJiraIssue",
+      "mcp__gdocsgusto__fetch",
+      "mcp__slackgusto__search",
+      "Bash(gh pr list:*)",
+      "Bash(for:*)",
+      "Bash(do echo \"=== Run $i ===\")",
+      "Bash(done)",
+      "Skill(fix-flaky-test)",
+      "mcp__figma__get_design_context",
+      "mcp__figma__get_screenshot",
+      "WebFetch(domain:www.goodreads.com)",
+      "Skill(superpowers:brainstorming)",
+      "Bash(gh pr create:*)",
+      "Bash(npx eslint:*)",
+      "Bash(npx nx lint:*)",
+      "Bash(git show:*)",
+      "mcp__slackgusto__get_channel",
+      "mcp__slackgusto__get_channel_history",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nAdd Monokai-style colors to mermaid diagram\n\n- Blue for AWS config\n- Green for Shell\n- Orange for Claude Code\n- Black strokes and arrows\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(find:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(npm run format:*)",
+      "Bash(gh repo view:*)",
+      "Bash(gh issue list:*)",
+      "mcp__firecrawl-mcp__firecrawl_scrape",
+      "Skill(ruby-lsp-guideline:impact-analysis)",
+      "Bash(lsof:*)",
+      "Bash(tree:*)",
+      "Bash(wc:*)",
+      "Bash(bundle check:*)",
+      "Bash(bundle install:*)",
+      "Bash(mise list:*)",
+      "Bash(rbenv versions:*)",
+      "Bash(mise use:*)",
+      "Bash(mise exec:*)",
+      "Skill(ruby-lsp-guideline:semantic-search)",
+      "Bash(gem info:*)",
+      "Bash(gem specification:*)",
+      "Bash(npm run build:*)",
+      "Bash(nx graph:*)",
+      "Bash(nx reset)",
+      "Bash(nx build:*)",
+      "Bash(git -C /Users/emma.hyde/work/web/zenpayroll show origin/main:frontend/packages/app-gusto-pro/src/lib/advisoryOpportunities/AdvisoryOpportunity.graphql)",
+      "Bash(git -C /Users/emma.hyde/work/web/zenpayroll show origin/main:zenpayroll/frontend/packages/app-gusto-pro/src/lib/advisoryOpportunities/AdvisoryOpportunity.graphql)",
+      "Bash(git -C /Users/emma.hyde/work/web/zenpayroll diff HEAD..origin/main -- packs/utilities/graphql_core/supergraph-schema.graphql)",
+      "Bash(git -C /Users/emma.hyde/work/web/zenpayroll diff HEAD..origin/main -- zenpayroll/frontend/packages/graphql/src/__generated__/supergraph-schema.graphql)",
+      "Bash(git -C /Users/emma.hyde/work/web/zenpayroll diff --name-only HEAD..origin/main)",
+      "Bash(git -C /Users/emma.hyde/work/web/zenpayroll show origin/main:zenpayroll/frontend/packages/graphql/src/__generated__/supergraph-schema.graphql)",
+      "Bash(tee:*)",
+      "Bash(git -C /Users/emma.hyde/work/web/zenpayroll diff -- frontend/packages/graphql/src/__generated__/supergraph-schema.graphql)",
+      "WebFetch(domain:www.figma.com)",
+      "Bash(pbcopy echo \"PR description copied to clipboard!\")",
+      "Bash(git pull:*)",
+      "Bash(jq:*)",
+      "Bash(gh release list:*)",
+      "Bash(git rebase:*)",
+      "Bash(git status:*)",
+      "Bash(NEXT_BUNDLE=1 bundle install:*)",
+      "Bash(SKIP_GEMFILE_LOCKFILE_CHANGED_PARITY_CHECK=1 git add:*)",
+      "Bash(bundle lock:*)",
+      "Bash(BUNDLE_GEMFILE=Gemfile.next bundle lock:*)",
+      "mcp__slackgusto__get_thread_messages",
+      "Bash(AWS_PROFILE=bedrock-users aws bedrock:*)",
+      "Bash(AWS_PROFILE=bedrock-users aws bedrock-runtime invoke-model:*)",
+      "WebFetch(domain:forum.cursor.com)",
+      "WebFetch(domain:cursor.com)",
+      "Skill(gsd:discuss-phase)",
+      "Bash(echo === Files from PR with NO working tree changes ===:*)",
+      "mcp__jiraconfluence-gusto__search",
+      "mcp__notiongusto__notion-fetch",
+      "mcp__notiongusto__notion-update-page",
+      "Skill(code-review:code-review)",
+      "mcp__jiraconfluence-gusto__getAccessibleAtlassianResources",
+      "mcp__jiraconfluence-gusto__getJiraIssue",
+      "Bash(bundle config:*)",
+      "Bash(yarn global:*)",
+      "Bash(echo gem not installed locally:*)",
+      "Bash(head:*)",
+      "Bash(gh pr:*)",
+      "mcp__jiraconfluence-gusto__atlassianUserInfo",
+      "mcp__slackgusto__fetch",
+      "Skill(claude-md-management:revise-claude-md)",
+      "mcp__jiraconfluence-gusto__getJiraProjectIssueTypesMetadata",
+      "Bash(bin/rails runner:*)",
+      "mcp__notiongusto__notion-create-pages",
+      "Bash(gh search:*)",
+      "Bash(bundle info:*)",
+      "Bash(kubectl:*)",
+      "Bash(/Users/emma.hyde/work/app/.claude/skills/start-feature-branch/scripts/start-feature-branch.sh RETIRE-3450:*)"
+    ],
+    "deny": [
+      "Read(./node_modules/**)",
+      "Read(./**/node_modules/**)",
+      "Read(./dist/**)",
+      "Read(./**/dist/**)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:api.github.com)",
+      "Bash(find:*)"
+    ],
+    "ask": [],
+    "defaultMode": "bypassPermissions",
+    "additionalDirectories": [
+      "/Users/emma.hyde/work/staging-k8s/"
+    ]
+  },
+  "model": "opus[1m]",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "TaskCreate",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/hooks/task-dependency-validator.py",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/business-interactions-guard.sh",
+            "timeout": 5,
+            "statusMessage": "Checking after-hours guard..."
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/capture-test-output.sh",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/pr-ownership-guard.sh",
+            "timeout": 10,
+            "statusMessage": "Checking PR ownership..."
+          }
+        ]
+      },
+      {
+        "matcher": "SendMessage",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/require-summary.sh",
+            "timeout": 3
+          }
+        ]
+      },
+      {
+        "matcher": "Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/enforce-explicit-subagent-model.sh",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/agent-token-budget.sh",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/edit-replace-all-reminder.sh",
+            "timeout": 3
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"/Users/emma.hyde/.claude/hooks/gsd-check-update.js\""
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash /Users/emma.hyde/.claude/hooks/cmux-title.sh",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /Users/emma.hyde/projects/memesis/hooks/session_start.py",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /Users/emma.hyde/projects/memesis/hooks/pre_compact.py",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "Stop": [],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"/Users/emma.hyde/.claude/hooks/gsd-context-monitor.js\""
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash /Users/emma.hyde/.claude/hooks/cmux-title.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "node /Users/emma.hyde/.claude/hud/omc-hud.mjs"
+  },
+  "enabledPlugins": {
+    "claude-md-management@claude-plugins-official": true,
+    "customaize-agent@context-engineering-kit": true,
+    "document-skills@anthropic-agent-skills": true,
+    "kaizen@context-engineering-kit": true,
+    "plugin-dev@claude-plugins-official": true,
+    "reflexion@context-engineering-kit": true,
+    "rpi@claude-ruby-marketplace": true,
+    "subtask@subtask": true,
+    "superpowers-developing-for-claude-code@superpowers-marketplace": true,
+    "superpowers-lab@superpowers-marketplace": true,
+    "superpowers@claude-plugins-official": true,
+    "tech-stack@context-engineering-kit": true,
+    "agent-teams@claude-code-workflows": true,
+    "architecture-patterns@claude-skills": true,
+    "design-review@claude-skills": true,
+    "firecrawl-scraper@claude-skills": true,
+    "gemini-cli@claude-skills": true,
+    "idempotency-handling@claude-skills": true,
+    "inspira-ui@claude-skills": true,
+    "interaction-design@claude-skills": true,
+    "logging-best-practices@claude-skills": true,
+    "plan-interview@claude-skills": true,
+    "root-cause-tracing@claude-skills": true,
+    "tailwind-v4-shadcn@claude-skills": true,
+    "technical-specification@claude-skills": true,
+    "claude-code-bash-patterns@claude-skills": true,
+    "shell-scripting@claude-code-workflows": true,
+    "code-simplifier@claude-plugins-official": true,
+    "skill-to-plugin@guideline-plugin-marketplace": true,
+    "context7@claude-plugins-official": true,
+    "eng-workflow@guideline-plugin-marketplace": true,
+    "mcp-voice-hooks-plugin@mcp-voice-hooks-marketplace": true,
+    "playground@claude-plugins-official": true,
+    "discuss-and-execute@guideline-plugin-marketplace": true,
+    "prompts.chat@prompts.chat": true,
+    "mintlify@claude-plugins-official": true,
+    "atomic-agents@claude-plugins-official": true,
+    "code-review@claude-skills": true,
+    "comprehensive-review@claude-code-workflows": true,
+    "optibot@claude-plugins-official": true,
+    "sadd@context-engineering-kit": true,
+    "sdd@context-engineering-kit": true,
+    "ui-ux-pro-max@ui-ux-pro-max-skill": true,
+    "conductor@claude-code-workflows": true,
+    "evals-skills@hamelsmu-evals-skills": true,
+    "skill-creator@claude-plugins-official": true,
+    "autoresearch@autoresearch": true,
+    "decklet@guideline-plugin-marketplace": true,
+    "verify-implementation@guideline-plugin-marketplace": true,
+    "chrome-devtools-mcp@claude-plugins-official": true,
+    "oh-my-claudecode@omc": true,
+    "team-assemble@team-attention-plugins": true,
+    "agent-council@team-attention-plugins": true,
+    "clarify@team-attention-plugins": true,
+    "doubt@team-attention-plugins": true,
+    "interactive-review@team-attention-plugins": true,
+    "dev@team-attention-plugins": true,
+    "session-wrap@team-attention-plugins": true,
+    "claude-mem@thedotmack": true,
+    "cmux-plugin@patchoutech-plugins": true
+  },
+  "extraKnownMarketplaces": {
+    "knowledge-work-plugins": {
+      "source": {
+        "source": "github",
+        "repo": "anthropics/knowledge-work-plugins"
+      }
+    },
+    "claude-skills": {
+      "source": {
+        "source": "git",
+        "url": "https://github.com/secondsky/claude-skills.git"
+      }
+    },
+    "mcp-voice-hooks-marketplace": {
+      "source": {
+        "source": "directory",
+        "path": "/Users/emma.hyde/.claude/plugins/mcp-voice-hooks"
+      }
+    },
+    "prompts.chat": {
+      "source": {
+        "source": "github",
+        "repo": "f/prompts.chat"
+      }
+    },
+    "ui-ux-pro-max-skill": {
+      "source": {
+        "source": "github",
+        "repo": "nextlevelbuilder/ui-ux-pro-max-skill"
+      }
+    },
+    "hamelsmu-evals-skills": {
+      "source": {
+        "source": "github",
+        "repo": "hamelsmu/evals-skills"
+      }
+    },
+    "autoresearch": {
+      "source": {
+        "source": "git",
+        "url": "https://github.com/uditgoenka/autoresearch.git"
+      }
+    },
+    "guideline-plugin-marketplace": {
+      "source": {
+        "source": "github",
+        "repo": "guideline-app/guideline-plugin-marketplace"
+      }
+    },
+    "chrome-devtools-plugins": {
+      "source": {
+        "source": "github",
+        "repo": "ChromeDevTools/chrome-devtools-mcp"
+      }
+    },
+    "omc": {
+      "source": {
+        "source": "git",
+        "url": "https://github.com/Yeachan-Heo/oh-my-claudecode.git"
+      }
+    },
+    "team-attention-plugins": {
+      "source": {
+        "source": "github",
+        "repo": "team-attention/plugins-for-claude-natives"
+      }
+    },
+    "thedotmack": {
+      "source": {
+        "source": "github",
+        "repo": "thedotmack/claude-mem"
+      }
+    },
+    "patchoutech-plugins": {
+      "source": {
+        "source": "github",
+        "repo": "hopchouinard/patchoutech-plugins"
+      }
+    }
+  },
+  "alwaysThinkingEnabled": true,
+  "effortLevel": "high",
+  "promptSuggestionEnabled": true,
+  "showClearContextOnPlanAccept": true,
+  "showThinkingSummaries": true,
+  "skipDangerousModePermissionPrompt": true,
+  "teammateMode": "tmux",
+  "codemossProviderId": "aa8a10b6-b930-4410-88b3-d7df437a1ba4"
+}
