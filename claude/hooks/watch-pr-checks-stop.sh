@@ -11,5 +11,5 @@ rm -f "$flag"
 
 jq -n --arg pr "$pr" --arg repo "$repo" '{
   "decision": "block",
-  "reason": ("PR #" + $pr + " (" + $repo + ") was pushed. Invoke the watch-pr-checks skill to start monitoring CI checks before stopping.")
+  "reason": ("PR #" + $pr + " (" + $repo + ") was pushed. Run /watch-pr-checks to start monitoring CI checks before stopping.")
 }'
