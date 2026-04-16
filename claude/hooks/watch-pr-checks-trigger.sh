@@ -7,8 +7,8 @@ cmd="$(echo "$input" | jq -r '.tool_input.command // empty' 2>/dev/null)"
 
 echo "$cmd" | grep -qE 'git push|gh pr create' || exit 0
 
-stdout="$(echo "$input" | jq -r '.tool_response.stdout // .tool_output.stdout // empty' 2>/dev/null)"
-stderr="$(echo "$input" | jq -r '.tool_response.stderr // .tool_output.stderr // empty' 2>/dev/null)"
+stdout="$(echo "$input" | jq -r '.tool_response.stdout // empty' 2>/dev/null)"
+stderr="$(echo "$input" | jq -r '.tool_response.stderr // empty' 2>/dev/null)"
 output="${stdout}
 ${stderr}"
 if echo "$output" | grep -qE 'fatal:|rejected|! \[remote rejected\]'; then
