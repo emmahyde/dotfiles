@@ -18,8 +18,27 @@ fi
 echo "Watching PR #${PR} (every ${INTERVAL}s)..."
 
 prev_summary=""
+last_comment_ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+check_comments() {
+  local repo
+  repo="$(gh pr view "$PR" --json url -q '.url' 2>/dev/null | sed 's|https://github.com/||; s|/pull/.*||')" || return
+  [ -z "$repo" ] && return
+
+  local comments
+  comments="$(gh api "repos/${repo}/pulls/${PR}/comments?since=${last_comment_ts}&sort=created&direction=asc" 2>/dev/null)" || return
+
+  local count
+  count="$(echo "$comments" | jq 'length' 2>/dev/null)" || return
+  [ "$count" -eq 0 ] && return
+
+  echo "$comments" | jq -r '.[] | "PR #'"$PR"' COMMENT by \(.user.login) on \(.path):\(.line // "file"): \(.body | split("\n") | first)"' 2>/dev/null
+  last_comment_ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+}
 
 while true; do
+  check_comments
+
   json="$(gh pr checks "$PR" --json name,state,bucket 2>&1)" || {
     echo "ERROR: Failed to fetch checks — retrying"
     sleep "$INTERVAL"
