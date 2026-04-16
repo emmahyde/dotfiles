@@ -12,7 +12,16 @@ if echo "$output" | grep -qE 'fatal:|rejected|! \[remote rejected\]'; then
   exit 0
 fi
 
-pr="$(gh pr view --json number -q .number 2>/dev/null || true)"
+# Extract repo and branch from push output (e.g. "To https://github.com/org/repo.git")
+repo_url="$(echo "$output" | grep '^To ' | sed 's/^To //' | sed 's/\.git$//' | head -1)"
+repo="$(echo "$repo_url" | grep -oE '[^/]+/[^/]+$')"
+branch="$(echo "$output" | grep -oE '[^ ]+ -> [^ ]+' | head -1 | sed 's/ -> .*//')"
+
+if [ -z "$repo" ] || [ -z "$branch" ]; then
+  exit 0
+fi
+
+pr="$(gh pr view "$branch" --repo "$repo" --json number -q .number 2>/dev/null || true)"
 if [ -n "$pr" ]; then
   echo "$pr" > /tmp/claude-pr-pushed
 fi
