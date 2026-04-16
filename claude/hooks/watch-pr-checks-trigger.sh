@@ -7,14 +7,18 @@ cmd="$(echo "$input" | jq -r '.tool_input.command // empty' 2>/dev/null)"
 
 echo "$cmd" | grep -qE 'git push|gh pr create' || exit 0
 
-output="$(echo "$input" | jq -r '.tool_output.stdout // empty' 2>/dev/null)"
+stdout="$(echo "$input" | jq -r '.tool_response.stdout // .tool_output.stdout // empty' 2>/dev/null)"
+stderr="$(echo "$input" | jq -r '.tool_response.stderr // .tool_output.stderr // empty' 2>/dev/null)"
+output="${stdout}
+${stderr}"
 if echo "$output" | grep -qE 'fatal:|rejected|! \[remote rejected\]'; then
   exit 0
 fi
 
-# Extract repo and branch from push output (e.g. "To https://github.com/org/repo.git")
+# Extract repo from push output — handles both SSH (github.com:org/repo) and HTTPS (github.com/org/repo)
+# git push writes to stderr, gh pr create writes to stdout
 repo_url="$(echo "$output" | grep '^To ' | sed 's/^To //' | sed 's/\.git$//' | head -1)"
-repo="$(echo "$repo_url" | grep -oE '[^/]+/[^/]+$')"
+repo="$(echo "$repo_url" | sed 's|.*github\.com[:/]||')"
 branch="$(echo "$output" | grep -oE '[^ ]+ -> [^ ]+' | head -1 | sed 's/ -> .*//')"
 
 if [ -z "$repo" ] || [ -z "$branch" ]; then
