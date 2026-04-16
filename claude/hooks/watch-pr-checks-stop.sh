@@ -2,13 +2,14 @@
 # Blocking Stop hook: if a push/PR-create was detected this turn, prevent
 # Claude from stopping until it starts the PR checks monitor.
 
-FLAG="/tmp/claude-pr-pushed"
-[ -f "$FLAG" ] || exit 0
+flag="$(ls /tmp/claude-pr-pushed-* 2>/dev/null | head -1)"
+[ -n "$flag" ] || exit 0
 
-pr="$(cat "$FLAG")"
-rm -f "$FLAG"
+pr="$(head -1 "$flag")"
+repo="$(tail -1 "$flag")"
+rm -f "$flag"
 
-jq -n --arg pr "$pr" '{
+jq -n --arg pr "$pr" --arg repo "$repo" '{
   "decision": "block",
-  "reason": ("PR #" + $pr + " was pushed. Invoke the watch-pr-checks skill to start monitoring CI checks before stopping.")
+  "reason": ("PR #" + $pr + " (" + $repo + ") was pushed. Invoke the watch-pr-checks skill to start monitoring CI checks before stopping.")
 }'

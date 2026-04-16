@@ -23,5 +23,7 @@ fi
 
 pr="$(gh pr view "$branch" --repo "$repo" --json number -q .number 2>/dev/null || true)"
 if [ -n "$pr" ]; then
-  echo "$pr" > /tmp/claude-pr-pushed
+  flag="/tmp/claude-pr-pushed-${repo//\//-}-${pr}"
+  echo "$pr" > "$flag"
+  echo "$repo" >> "$flag"
 fi
