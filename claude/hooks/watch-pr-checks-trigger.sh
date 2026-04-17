@@ -5,7 +5,7 @@
 input=$(cat)
 cmd="$(echo "$input" | jq -r '.tool_input.command // empty' 2>/dev/null)"
 
-echo "$cmd" | grep -qE 'git push|gh pr create' || exit 0
+echo "$cmd" | grep -qE 'git\b.*\bpush|gh pr create' || exit 0
 
 stdout="$(echo "$input" | jq -r '.tool_response.stdout // empty' 2>/dev/null)"
 stderr="$(echo "$input" | jq -r '.tool_response.stderr // empty' 2>/dev/null)"
@@ -25,9 +25,14 @@ if [ -z "$repo" ] || [ -z "$branch" ]; then
   exit 0
 fi
 
+session="$(echo "$input" | jq -r '.session_id // empty' 2>/dev/null)"
+if [ -z "$session" ]; then
+  exit 0
+fi
+
 pr="$(gh pr view "$branch" --repo "$repo" --json number -q .number 2>/dev/null || true)"
 if [ -n "$pr" ]; then
-  flag="/tmp/claude-pr-pushed-${repo//\//-}-${pr}"
+  flag="/tmp/claude-pr-pushed-${session}-${repo//\//-}-${pr}"
   echo "$pr" > "$flag"
   echo "$repo" >> "$flag"
 fi
