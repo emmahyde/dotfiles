@@ -1,0 +1,43 @@
+{
+  "skill_name": "cmux-interactivity",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "I need you to run `npm run build` and then `npm test` in my project at /tmp/fake-project and let me know when it's done. I'm running this inside cmux (CMUX_WORKSPACE_ID=workspace:1, CMUX_SURFACE_ID=surface:1 are set). Don't actually execute the commands — just write me the shell script you'd use to do this task as a well-behaved cmux agent.",
+      "expected_output": "A shell script that: detects cmux via env vars, sets sidebar status/progress at key stages, sends a desktop notification on completion (success or failure), cleans up sidebar metadata on exit, and uses cmux CLI commands (set-status, set-progress, log, notify, clear-status, clear-progress).",
+      "files": [],
+      "assertions": [
+        {"name": "uses-set-status", "description": "Script calls cmux set-status at least once"},
+        {"name": "uses-notify", "description": "Script calls cmux notify on completion"},
+        {"name": "cleans-up-sidebar", "description": "Script calls cmux clear-status or clear-progress"},
+        {"name": "handles-failure", "description": "Script has distinct behavior on non-zero exit"},
+        {"name": "uses-progress-or-log", "description": "Script uses cmux set-progress or cmux log during task"}
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "Write me a shell script that runs a database migration (`python manage.py migrate`) and handles both the cmux case and the non-cmux case gracefully. It should do something useful even if cmux isn't installed or the socket isn't available.",
+      "expected_output": "A script that detects cmux availability (checks socket and/or CLI), uses cmux sidebar/notifications when available, falls back to plain echo/printf output when not in cmux, and never errors out due to missing cmux. The fallback behavior should still be informative.",
+      "files": [],
+      "assertions": [
+        {"name": "detects-cmux", "description": "Script checks for cmux presence before using it"},
+        {"name": "has-fallback-branch", "description": "Script has an else/fallback path that works without cmux"},
+        {"name": "fallback-is-informative", "description": "Fallback uses echo or printf, not silent"},
+        {"name": "no-unconditional-cmux", "description": "Does not call cmux commands outside a conditional block"}
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I'm inside cmux and I want to open the Grafana dashboard at http://localhost:3000 in a browser split, wait for it to load, take a screenshot, and then check if the element with id 'panel-1' is visible. Write the cmux commands to do this.",
+      "expected_output": "A sequence of cmux browser commands: `cmux browser open-split http://localhost:3000`, wait for load-state complete, screenshot to a file, then `cmux browser surface:N is visible '#panel-1'`. Should use correct subcommand syntax from the browser-automation reference.",
+      "files": [],
+      "assertions": [
+        {"name": "uses-open-split", "description": "Uses cmux browser open-split (not just open)"},
+        {"name": "waits-for-load", "description": "Includes a wait --load-state command"},
+        {"name": "takes-screenshot", "description": "Includes cmux browser screenshot"},
+        {"name": "checks-visibility", "description": "Uses cmux browser is visible '#panel-1'"},
+        {"name": "correct-subcommand-syntax", "description": "Commands use cmux browser <surface> <subcommand> pattern"}
+      ]
+    }
+  ]
+}

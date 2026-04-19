@@ -1,0 +1,8 @@
+{
+  "name": "feynman",
+  "description": "Multi-agent research with source verification, adversarial review, and provenance tracking",
+  "version": "1.0.0",
+  "author": {
+    "name": "Matt Skinner"
+  }
+}

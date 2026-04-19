@@ -1,0 +1,26 @@
+{
+  "eval_name": "graceful-non-cmux-fallback",
+  "config": "without_skill",
+  "expectations": [
+    {
+      "text": "detects-cmux",
+      "passed": true,
+      "evidence": "Detects cmux via env/socket/CLI \u2014 FOUND"
+    },
+    {
+      "text": "has-fallback-branch",
+      "passed": true,
+      "evidence": "Has else/fallback branch \u2014 FOUND"
+    },
+    {
+      "text": "fallback-is-informative",
+      "passed": true,
+      "evidence": "Fallback uses echo/printf \u2014 FOUND"
+    },
+    {
+      "text": "no-unconditional-cmux",
+      "passed": true,
+      "evidence": "Unconditional cmux call at line start (should NOT be present \u2014 pass = absent) \u2014 absent (good)"
+    }
+  ]
+}

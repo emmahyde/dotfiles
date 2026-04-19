@@ -1,0 +1,5 @@
+{
+  "name": "subagent-policy",
+  "description": "Enforces model selection and token-efficient prompting when spawning subagents via the Task tool",
+  "version": "1.0.0"
+}

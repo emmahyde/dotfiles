@@ -1,0 +1,31 @@
+{
+  "eval_name": "cmux-task-lifecycle",
+  "config": "with_skill",
+  "expectations": [
+    {
+      "text": "uses-set-status",
+      "passed": true,
+      "evidence": "Script calls cmux set-status \u2014 FOUND"
+    },
+    {
+      "text": "uses-notify",
+      "passed": true,
+      "evidence": "Script calls cmux notify \u2014 FOUND"
+    },
+    {
+      "text": "cleans-up-sidebar",
+      "passed": true,
+      "evidence": "Script cleans up sidebar \u2014 FOUND"
+    },
+    {
+      "text": "handles-failure",
+      "passed": true,
+      "evidence": "Script handles failure case \u2014 FOUND"
+    },
+    {
+      "text": "uses-progress-or-log",
+      "passed": true,
+      "evidence": "Uses cmux set-progress or log \u2014 FOUND"
+    }
+  ]
+}

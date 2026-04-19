@@ -1,0 +1,203 @@
+{
+  "version": 2,
+  "plugins": {
+    "claude-md-management@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/Users/emmahyde/.claude/plugins/cache/claude-plugins-official/claude-md-management/1.0.0",
+        "version": "1.0.0",
+        "installedAt": "2026-03-16T02:28:49.391Z",
+        "lastUpdated": "2026-03-16T02:28:49.391Z",
+        "gitCommitSha": "d5c15b861cd23e3102215c26020368ad5134dc47"
+      }
+    ],
+    "code-simplifier@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/Users/emmahyde/.claude/plugins/cache/claude-plugins-official/code-simplifier/1.0.0",
+        "version": "1.0.0",
+        "installedAt": "2026-02-15T03:53:30.550Z",
+        "lastUpdated": "2026-02-15T03:53:30.550Z",
+        "gitCommitSha": "2cd88e7947b7382e045666abee790c7f55f669f3"
+      }
+    ],
+    "canvas@claude-canvas": [
+      {
+        "scope": "user",
+        "installPath": "/Users/emmahyde/.claude/plugins/cache/claude-canvas/canvas/0.1.0",
+        "version": "0.1.0",
+        "installedAt": "2026-03-17T00:11:30.029Z",
+        "lastUpdated": "2026-03-17T00:11:30.029Z",
+        "gitCommitSha": "2a88ac56bc38e5ab37c5619952686f757935ab80"
+      }
+    ],
+    "reflexion@context-engineering-kit": [
+      {
+        "scope": "user",
+        "installPath": "/Users/emmahyde/.claude/plugins/cache/context-engineering-kit/reflexion/1.1.2",
+        "version": "1.1.2",
+        "installedAt": "2026-02-15T03:53:31.963Z",
+        "lastUpdated": "2026-02-15T03:53:31.963Z",
+        "gitCommitSha": "49be11a06d5e2a8c31e924ef55a771d9229fbca2"
+      }
+    ],
+    "superpowers@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/Users/emmahyde/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.7",
+        "version": "5.0.7",
+        "installedAt": "2026-03-16T02:32:44.736Z",
+        "lastUpdated": "2026-04-18T03:46:07.726Z",
+        "gitCommitSha": "363923f74aa9cd7b470c0aaa73dee629a8bfdc90"
+      }
+    ],
+    "plugin-dev@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/Users/emmahyde/.claude/plugins/cache/claude-plugins-official/plugin-dev/unknown",
+        "version": "unknown",
+        "installedAt": "2026-02-15T04:08:04.337Z",
+        "lastUpdated": "2026-04-15T04:25:03.667Z",
+        "gitCommitSha": "2cd88e7947b7382e045666abee790c7f55f669f3"
+      }
+    ],
+    "ui-ux-pro-max@ui-ux-pro-max-skill": [
+      {
+        "scope": "user",
+        "installPath": "/Users/emmahyde/.claude/plugins/cache/ui-ux-pro-max-skill/ui-ux-pro-max/2.0.1",
+        "version": "2.0.1",
+        "installedAt": "2026-02-15T22:43:25.342Z",
+        "lastUpdated": "2026-02-15T22:43:25.342Z",
+        "gitCommitSha": "6623f12b4058d09618c89cffb2de59a47c45f999"
+      }
+    ],
+    "agent-teams@claude-code-workflows": [
+      {
+        "scope": "user",
+        "installPath": "/Users/emmahyde/.claude/plugins/cache/claude-code-workflows/agent-teams/1.0.2",
+        "version": "1.0.2",
+        "installedAt": "2026-03-16T02:27:53.614Z",
+        "lastUpdated": "2026-03-16T02:27:53.614Z",
+        "gitCommitSha": "4820385a315c9cad2cc4b794bdab49afcafd635e"
+      }
+    ],
+    "csharp-lsp@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/Users/emmahyde/.claude/plugins/cache/claude-plugins-official/csharp-lsp/1.0.0",
+        "version": "1.0.0",
+        "installedAt": "2026-04-19T13:54:48.490Z",
+        "lastUpdated": "2026-04-19T13:54:48.490Z"
+      }
+    ],
+    "agent-orchestration@claude-code-workflows": [
+      {
+        "scope": "user",
+        "installPath": "/Users/emmahyde/.claude/plugins/cache/claude-code-workflows/agent-orchestration/1.2.0",
+        "version": "1.2.0",
+        "installedAt": "2026-03-15T06:26:55.669Z",
+        "lastUpdated": "2026-03-15T06:26:55.669Z",
+        "gitCommitSha": "4820385a315c9cad2cc4b794bdab49afcafd635e"
+      }
+    ],
+    "gsd-linear@sector-local": [
+      {
+        "scope": "project",
+        "projectPath": "/Users/emmahyde/projects/sector",
+        "installPath": "/Users/emmahyde/.claude/plugins/cache/sector-local/gsd-linear/0.1.0",
+        "version": "0.1.0",
+        "installedAt": "2026-03-15T06:46:52.886Z",
+        "lastUpdated": "2026-04-19T20:49:57.393Z",
+        "gitCommitSha": "eba525f6c756a8c8dcdffb32271d0c38552d585a"
+      }
+    ],
+    "comprehensive-review@claude-code-workflows": [
+      {
+        "scope": "user",
+        "installPath": "/Users/emmahyde/.claude/plugins/cache/claude-code-workflows/comprehensive-review/1.3.0",
+        "version": "1.3.0",
+        "installedAt": "2026-03-16T02:27:53.644Z",
+        "lastUpdated": "2026-04-16T16:25:20.898Z",
+        "gitCommitSha": "4820385a315c9cad2cc4b794bdab49afcafd635e"
+      }
+    ],
+    "debugging-toolkit@claude-code-workflows": [
+      {
+        "scope": "user",
+        "installPath": "/Users/emmahyde/.claude/plugins/cache/claude-code-workflows/debugging-toolkit/1.2.0",
+        "version": "1.2.0",
+        "installedAt": "2026-03-16T02:27:53.657Z",
+        "lastUpdated": "2026-03-16T02:27:53.657Z",
+        "gitCommitSha": "4820385a315c9cad2cc4b794bdab49afcafd635e"
+      }
+    ],
+    "frontend-design@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/Users/emmahyde/.claude/plugins/cache/claude-plugins-official/frontend-design/unknown",
+        "version": "unknown",
+        "installedAt": "2026-03-16T02:28:48.970Z",
+        "lastUpdated": "2026-04-15T04:25:03.663Z",
+        "gitCommitSha": "d5c15b861cd23e3102215c26020368ad5134dc47"
+      }
+    ],
+    "autoresearch@autoresearch": [
+      {
+        "scope": "user",
+        "installPath": "/Users/emmahyde/.claude/plugins/cache/autoresearch/autoresearch/1.9.12",
+        "version": "1.9.12",
+        "installedAt": "2026-03-16T23:37:16.145Z",
+        "lastUpdated": "2026-04-16T16:25:18.182Z",
+        "gitCommitSha": "0928894363d1e930215aff79d19b1d36165a6e4e"
+      }
+    ],
+    "skill-creator@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/Users/emmahyde/.claude/plugins/cache/claude-plugins-official/skill-creator/unknown",
+        "version": "unknown",
+        "installedAt": "2026-03-28T01:56:03.900Z",
+        "lastUpdated": "2026-04-15T04:25:03.666Z"
+      }
+    ],
+    "using-cmux@hummer98-using-cmux": [
+      {
+        "scope": "user",
+        "installPath": "/Users/emmahyde/.claude/plugins/cache/hummer98-using-cmux/using-cmux/1.5.1",
+        "version": "1.5.1",
+        "installedAt": "2026-04-10T08:30:21.089Z",
+        "lastUpdated": "2026-04-10T08:30:21.089Z",
+        "gitCommitSha": "eec744b8a4606e1035cad1132c79df5f0c55b428"
+      }
+    ],
+    "claude-mem@thedotmack": [
+      {
+        "scope": "user",
+        "installPath": "/Users/emmahyde/.claude/plugins/cache/thedotmack/claude-mem/12.2.1",
+        "version": "12.2.1",
+        "installedAt": "2026-04-16T16:23:23.057Z",
+        "lastUpdated": "2026-04-19T19:06:01.268Z",
+        "gitCommitSha": "70a150db74ca82110a62d194b20aa0422491dd6a"
+      }
+    ],
+    "pyright-lsp@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/Users/emmahyde/.claude/plugins/cache/claude-plugins-official/pyright-lsp/1.0.0",
+        "version": "1.0.0",
+        "installedAt": "2026-04-19T09:56:52.117Z",
+        "lastUpdated": "2026-04-19T09:56:52.117Z"
+      }
+    ],
+    "feynman@feynman-research": [
+      {
+        "scope": "user",
+        "installPath": "/Users/emmahyde/.claude/plugins/cache/feynman-research/feynman/1.0.0",
+        "version": "1.0.0",
+        "installedAt": "2026-04-19T13:23:12.066Z",
+        "lastUpdated": "2026-04-19T13:23:12.066Z",
+        "gitCommitSha": "fbcdf00da32497dd077b6de950cac78c7660d751"
+      }
+    ]
+  }
+}

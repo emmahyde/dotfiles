@@ -1,0 +1,20 @@
+{
+  "ruby": {
+    "command": "ruby-lsp",
+    "extensionToLanguage": {
+      ".rb": "ruby",
+      ".rake": "ruby",
+      ".gemspec": "ruby",
+      ".ru": "ruby",
+      ".erb": "erb"
+    }
+  },
+  "sorbet": {
+    "command": "srb",
+    "args": ["tc", "--lsp", "--enable-all-experimental-lsp-features"],
+    "extensionToLanguage": {
+      ".rb": "sorbet",
+      ".rbi": "sorbet"
+    }
+  }
+}

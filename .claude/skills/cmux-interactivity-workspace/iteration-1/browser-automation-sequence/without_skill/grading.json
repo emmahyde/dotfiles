@@ -1,0 +1,31 @@
+{
+  "eval_name": "browser-automation-sequence",
+  "config": "without_skill",
+  "expectations": [
+    {
+      "text": "uses-open-split",
+      "passed": false,
+      "evidence": "Uses cmux browser open-split \u2014 NOT FOUND"
+    },
+    {
+      "text": "waits-for-load",
+      "passed": false,
+      "evidence": "Includes wait --load-state \u2014 NOT FOUND"
+    },
+    {
+      "text": "takes-screenshot",
+      "passed": true,
+      "evidence": "Includes screenshot command \u2014 FOUND"
+    },
+    {
+      "text": "checks-visibility",
+      "passed": true,
+      "evidence": "Checks #panel-1 visibility \u2014 FOUND"
+    },
+    {
+      "text": "correct-subcommand-syntax",
+      "passed": false,
+      "evidence": "Uses cmux browser surface:N pattern \u2014 NOT FOUND"
+    }
+  ]
+}

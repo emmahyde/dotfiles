@@ -1,0 +1,6 @@
+{
+  "eval_id": 0,
+  "eval_name": "cmux-task-lifecycle",
+  "prompt": "I need you to run `npm run build` and then `npm test` in my project at /tmp/fake-project and let me know when it's done. I'm running this inside cmux (CMUX_WORKSPACE_ID=workspace:1, CMUX_SURFACE_ID=surface:1 are set). Don't actually execute the commands — just write me the shell script you'd use to do this task as a well-behaved cmux agent.",
+  "assertions": []
+}
