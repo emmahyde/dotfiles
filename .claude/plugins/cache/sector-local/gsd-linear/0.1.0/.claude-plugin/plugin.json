@@ -1,0 +1,8 @@
+{
+  "name": "gsd-linear",
+  "version": "0.1.0",
+  "description": "Syncs GSD planning artifacts to Linear — Milestones→Initiatives, Phases→Issues, Plans→Todos. Push-only, non-destructive, GSD-labeled.",
+  "author": {
+    "name": "Sector Project"
+  }
+}

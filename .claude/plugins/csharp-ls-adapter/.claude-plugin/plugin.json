@@ -1,0 +1,5 @@
+{
+  "name": "csharp-ls-adapter",
+  "description": "C# language support via csharp-ls-adapter",
+  "version": "1.0.0"
+}

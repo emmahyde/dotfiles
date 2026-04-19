@@ -1,0 +1,6 @@
+{
+  "eval_id": 1,
+  "eval_name": "graceful-non-cmux-fallback",
+  "prompt": "Write me a shell script that runs a database migration (`python manage.py migrate`) and handles both the cmux case and the non-cmux case gracefully. It should do something useful even if cmux isn't installed or the socket isn't available.",
+  "assertions": []
+}

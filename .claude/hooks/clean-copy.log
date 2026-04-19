@@ -1,0 +1,7 @@
+Sun Mar 15 04:38:18 EDT 2026: triggered
+BEFORE: ⏺ Good context. The codebase has rich data to expose — 222
+  event definitions, 5 game presets, character histories,
+  plus the CLI already wraps simulation commands. The
+  planning system has 70+
+AFTER: Good context. The codebase has rich data to expose — 222 event definitions, 5 game presets, character histories, plus the CLI already wraps simulation commands. The planning system has 70+ phase dir
+---

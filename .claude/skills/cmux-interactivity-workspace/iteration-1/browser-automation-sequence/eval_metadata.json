@@ -1,0 +1,6 @@
+{
+  "eval_id": 2,
+  "eval_name": "browser-automation-sequence",
+  "prompt": "I'm inside cmux and I want to open the Grafana dashboard at http://localhost:3000 in a browser split, wait for it to load, take a screenshot, and then check if the element with id 'panel-1' is visible. Write the cmux commands to do this.",
+  "assertions": []
+}

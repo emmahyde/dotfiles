@@ -1,0 +1,28 @@
+{
+  "description": "Enforce model selection on Task calls and inject context into subagents",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Task",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/check-task-model.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/inject-subagent-context.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

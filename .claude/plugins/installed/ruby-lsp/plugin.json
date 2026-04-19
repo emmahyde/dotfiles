@@ -1,0 +1,21 @@
+{
+  "name": "ruby-lsp",
+  "version": "1.0.0",
+  "description": "Ruby LSP integration for Claude Code (mise-configured)",
+  "lspServers": {
+    "ruby": {
+      "command": "/Users/emmahyde/.local/share/mise/installs/ruby/4.0.1/bin/ruby-lsp",
+      "args": [],
+      "extensionToLanguage": {
+        ".rb": "ruby",
+        ".rake": "ruby",
+        ".gemspec": "ruby",
+        ".ru": "ruby"
+      },
+      "env": {
+        "PATH": "/Users/emmahyde/.local/share/mise/installs/cargo-exa/0.10.1/bin:/Users/emmahyde/.local/share/mise/installs/cargo-ripgrep/15.1.0/bin:/Users/emmahyde/.local/share/mise/installs/node/20.19.6/bin:/Users/emmahyde/.local/share/mise/installs/npm/11.7.0/bin:/Users/emmahyde/.local/share/mise/installs/python/3.12.12/bin:/Users/emmahyde/.local/share/mise/installs/ruby/4.0.1/bin:/Users/emmahyde/.cargo/bin:/Users/emmahyde/.local/share/mise/installs/uv/0.9.18/uv-aarch64-apple-darwin:/opt/homebrew/opt/mise/bin:/Users/emmahyde/.bun/bin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/opt/homebrew/bin:/Applications/iTerm.app/Contents/Resources/utilities",
+        "MISE_SHELL": "fish"
+      }
+    }
+  }
+}

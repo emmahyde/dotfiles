@@ -1,0 +1,172 @@
+{
+  "claude-plugins-official": {
+    "source": {
+      "source": "github",
+      "repo": "anthropics/claude-plugins-official"
+    },
+    "installLocation": "/Users/emmahyde/.claude/plugins/marketplaces/claude-plugins-official",
+    "lastUpdated": "2026-04-19T21:46:49.651Z"
+  },
+  "superpowers-dev": {
+    "source": {
+      "source": "github",
+      "repo": "obra/superpowers"
+    },
+    "installLocation": "/Users/emmahyde/.claude/plugins/marketplaces/superpowers-dev",
+    "lastUpdated": "2026-04-16T16:23:46.553Z"
+  },
+  "claude-code-workflows": {
+    "source": {
+      "source": "git",
+      "url": "https://github.com/wshobson/agents.git"
+    },
+    "installLocation": "/Users/emmahyde/.claude/plugins/marketplaces/claude-code-workflows",
+    "lastUpdated": "2026-04-16T16:25:20.872Z"
+  },
+  "context-engineering-kit": {
+    "source": {
+      "source": "github",
+      "repo": "NeoLabHQ/context-engineering-kit"
+    },
+    "installLocation": "/Users/emmahyde/.claude/plugins/marketplaces/context-engineering-kit",
+    "lastUpdated": "2026-04-16T16:23:49.271Z"
+  },
+  "anthropic-agent-skills": {
+    "source": {
+      "source": "github",
+      "repo": "anthropics/skills"
+    },
+    "installLocation": "/Users/emmahyde/.claude/plugins/marketplaces/anthropic-agent-skills",
+    "lastUpdated": "2026-04-16T16:23:51.130Z"
+  },
+  "claude-code-lsps": {
+    "source": {
+      "source": "github",
+      "repo": "boostvolt/claude-code-lsps"
+    },
+    "installLocation": "/Users/emmahyde/.claude/plugins/marketplaces/claude-code-lsps",
+    "lastUpdated": "2026-04-16T16:23:52.672Z"
+  },
+  "ruby-lsp-marketplace": {
+    "source": {
+      "source": "github",
+      "repo": "benjaminjackson/ruby-lsp"
+    },
+    "installLocation": "/Users/emmahyde/.claude/plugins/marketplaces/ruby-lsp-marketplace",
+    "lastUpdated": "2026-04-16T16:23:54.225Z"
+  },
+  "claude-canvas": {
+    "source": {
+      "source": "github",
+      "repo": "dvdsgl/claude-canvas"
+    },
+    "installLocation": "/Users/emmahyde/.claude/plugins/marketplaces/claude-canvas",
+    "lastUpdated": "2026-04-16T16:23:55.867Z"
+  },
+  "subagent-policy": {
+    "source": {
+      "source": "directory",
+      "path": "/Users/emmahyde/.claude/plugins/local/subagent-policy"
+    },
+    "installLocation": "/Users/emmahyde/.claude/plugins/local/subagent-policy",
+    "lastUpdated": "2026-04-16T16:23:55.868Z"
+  },
+  "memory-access": {
+    "source": {
+      "source": "github",
+      "repo": "emmahyde/memory-access"
+    },
+    "installLocation": "/Users/emmahyde/.claude/plugins/marketplaces/memory-access",
+    "lastUpdated": "2026-04-19T20:49:58.938Z",
+    "autoUpdate": true
+  },
+  "ui-ux-pro-max-skill": {
+    "source": {
+      "source": "github",
+      "repo": "nextlevelbuilder/ui-ux-pro-max-skill"
+    },
+    "installLocation": "/Users/emmahyde/.claude/plugins/marketplaces/ui-ux-pro-max-skill",
+    "lastUpdated": "2026-04-16T16:23:59.528Z"
+  },
+  "it2": {
+    "source": {
+      "source": "github",
+      "repo": "tmc/it2"
+    },
+    "installLocation": "/Users/emmahyde/.claude/plugins/marketplaces/it2",
+    "lastUpdated": "2026-04-16T16:24:02.249Z"
+  },
+  "local-plugins": {
+    "source": {
+      "source": "directory",
+      "path": "/Users/emmahyde/.claude/plugins"
+    },
+    "installLocation": "/Users/emmahyde/.claude/plugins",
+    "lastUpdated": "2026-04-16T16:24:02.254Z"
+  },
+  "sector-local": {
+    "source": {
+      "source": "directory",
+      "path": "/Users/emmahyde/projects/sector/.claude/plugins"
+    },
+    "installLocation": "/Users/emmahyde/projects/sector/.claude/plugins",
+    "lastUpdated": "2026-04-16T16:24:02.254Z"
+  },
+  "claude-skills": {
+    "source": {
+      "source": "git",
+      "url": "https://github.com/secondsky/claude-skills.git"
+    },
+    "installLocation": "/Users/emmahyde/.claude/plugins/marketplaces/claude-skills",
+    "lastUpdated": "2026-04-16T16:24:04.580Z"
+  },
+  "autoresearch": {
+    "source": {
+      "source": "git",
+      "url": "https://github.com/uditgoenka/autoresearch.git"
+    },
+    "installLocation": "/Users/emmahyde/.claude/plugins/marketplaces/autoresearch",
+    "lastUpdated": "2026-04-16T16:25:18.159Z"
+  },
+  "hummer98-using-cmux": {
+    "source": {
+      "source": "github",
+      "repo": "hummer98/using-cmux"
+    },
+    "installLocation": "/Users/emmahyde/.claude/plugins/marketplaces/hummer98-using-cmux",
+    "lastUpdated": "2026-04-16T16:24:06.724Z"
+  },
+  "hummer98-cmux-team": {
+    "source": {
+      "source": "github",
+      "repo": "hummer98/cmux-team"
+    },
+    "installLocation": "/Users/emmahyde/.claude/plugins/marketplaces/hummer98-cmux-team",
+    "lastUpdated": "2026-04-16T16:24:09.906Z"
+  },
+  "thedotmack": {
+    "source": {
+      "source": "github",
+      "repo": "thedotmack/claude-mem"
+    },
+    "installLocation": "/Users/emmahyde/.claude/plugins/marketplaces/thedotmack",
+    "lastUpdated": "2026-04-19T21:46:49.596Z",
+    "autoUpdate": true
+  },
+  "feynman-research": {
+    "source": {
+      "source": "github",
+      "repo": "mjskinner82/feynman-plugin"
+    },
+    "installLocation": "/Users/emmahyde/.claude/plugins/marketplaces/feynman-research",
+    "lastUpdated": "2026-04-19T13:22:05.297Z"
+  },
+  "understand-anything": {
+    "source": {
+      "source": "github",
+      "repo": "Lum1104/Understand-Anything"
+    },
+    "installLocation": "/Users/emmahyde/.claude/plugins/marketplaces/understand-anything",
+    "lastUpdated": "2026-04-19T16:49:23.856Z"
+  }
+}
