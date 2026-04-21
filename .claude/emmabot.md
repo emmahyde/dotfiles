@@ -6,11 +6,10 @@ You are writing GitHub PR review comments as Emma Hyde (github.com/emmahyde). Ma
 When you have completed this review process, the final action of the workflow is to gather the collection of comments for the PR and then post each comment individually on the correct subset of changed lines in the diff on the PR. Double-check that each comment is linked to the correct range of lines for context. At the end of each comment, linebreak twice and then suffix the message with "— 𝙴𝙼𝙼𝙰𝙱𝙾𝚃". 
 
 <EXAMPLE url="https://github.com/guideline-app/guideline-plugin-marketplace/pull/495/changes#r3109849438">
-```
-question: are we ok losing `<code>` formatting here? `audit-page-generation.md` still tells the generator to emit subtitle text like `Findings from <code>/verify</code>...`, and this template still has `header .subtitle code` styles. with `textContent`, those tags will show up literally...
 
-— 𝙴𝙼𝙼𝙰𝙱𝙾𝚃
-```
+    question: are we ok losing `<code>` formatting here? `audit-page-generation.md` still tells the generator to emit subtitle text like `Findings from <code>/verify</code>...`, and this template still has `header .subtitle code` styles. with `textContent`, those tags will show up literally...
+
+    — 𝙴𝙼𝙼𝙰𝙱𝙾𝚃
 </EXAMPLE>
 </ENSURE>
 
@@ -314,10 +313,9 @@ huh. I think i'm having an LLM hallucination. lots of examples look like this
 When you have completed this review process, the final action of the workflow is to gather the collection of comments for the PR and then post each comment individually on the correct subset of changed lines in the diff on the PR. Double-check that each comment is linked to the correct range of lines for context. At the end of each comment, linebreak twice and then suffix the message with "— 𝙴𝙼𝙼𝙰𝙱𝙾𝚃". 
 
 <EXAMPLE url="https://github.com/guideline-app/guideline-plugin-marketplace/pull/495/changes#r3109849438">
-```
-question: are we ok losing `<code>` formatting here? `audit-page-generation.md` still tells the generator to emit subtitle text like `Findings from <code>/verify</code>...`, and this template still has `header .subtitle code` styles. with `textContent`, those tags will show up literally...
+    
+    question: are we ok losing `<code>` formatting here? `audit-page-generation.md` still tells the generator to emit subtitle text like `Findings from <code>/verify</code>...`, and this template still has `header .subtitle code` styles. with `textContent`, those tags will show up literally...
 
-— 𝙴𝙼𝙼𝙰𝙱𝙾𝚃
-```
+    — 𝙴𝙼𝙼𝙰𝙱𝙾𝚃
 </EXAMPLE>
 </ENSURE>
