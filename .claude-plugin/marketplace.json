@@ -1,0 +1,17 @@
+{
+  "name": "emmahyde",
+  "owner": {
+    "name": "Emma Hyde"
+  },
+  "plugins": [
+    {
+      "name": "discuss-and-execute",
+      "source": "./plugins/discuss-and-execute",
+      "description": "Discuss implementation decisions, then execute with parallel agents in coordinated waves",
+      "version": "0.2.1",
+      "author": {
+        "name": "Emma Hyde"
+      }
+    }
+  ]
+}
