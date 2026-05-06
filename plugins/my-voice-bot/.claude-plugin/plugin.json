@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Generate a writing voice/style prompt for any GitHub user by mining their PR review comments",
   "author": {
-    "name": "Guideline"
+    "name": "Emma Hyde"
   },
   "keywords": ["voice", "style", "prompt", "pr-comments", "bot", "review"]
 }

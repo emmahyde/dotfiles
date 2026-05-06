@@ -12,6 +12,33 @@
       "author": {
         "name": "Emma Hyde"
       }
+    },
+    {
+      "name": "my-voice-bot",
+      "source": "./plugins/my-voice-bot",
+      "description": "Generate a writing voice/style prompt for any GitHub user by mining their PR review comments",
+      "version": "1.0.0",
+      "author": {
+        "name": "Emma Hyde"
+      }
+    },
+    {
+      "name": "search-conversations",
+      "source": "./plugins/search-conversations",
+      "description": "Search past Claude Code conversations across all projects by description, returning resume commands",
+      "version": "1.0.0",
+      "author": {
+        "name": "Emma Hyde"
+      }
+    },
+    {
+      "name": "wispr",
+      "source": "./plugins/wispr",
+      "description": "Voice interaction with Claude Code via Wispr Flow dictation and macOS TTS",
+      "version": "1.0.0",
+      "author": {
+        "name": "Emma Hyde"
+      }
     }
   ]
 }

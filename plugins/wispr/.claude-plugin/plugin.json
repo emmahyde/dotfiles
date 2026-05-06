@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Voice interaction with Claude Code via Wispr Flow dictation and macOS TTS",
   "author": {
-    "name": "Guideline"
+    "name": "Emma Hyde"
   },
   "keywords": ["voice", "wispr", "dictation", "tts", "speech", "accessibility"]
 }
