@@ -70,5 +70,5 @@ Auto-selected. If `ELEVENLABS_API_KEY` is set in the environment, `speak.sh` use
 | `WISPR_APP` | config → all apps | Filter to one app's dictations by bundle ID |
 | `WISPR_POLL_INTERVAL` | `0.5` | DB poll frequency in seconds |
 | `ELEVENLABS_API_KEY` | unset | When set, switches TTS to ElevenLabs |
-| `WISPR_ELEVENLABS_VOICE_ID` | `ELEVENLABS_VOICE_ID` → config → `21m00Tcm4TlvDq8ikWAM` | ElevenLabs voice ID |
+| `ELEVENLABS_VOICE_ID` | config → `21m00Tcm4TlvDq8ikWAM` | ElevenLabs voice ID |
 | `WISPR_ELEVENLABS_MODEL` | config → `eleven_turbo_v2_5` | ElevenLabs model ID |
