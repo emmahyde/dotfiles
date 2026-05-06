@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Search past Claude Code conversations across all projects by description, returning resume commands",
   "author": {
-    "name": "emmahyde"
+    "name": "Emma Hyde"
   },
   "keywords": ["search", "conversations", "history", "resume", "find", "claude-code"]
 }
