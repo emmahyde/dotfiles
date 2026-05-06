@@ -8,7 +8,7 @@
 #
 # Voice resolution:
 #   - say:        WISPR_VOICE → wispr_voice → Samantha
-#   - ElevenLabs: WISPR_ELEVENLABS_VOICE_ID → elevenlabs_voice_id → 21m00Tcm4TlvDq8ikWAM (Rachel)
+#   - ElevenLabs: WISPR_ELEVENLABS_VOICE_ID → ELEVENLABS_VOICE_ID → elevenlabs_voice_id → 21m00Tcm4TlvDq8ikWAM (Rachel)
 
 set -u
 
@@ -30,7 +30,7 @@ _say_fallback() {
 }
 
 if [ -n "${ELEVENLABS_API_KEY:-}" ] && command -v curl >/dev/null 2>&1 && command -v afplay >/dev/null 2>&1; then
-  VOICE_ID="${WISPR_ELEVENLABS_VOICE_ID:-$(_cfg elevenlabs_voice_id)}"
+  VOICE_ID="${WISPR_ELEVENLABS_VOICE_ID:-${ELEVENLABS_VOICE_ID:-$(_cfg elevenlabs_voice_id)}}"
   VOICE_ID="${VOICE_ID:-21m00Tcm4TlvDq8ikWAM}"
   MODEL="${WISPR_ELEVENLABS_MODEL:-$(_cfg elevenlabs_model)}"
   MODEL="${MODEL:-eleven_turbo_v2_5}"
