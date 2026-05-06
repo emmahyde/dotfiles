@@ -52,9 +52,15 @@ Dictate into Wispr starting with your trigger word (default: `claude`). For exam
 trigger_word: claude
 # wispr_app:
 # wispr_voice: Samantha
+# elevenlabs_voice_id: 21m00Tcm4TlvDq8ikWAM
+# elevenlabs_model: eleven_turbo_v2_5
 ```
 
 Set `trigger_word` to any word to gate the monitor, or leave it empty to forward all dictations.
+
+## TTS providers
+
+Auto-selected. If `ELEVENLABS_API_KEY` is set in the environment, `speak.sh` uses ElevenLabs. Otherwise it uses macOS `say`. On any ElevenLabs failure (network error, non-200, missing curl/afplay) it falls back to `say`.
 
 ## Env vars
 
@@ -63,3 +69,6 @@ Set `trigger_word` to any word to gate the monitor, or leave it empty to forward
 | `WISPR_VOICE` | config → `Samantha` | macOS `say` voice |
 | `WISPR_APP` | config → all apps | Filter to one app's dictations by bundle ID |
 | `WISPR_POLL_INTERVAL` | `0.5` | DB poll frequency in seconds |
+| `ELEVENLABS_API_KEY` | unset | When set, switches TTS to ElevenLabs |
+| `WISPR_ELEVENLABS_VOICE_ID` | config → `21m00Tcm4TlvDq8ikWAM` | ElevenLabs voice ID |
+| `WISPR_ELEVENLABS_MODEL` | config → `eleven_turbo_v2_5` | ElevenLabs model ID |
