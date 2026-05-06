@@ -1,0 +1,9 @@
+{
+  "name": "wispr",
+  "version": "1.0.0",
+  "description": "Voice interaction with Claude Code via Wispr Flow dictation and macOS TTS",
+  "author": {
+    "name": "Guideline"
+  },
+  "keywords": ["voice", "wispr", "dictation", "tts", "speech", "accessibility"]
+}
