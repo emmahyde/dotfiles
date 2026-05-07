@@ -1,0 +1,59 @@
+# .pre-commit-config.yaml — wires up rubocop, brakeman, bundler-audit,
+# and the project test suite as commit-time / push-time hooks.
+#
+# Install: pip install pre-commit && pre-commit install
+# Run on all files: pre-commit run --all-files
+# Skip a hook once: SKIP=brakeman git commit ...
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+        args: ["--maxkb=500"]
+      - id: check-merge-conflict
+      - id: mixed-line-ending
+
+  # Local hooks call into bundler so they use the project's gem versions.
+  - repo: local
+    hooks:
+      - id: rubocop
+        name: rubocop
+        entry: bundle exec rubocop --force-exclusion
+        language: system
+        types: [ruby]
+        require_serial: false
+
+      - id: brakeman
+        name: brakeman (security)
+        entry: bundle exec brakeman --no-pager --quiet --exit-on-warn
+        language: system
+        pass_filenames: false
+        files: \.(rb|erb|haml|slim)$
+
+      - id: bundler-audit
+        name: bundler-audit (CVE check)
+        entry: bundle exec bundle-audit check --update
+        language: system
+        pass_filenames: false
+        files: ^(Gemfile|Gemfile\.lock)$
+
+      # Use ONE of the two below depending on test framework
+      - id: minitest
+        name: minitest (changed files only)
+        entry: bin/rails test
+        language: system
+        pass_filenames: false
+        stages: [pre-push]   # full suite is slow; only on push
+        files: \.rb$
+
+      # - id: rspec
+      #   name: rspec (changed specs)
+      #   entry: bundle exec rspec --fail-fast
+      #   language: system
+      #   pass_filenames: false
+      #   stages: [pre-push]
+      #   files: \.rb$
