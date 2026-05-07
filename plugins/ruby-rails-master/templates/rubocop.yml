@@ -1,0 +1,119 @@
+# Opinionated baseline rubocop configuration for new Rails apps.
+# Tunes the defaults toward how the community actually writes Rails in 2024+,
+# and disables rules that conflict with idiomatic Rails.
+#
+# Drop into project root as `.rubocop.yml`. Adjust as the team's taste evolves.
+
+require:
+  - rubocop-rails
+  - rubocop-performance
+  # Uncomment if using RSpec:
+  # - rubocop-rspec
+
+AllCops:
+  TargetRubyVersion: 3.2
+  TargetRailsVersion: 7.1
+  NewCops: enable
+  SuggestExtensions: false
+  Exclude:
+    - "bin/**/*"
+    - "db/schema.rb"
+    - "db/migrate/*"            # Migrations have their own conventions
+    - "vendor/**/*"
+    - "node_modules/**/*"
+    - "tmp/**/*"
+    - "log/**/*"
+    - "config/initializers/**/*" # Often have generator-style code
+    - "config/environments/**/*"
+    - "config/application.rb"
+
+# === Style ===
+# Rails apps universally use double quotes; lock it down.
+Style/StringLiterals:
+  EnforcedStyle: double_quotes
+Style/StringLiteralsInInterpolation:
+  EnforcedStyle: double_quotes
+
+# Allow Ruby's "do ... end" for multi-line blocks; "{ ... }" for single-line.
+Style/BlockDelimiters:
+  EnforcedStyle: line_count_based
+
+# Documentation comments on every class are noise.
+Style/Documentation:
+  Enabled: false
+
+# Frozen string literals at top of every file. Modern Ruby.
+Style/FrozenStringLiteralComment:
+  EnforcedStyle: always
+
+# === Layout ===
+Layout/LineLength:
+  Max: 120                       # 120 reads fine on modern monitors
+
+Layout/ArgumentAlignment:
+  EnforcedStyle: with_first_argument
+
+# === Metrics ===
+# These default low; bump for Rails apps that reasonably have larger methods
+# in controllers/models. The Sandi Rules apply more strictly when YOU choose
+# to apply them.
+Metrics/MethodLength:
+  Max: 15
+  Exclude:
+    - "db/migrate/*"
+    - "test/**/*"
+    - "spec/**/*"
+
+Metrics/ClassLength:
+  Max: 150
+  Exclude:
+    - "db/migrate/*"
+    - "test/**/*"
+    - "spec/**/*"
+
+Metrics/AbcSize:
+  Max: 20
+
+Metrics/BlockLength:
+  Exclude:
+    - "config/routes.rb"
+    - "config/environments/*.rb"
+    - "lib/tasks/*.rake"
+    - "test/**/*"
+    - "spec/**/*"
+
+# === Naming ===
+Naming/PredicateName:
+  ForbiddenPrefixes:
+    - is_
+
+# === Rails ===
+Rails/HasManyOrHasOneDependent:
+  Enabled: true                   # always specify dependent: when adding has_many
+
+Rails/SkipsModelValidations:
+  AllowedMethods:
+    - update_all
+    - delete_all
+    - increment_counter
+    - decrement_counter
+    - update_columns
+    - touch_all
+
+Rails/UnknownEnv:
+  Environments:
+    - development
+    - test
+    - production
+    - staging                     # add yours
+
+# === Performance ===
+Performance/StringReplacement:
+  Enabled: true
+
+# === Project-specific overrides ===
+# Add per-project disables here, with a brief comment explaining why.
+# Example:
+# Rails/HasManyOrHasOneDependent:
+#   Exclude:
+#     - app/models/legacy/**/*    # legacy code, will be deleted

@@ -1,0 +1,19 @@
+{
+  "name": "ruby-rails-master",
+  "version": "0.1.0",
+  "description": "Idiomatic Ruby on Rails design, refactoring, and review. Bundles four skills (Ruby/Rails idioms, Sandi Metz design, clean code & refactoring, algorithms) with five specialist subagents, eight slash commands, and a templates + scripts toolkit for working in Rails codebases.",
+  "author": {
+    "name": "Emma Hyde",
+    "email": "emmajhyde@gmail.com"
+  },
+  "license": "MIT",
+  "keywords": [
+    "ruby",
+    "rails",
+    "refactoring",
+    "object-oriented",
+    "sandi-metz",
+    "code-review",
+    "clean-code"
+  ]
+}
