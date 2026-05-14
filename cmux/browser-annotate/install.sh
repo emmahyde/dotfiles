@@ -2,12 +2,12 @@
 # Install cmux-browser-annotate into all active cmux browser surfaces.
 # Works as a curl-pipe-sh one-liner or run locally after cloning.
 #
-# Remote:  curl -sL https://raw.githubusercontent.com/emmahyde/dotfiles/master/cmux-browser-annotate/install.sh | sh
+# Remote:  curl -sL https://raw.githubusercontent.com/emmahyde/dotfiles/master/cmux/browser-annotate/install.sh | sh
 # Local:   ./install.sh [surface:N]
 
 set -e
 
-REPO_RAW="https://raw.githubusercontent.com/emmahyde/dotfiles/master/cmux-browser-annotate"
+REPO_RAW="https://raw.githubusercontent.com/emmahyde/dotfiles/master/cmux/browser-annotate"
 
 # Fetch the JS — prefer local file, fall back to GitHub
 SCRIPT_DIR="$(cd "$(dirname "$0")" 2>/dev/null && pwd 2>/dev/null || echo "")"
