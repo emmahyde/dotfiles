@@ -32,7 +32,7 @@ Local clone:
 Curl one-liner:
 
 ```sh
-curl -sL https://raw.githubusercontent.com/emmahyde/dotfiles/master/cmux/claude-branch-split/install.sh | bash
+curl -sL https://raw.githubusercontent.com/emmahyde/dotfiles/main/cmux/claude-branch-split/install.sh | bash
 ```
 
 Both paths symlink (or copy, when curled) the two files into:
