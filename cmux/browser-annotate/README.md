@@ -1,4 +1,4 @@
-# cmux-browser-annotate
+# cmux/browser-annotate
 
 ![](https://github.com/user-attachments/assets/3a565fae-34aa-4b67-8de6-c13c1130d79d)
 
@@ -10,14 +10,14 @@ A drawing and annotation overlay for [cmux](https://cmux.dev) browser surfaces. 
 ## Quick Install
 
 ```sh
-curl -sL https://raw.githubusercontent.com/emmahyde/dotfiles/master/cmux-browser-annotate/install.sh | sh
+curl -sL https://raw.githubusercontent.com/emmahyde/dotfiles/master/cmux/browser-annotate/install.sh | sh
 ```
 
 Or clone and run locally:
 
 ```sh
 git clone https://github.com/emmahyde/dotfiles.git
-./dotfiles/cmux-browser-annotate/install.sh
+./dotfiles/cmux/browser-annotate/install.sh
 ```
 
 ## Usage
@@ -71,7 +71,7 @@ Source the wrapper in your shell config to auto-inject when opening browsers:
 
 ```sh
 # In ~/.bashrc, ~/.zshrc, or ~/.config/fish/config.fish
-source ~/work/dotfiles/cmux-browser-annotate/cmux-browser.sh
+source ~/work/dotfiles/cmux/browser-annotate/cmux-browser.sh
 ```
 
 Then use `cmux-browser open <url>` instead of `cmux browser open`.

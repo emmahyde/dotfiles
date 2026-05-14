@@ -4,7 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 TARGET="$HOME/.claude"
 
-items=(CLAUDE.md settings.json settings.local.json hooks.json skills hooks commands scripts)
+items=(CLAUDE.md settings.json settings.local.json hooks.json skills hooks commands)
 
 for item in "${items[@]}"; do
   src="$SCRIPT_DIR/$item"
