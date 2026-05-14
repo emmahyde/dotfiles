@@ -1,5 +1,7 @@
 # claude-branch-split
 
+<img width="1242" height="1242" alt="Screen Recording 2026-05-13 at 22 48 29 censored" src="https://github.com/user-attachments/assets/ab940edf-7d3a-4a27-b8bf-8a2b5f46c167" />
+
 `/branch` slash command for Claude Code. Forks the current session into a
 new cmux split so two divergent threads can run side-by-side.
 
