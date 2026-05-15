@@ -1,0 +1,9 @@
+{
+  "name": "watch-pr-checks",
+  "version": "1.0.0",
+  "description": "Monitor GitHub CI checks for the current branch's PR. Auto-triggered after git push or gh pr create.",
+  "author": {
+    "name": "Emma Hyde"
+  },
+  "keywords": ["github", "ci", "pr", "checks", "monitoring"]
+}

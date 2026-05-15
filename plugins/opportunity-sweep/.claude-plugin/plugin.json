@@ -1,0 +1,9 @@
+{
+  "name": "opportunity-sweep",
+  "version": "1.0.0",
+  "description": "Scan Reddit for software market opportunities, pain points, and unmet needs. SaaS idea discovery and gap analysis.",
+  "author": {
+    "name": "Emma Hyde"
+  },
+  "keywords": ["market-research", "reddit", "saas", "opportunity", "discovery"]
+}
