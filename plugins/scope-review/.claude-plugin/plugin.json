@@ -1,0 +1,9 @@
+{
+  "name": "scope-review",
+  "version": "1.0.0",
+  "description": "Five-step adversarial scoping for a contested fix, in-flight feature, or underspecified spec. Maps work, critiques, steelmans, then synthesizes outstanding questions.",
+  "author": {
+    "name": "Emma Hyde"
+  },
+  "keywords": ["scoping", "review", "planning", "critique", "steelman"]
+}

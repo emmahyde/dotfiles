@@ -39,6 +39,51 @@
       "author": {
         "name": "Emma Hyde"
       }
+    },
+    {
+      "name": "watch-pr-checks",
+      "source": "./plugins/watch-pr-checks",
+      "description": "Monitor GitHub CI checks for the current branch's PR. Auto-triggered after git push or gh pr create.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Emma Hyde"
+      }
+    },
+    {
+      "name": "scope-review",
+      "source": "./plugins/scope-review",
+      "description": "Five-step adversarial scoping for a contested fix, in-flight feature, or underspecified spec.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Emma Hyde"
+      }
+    },
+    {
+      "name": "opportunity-sweep",
+      "source": "./plugins/opportunity-sweep",
+      "description": "Scan Reddit for software market opportunities, pain points, and unmet needs.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Emma Hyde"
+      }
+    },
+    {
+      "name": "diagram-workshop",
+      "source": "./plugins/diagram-workshop",
+      "description": "Interactive, iterative diagram creation in the browser — force-directed graphs, hierarchies, Sankey, timelines.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Emma Hyde"
+      }
+    },
+    {
+      "name": "thoughtful-terse",
+      "source": "./plugins/thoughtful-terse",
+      "description": "Tighten communication to senior-engineer register without losing rigor; absorb the broader concern from corrections.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Emma Hyde"
+      }
     }
   ]
 }

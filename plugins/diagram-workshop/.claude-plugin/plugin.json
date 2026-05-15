@@ -1,0 +1,9 @@
+{
+  "name": "diagram-workshop",
+  "version": "1.0.0",
+  "description": "Interactive, iterative diagram creation in the browser — force-directed graphs, hierarchies, Sankey flows, timelines, scatter plots. Includes create and review skills.",
+  "author": {
+    "name": "Emma Hyde"
+  },
+  "keywords": ["diagram", "visualization", "d3", "interactive", "browser"]
+}
