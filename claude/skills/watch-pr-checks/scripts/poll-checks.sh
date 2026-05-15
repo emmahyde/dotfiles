@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
-# Poll GitHub PR checks, comments, and merge state. Stream events to stdout (for Monitor).
-# Only emits when something CHANGES. Exits only on MERGED.
+# Poll a GitHub PR with a single batched GraphQL request per cycle.
+# Streams change-events to stdout (for Monitor). Exits on MERGED/CLOSED.
 # Usage: poll-checks.sh [PR_NUMBER] [POLL_INTERVAL_SECONDS]
+
+set -u
 
 PR="${1:-}"
 INTERVAL="${2:-60}"
@@ -15,146 +17,200 @@ if [ -z "$PR" ]; then
   exit 1
 fi
 
-REPO="$(gh pr view "$PR" --json url -q '.url' 2>/dev/null | sed 's|https://github.com/||; s|/pull/.*||')"
-if [ -z "$REPO" ]; then
-  echo "ERROR: Could not determine repo for PR #${PR}"
+# Resolve owner/repo from PR URL (one-time).
+PR_URL="$(gh pr view "$PR" --json url -q .url 2>/dev/null || true)"
+if [ -z "$PR_URL" ]; then
+  echo "ERROR: Could not resolve PR #${PR}"
   exit 1
 fi
+OWNER_REPO="${PR_URL#https://github.com/}"
+OWNER_REPO="${OWNER_REPO%/pull/*}"
+OWNER="${OWNER_REPO%%/*}"
+REPO="${OWNER_REPO#*/}"
 
-echo "Watching PR #${PR} in ${REPO} (every ${INTERVAL}s)..."
+echo "Watching PR #${PR} in ${OWNER}/${REPO} (every ${INTERVAL}s)..."
+
+QUERY='query($owner:String!,$repo:String!,$pr:Int!){
+  repository(owner:$owner,name:$repo){
+    pullRequest(number:$pr){
+      state
+      mergeable
+      author{login}
+      comments(last:100){nodes{
+        databaseId
+        author{login}
+        body
+        createdAt
+      }}
+      commits(last:1){nodes{commit{statusCheckRollup{
+        contexts(first:100){nodes{
+          __typename
+          ... on CheckRun{name conclusion status}
+          ... on StatusContext{context state}
+        }}
+      }}}}
+      reviewThreads(last:100){nodes{
+        isResolved
+        comments(first:50){nodes{
+          databaseId
+          author{login}
+          body
+          path
+          line
+          originalLine
+          createdAt
+        }}
+      }}
+    }
+  }
+}'
 
 prev_check_summary=""
 prev_mergeable=""
 prev_pr_state=""
-last_comment_ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 prev_unresolved_ids=""
+# Initial high-water mark — only emit comments created after monitor start.
+last_comment_iso="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
-check_pr_state() {
+emit_from_json() {
+  local json="$1"
+
+  # PR state — exit on MERGED/CLOSED.
   local state
-  state="$(gh pr view "$PR" --json state -q .state 2>/dev/null)" || return
-  [ -z "$state" ] && return
-
-  if [ "$state" != "$prev_pr_state" ]; then
+  state="$(echo "$json" | jq -r '.data.repository.pullRequest.state // empty')"
+  if [ -n "$state" ] && [ "$state" != "$prev_pr_state" ]; then
     prev_pr_state="$state"
-    if [ "$state" = "MERGED" ]; then
-      echo "PR #${PR} MERGED"
-      exit 0
-    elif [ "$state" = "CLOSED" ]; then
-      echo "PR #${PR} CLOSED"
-      exit 0
-    fi
+    case "$state" in
+      MERGED) echo "PR #${PR} MERGED"; exit 0 ;;
+      CLOSED) echo "PR #${PR} CLOSED"; exit 0 ;;
+    esac
   fi
-}
 
-check_comments() {
-  local comments
-  comments="$(gh api "repos/${REPO}/pulls/${PR}/comments?since=${last_comment_ts}&sort=created&direction=asc" 2>/dev/null)" || return
+  # Mergeable — emit only on transition into CONFLICTING.
+  local mergeable
+  mergeable="$(echo "$json" | jq -r '.data.repository.pullRequest.mergeable // empty')"
+  if [ -n "$mergeable" ] && [ "$mergeable" != "UNKNOWN" ] && [ "$mergeable" != "$prev_mergeable" ]; then
+    prev_mergeable="$mergeable"
+    [ "$mergeable" = "CONFLICTING" ] && echo "MERGE CONFLICT: branch has conflicts with base — rebase or merge required"
+  fi
 
-  local count
-  count="$(echo "$comments" | jq 'length' 2>/dev/null)" || return
-  [ "$count" -eq 0 ] && return
+  local author
+  author="$(echo "$json" | jq -r '.data.repository.pullRequest.author.login // empty')"
 
-  # Only emit new comments not from the PR author (i.e., review comments from others)
-  local pr_author
-  pr_author="$(gh pr view "$PR" --json author -q .author.login 2>/dev/null)" || pr_author=""
+  # New comments since last_comment_iso. Covers review-thread comments AND
+  # top-level PR (issue) comments. Non-author comments always pass. Self
+  # (PR author) comments pass only when open-ended / requesting changes —
+  # heuristic: ends with "?", or contains TODO/FIXME/WIP/`[ ]`, or imperative
+  # verbs (please|need to|should|let's|can we|could we|fix|update|change|
+  # remove|rework|follow up). Pure status replies are filtered out.
+  local self_keep_regex='\?\s*$|\b(TODO|FIXME|WIP)\b|\[ \]|\b(please|need to|should|let'\''?s|can we|could we|fix|update|change|remove|rework|follow ?up)\b'
+  local new_comments_block
+  new_comments_block="$(echo "$json" | jq -r --arg author "$author" --arg since "$last_comment_iso" --arg self_re "$self_keep_regex" '
+    (
+      [.data.repository.pullRequest.reviewThreads.nodes[]?.comments.nodes[]?
+        | {kind:"review", id:.databaseId, login:.author.login, body:.body, path:.path, line:(.line // .originalLine // "file"), createdAt:.createdAt}]
+      +
+      [.data.repository.pullRequest.comments.nodes[]?
+        | {kind:"issue", id:.databaseId, login:.author.login, body:.body, path:"PR conversation", line:"-", createdAt:.createdAt}]
+    )
+    | map(select(.createdAt > $since))
+    | map(select((.login != $author) or ((.body // "") | test($self_re; "i"))))
+    | sort_by(.createdAt)
+    | .[] |
+      "COMMENT (\(.kind)) by \(.login) on \(.path):\(.line) [id:\(.id)]\n\(.body)\n---END---"
+  ')"
+  if [ -n "$new_comments_block" ]; then
+    echo "$new_comments_block" | sed '/^---END---$/d'
+    # Advance high-water across BOTH streams regardless of filtering, so the
+    # next cycle doesn't re-emit filtered-out comments.
+    local newest
+    newest="$(echo "$json" | jq -r --arg since "$last_comment_iso" '
+      ([.data.repository.pullRequest.reviewThreads.nodes[]?.comments.nodes[]?.createdAt]
+       + [.data.repository.pullRequest.comments.nodes[]?.createdAt])
+      | map(select(. > $since)) | max // empty
+    ')"
+    [ -n "$newest" ] && last_comment_iso="$newest"
+  fi
 
-  echo "$comments" | jq -r --arg author "$pr_author" '
-    .[] | select(.user.login != $author) |
-    "COMMENT by \(.user.login) on \(.path):\(.line // .original_line // "file") [id:\(.id)]\n\(.body)"
-  ' 2>/dev/null
-
-  last_comment_ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-}
-
-check_unresolved_comments() {
-  # Fetch all review comments, find unresolved ones (no reply from PR author)
-  local all_comments
-  all_comments="$(gh api "repos/${REPO}/pulls/${PR}/comments?per_page=100&sort=created&direction=asc" 2>/dev/null)" || return
-
-  local pr_author
-  pr_author="$(gh pr view "$PR" --json author -q .author.login 2>/dev/null)" || pr_author=""
-
-  # Find top-level comments (not replies) from non-authors that have no reply from the author
+  # Unresolved threads: root comment from non-author + zero author replies + GitHub thread not resolved.
   local unresolved_ids
-  unresolved_ids="$(echo "$all_comments" | jq -r --arg author "$pr_author" '
-    # Group by thread (in_reply_to_id or self)
-    group_by(.in_reply_to_id // .id) |
-    map(
-      # A thread is unresolved if:
-      # - the root comment is not from the author
-      # - no reply in the thread is from the author
-      select(
-        (.[0].user.login != $author) and
-        (map(select(.user.login == $author)) | length == 0)
-      ) |
-      .[0].id
-    ) | join(",")
-  ' 2>/dev/null)" || return
-
+  unresolved_ids="$(echo "$json" | jq -r --arg author "$author" '
+    [.data.repository.pullRequest.reviewThreads.nodes[]?
+      | select(.isResolved == false)
+      | select((.comments.nodes[0].author.login // "") != $author)
+      | select([.comments.nodes[]? | select(.author.login == $author)] | length == 0)
+      | .comments.nodes[0].databaseId]
+    | sort | join(",")
+  ')"
   if [ "$unresolved_ids" != "$prev_unresolved_ids" ]; then
     prev_unresolved_ids="$unresolved_ids"
     if [ -n "$unresolved_ids" ]; then
       local count
       count="$(echo "$unresolved_ids" | tr ',' '\n' | wc -l | tr -d ' ')"
       echo "UNRESOLVED: ${count} review comment(s) need response"
+      echo "$json" | jq -r --arg author "$author" '
+        .data.repository.pullRequest.reviewThreads.nodes[]?
+        | select(.isResolved == false)
+        | select((.comments.nodes[0].author.login // "") != $author)
+        | select([.comments.nodes[]? | select(.author.login == $author)] | length == 0)
+        | .comments.nodes[0] as $root
+        | "  - [id:\($root.databaseId)] \($root.author.login) on \($root.path):\($root.line // $root.originalLine // "file")\n    \($root.body | gsub("\n";"\n    "))"
+      '
+    fi
+  fi
+
+  # CI: aggregate latest commit's CheckRun + StatusContext.
+  local counts
+  counts="$(echo "$json" | jq -r '
+    [.data.repository.pullRequest.commits.nodes[0].commit.statusCheckRollup.contexts.nodes[]?
+      | if .__typename == "CheckRun" then
+          (if .status != "COMPLETED" then "pending"
+           elif (.conclusion // "") | IN("SUCCESS","NEUTRAL","SKIPPED") then "pass"
+           else "fail" end)
+        elif .__typename == "StatusContext" then
+          (.state | ascii_downcase
+            | if . == "success" then "pass"
+              elif . == "failure" or . == "error" then "fail"
+              else "pending" end)
+        else empty end]
+    | {total: length,
+       passed: ([.[] | select(. == "pass")] | length),
+       failed: ([.[] | select(. == "fail")] | length),
+       pending: ([.[] | select(. == "pending")] | length)}
+    | "\(.total) \(.passed) \(.failed) \(.pending)"
+  ')"
+  local total passed failed pending
+  read -r total passed failed pending <<<"$counts"
+  if [ "${total:-0}" -gt 0 ]; then
+    local summary="${passed}p-${failed}f-${pending}w"
+    if [ "$summary" != "$prev_check_summary" ]; then
+      prev_check_summary="$summary"
+      if [ "$pending" -gt 0 ]; then
+        echo "CHECKS: ${passed} passed, ${failed} failed, ${pending} pending [${total} total]"
+      elif [ "$failed" -gt 0 ]; then
+        local failed_names
+        failed_names="$(echo "$json" | jq -r '
+          [.data.repository.pullRequest.commits.nodes[0].commit.statusCheckRollup.contexts.nodes[]?
+            | if .__typename == "CheckRun" then
+                (if .status == "COMPLETED" and ((.conclusion // "") | IN("SUCCESS","NEUTRAL","SKIPPED") | not) then .name else empty end)
+              elif .__typename == "StatusContext" then
+                (if (.state | ascii_downcase) == "failure" or (.state | ascii_downcase) == "error" then .context else empty end)
+              else empty end]
+          | join(", ")')"
+        echo "CHECKS FAILED: ${failed}/${total} — ${failed_names}"
+      else
+        echo "ALL GREEN: ${passed}/${total} checks passed"
+      fi
     fi
   fi
 }
 
-check_mergeable() {
-  local mergeable
-  mergeable="$(gh pr view "$PR" --json mergeable -q .mergeable 2>/dev/null)" || return
-  [ -z "$mergeable" ] && return
-  [ "$mergeable" = "UNKNOWN" ] && return
-  [ "$mergeable" = "$prev_mergeable" ] && return
-  prev_mergeable="$mergeable"
-  if [ "$mergeable" = "CONFLICTING" ]; then
-    echo "MERGE CONFLICT: branch has conflicts with base — rebase or merge required"
-  fi
-}
-
-check_ci() {
-  local json
-  json="$(gh pr checks "$PR" --json name,state,bucket 2>&1)" || {
-    echo "ERROR: Failed to fetch checks — retrying"
-    return
-  }
-
-  local total
-  total=$(echo "$json" | jq 'length' 2>/dev/null) || {
-    echo "ERROR: Unexpected response from gh — retrying"
-    return
-  }
-
-  [ "$total" -eq 0 ] && return
-
-  local passed failed pending
-  passed=$(echo "$json" | jq '[.[] | select(.bucket == "pass")] | length')
-  failed=$(echo "$json" | jq '[.[] | select(.bucket == "fail")] | length')
-  pending=$((total - passed - failed))
-
-  local summary="${passed}p-${failed}f-${pending}w"
-
-  # Only emit on state change
-  [ "$summary" = "$prev_check_summary" ] && return
-  prev_check_summary="$summary"
-
-  if [ "$pending" -gt 0 ]; then
-    echo "CHECKS: ${passed} passed, ${failed} failed, ${pending} pending [${total} total]"
-  elif [ "$failed" -gt 0 ]; then
-    local failed_names
-    failed_names=$(echo "$json" | jq -r '[.[] | select(.bucket == "fail")] | map(.name) | join(", ")')
-    echo "CHECKS FAILED: ${failed}/${total} — ${failed_names}"
-  else
-    echo "ALL GREEN: ${passed}/${total} checks passed"
-  fi
-}
-
 while true; do
-  check_pr_state
-  check_comments
-  check_unresolved_comments
-  check_mergeable
-  check_ci
+  json="$(gh api graphql -F owner="$OWNER" -F repo="$REPO" -F pr="$PR" -f query="$QUERY" 2>/dev/null || true)"
+  if [ -z "$json" ] || ! echo "$json" | jq -e '.data.repository.pullRequest' >/dev/null 2>&1; then
+    echo "ERROR: GraphQL fetch failed — retrying"
+  else
+    emit_from_json "$json"
+  fi
   sleep "$INTERVAL"
 done
