@@ -112,13 +112,20 @@ function connectBridge() {
   bridgeWs.onmessage = (e: MessageEvent) => {
     const msg = JSON.parse(e.data as string)
     log(`ws msg: ${JSON.stringify(msg)}`)
-    if (msg.type === 'comment') {
+    // 'comment' = a new review thread; 'followup' = the user continuing an
+    // existing thread after Claude has already replied. Both surface to the
+    // session as channel events keyed by comment_id; Claude answers either
+    // via the `reply` tool with that same comment_id.
+    if (msg.type === 'comment' || msg.type === 'followup') {
+      const isComment = msg.type === 'comment'
       const params = {
-        content: `${msg.quote}\n---\n${msg.text}`,
+        content: isComment ? `${msg.quote}\n---\n${msg.text}` : msg.text,
         meta: {
-          comment_id: msg.id,
-          turn_idx: String(msg.turn_idx),
-          lines: `${msg.line_start}-${msg.line_end}`,
+          comment_id: isComment ? msg.id : msg.comment_id,
+          ...(isComment ? {
+            turn_idx: String(msg.turn_idx),
+            lines: `${msg.line_start}-${msg.line_end}`,
+          } : { followup: 'true' }),
           ts: new Date().toISOString(),
         },
       }
