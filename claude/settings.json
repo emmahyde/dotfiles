@@ -355,7 +355,7 @@
   },
   "statusLine": {
     "type": "command",
-    "command": "node /Users/emma.hyde/.claude/hud/omc-hud.mjs"
+    "command": "/Users/emma.hyde/.claude/statusline.sh"
   },
   "enabledPlugins": {
     "claude-md-management@claude-plugins-official": true,
