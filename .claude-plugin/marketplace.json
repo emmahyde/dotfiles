@@ -39,6 +39,15 @@
       "author": {
         "name": "Emma Hyde"
       }
+    },
+    {
+      "name": "review-canvas",
+      "source": "./plugins/review-canvas",
+      "description": "PR-style transcript review canvas — drag-select line ranges, comment, stream comments back into session as channel events",
+      "version": "0.0.1",
+      "author": {
+        "name": "Emma Hyde"
+      }
     }
   ]
 }
