@@ -206,10 +206,10 @@ def comment_readout(threads: list[dict]) -> tuple[Text, Text]:
     if len(body) > 140:
         body = body[:139] + "…"
     url = head.get("url") or ""
-    quote = Text(f'"{body}"', style="grey50")
+    body_text = Text(body, style="grey50")
     if url:
-        quote.stylize(f"link {url}")
-    headline = Text.assemble((f"@{author}: ", "hot_pink"), quote)
+        body_text.stylize(f"link {url}")
+    headline = _label_grid(f"@{author}: ", "hot_pink", body_text)
 
     others: Counter[str] = Counter()
     for t in threads[1:]:
@@ -317,20 +317,40 @@ def pr_row(pr: dict) -> Group:
             names.append_text(seg)
         fail_line = _label_grid("[fail] ", "red", names)
 
-    # Tree body: each row is (prefix, content). Last branch uses └, others use ├.
-    tree_items: list[tuple[str, object]] = [("├─ ", meta)]
-    if fail_line is not None:
-        tree_items.append(("├─  ", fail_line))
+    # [required] nests under thumbs (level-2). [fail] and the comment stay at level-1.
+    nested_under_thumbs = []
     if req_line is not None:
-        tree_items.append(("├─  ", req_line))
+        nested_under_thumbs.append(req_line)
+
+    level1: list[tuple[str, object]] = [("thumbs", meta)]
+    if fail_line is not None:
+        level1.append(("fail", fail_line))
     if has_comment:
-        tree_items.append(("│",   Text("")))
-        tree_items.append(("└─  ", headline))
-        if others_line.plain:
-            tree_items.append(("    ", others_line))
-    else:
-        prefix, content = tree_items[-1]
-        tree_items[-1] = (prefix.replace("├", "└"), content)
+        level1.append(("spacer", Text("")))
+        level1.append(("comment", headline))
+
+    last_idx = max(i for i, (k, _) in enumerate(level1) if k != "spacer")
+
+    tree_items: list[tuple[str, object]] = []
+    for i, (kind, content) in enumerate(level1):
+        if kind == "spacer":
+            tree_items.append(("│", content))
+            continue
+        is_last = i == last_idx
+        if kind == "comment":
+            conn = "└─  " if is_last else "├─  "
+        else:
+            conn = "└─ " if is_last else "├─ "
+        tree_items.append((conn, content))
+        if kind == "thumbs" and nested_under_thumbs:
+            base = "    " if is_last else "│   "
+            for j, child in enumerate(nested_under_thumbs):
+                c_is_last = j == len(nested_under_thumbs) - 1
+                c_conn = "└─ " if c_is_last else "├─ "
+                tree_items.append((base + c_conn, child))
+
+    if has_comment and others_line.plain:
+        tree_items.append(("    ", others_line))
 
     tree = Table.grid(padding=(0, 0))
     tree.add_column(no_wrap=True)
