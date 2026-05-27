@@ -234,6 +234,14 @@ def fmt_age(updated_iso: str) -> str:
     if s < 86400: return f"{s // 3600}h"
     return f"{s // 86400}d"
 
+def _label_grid(label: str, label_style: str, content: Text) -> Table:
+    """Inline 2-col grid so wrapped content hangs under the first char after `label`."""
+    g = Table.grid(padding=(0, 0))
+    g.add_column(no_wrap=True)
+    g.add_column(ratio=1, overflow="fold")
+    g.add_row(Text(label, style=label_style), content)
+    return g
+
 def pr_row(pr: dict) -> Group:
     num = pr.get("number")
     title = pr.get("title") or "(no title)"
@@ -256,7 +264,8 @@ def pr_row(pr: dict) -> Group:
     req_line = None
     if pending_teams or pending_users:
         reqs = [f"@{t}" for t in pending_teams] + [f"@{u}" for u in pending_users]
-        req_line = Text.assemble(("[required] ", "grey50"), (", ".join(reqs), "hot_pink"))
+        req_line = _label_grid("[required] ", "grey50",
+                               Text(", ".join(reqs), style="hot_pink"))
 
     ready = (appr_ok
              and pr.get("mergeable") != "CONFLICTING"
@@ -299,14 +308,15 @@ def pr_row(pr: dict) -> Group:
 
     fail_line = None
     if fails:
-        fail_line = Text("[fail] ", style="red")
+        names = Text("", no_wrap=False)
         for i, f in enumerate(fails):
             if i > 0:
-                fail_line.append(", ", style="dim")
+                names.append(", ", style="dim")
             seg = Text(f["name"], style="red")
             if f.get("url"):
                 seg.stylize(f"link {f['url']}")
-            fail_line.append_text(seg)
+            names.append_text(seg)
+        fail_line = _label_grid("[fail] ", "red", names)
 
     # Tree body: each row is (prefix, content). Last branch uses └, others use ├.
     tree_items: list[tuple[str, object]] = [("├─ ", meta)]
