@@ -89,7 +89,7 @@ def _enrich_cache(prs: list[dict]) -> None:
         for n in req_nodes:
             rr = n.get("requestedReviewer") or {}
             if rr.get("__typename") == "Team":
-                pending_teams.append(rr.get("combinedSlug") or rr.get("slug") or rr.get("name") or "")
+                pending_teams.append(rr.get("slug") or rr.get("name") or "")
             elif rr.get("__typename") == "User":
                 pending_users.append(rr.get("login") or "")
         p["_pending_teams"] = [t for t in pending_teams if t]
@@ -228,13 +228,20 @@ def pr_row(pr: dict) -> Group:
     elif pr.get("mergeStateStatus") == "BEHIND":
         meta_parts.append(Text("  ·  ", style="dim"))
         meta_parts.append(Text("behind base", style="yellow"))
-    if pending_teams:
-        meta_parts.append(Text("  ·  awaiting team ", style="dim"))
-        meta_parts.append(Text(", ".join(pending_teams), style="magenta"))
-    if pending_users:
-        meta_parts.append(Text("  ·  awaiting ", style="dim"))
-        meta_parts.append(Text(", ".join(f"@{u}" for u in pending_users), style="cyan"))
     meta = Text.assemble(*meta_parts)
+
+    team_line = None
+    if pending_teams:
+        team_line = Text.assemble(
+            (f"awaiting team{'s' if len(pending_teams) > 1 else ''}: ", "dim"),
+            (", ".join(f"@{t}" for t in pending_teams), "magenta"),
+        )
+    user_line = None
+    if pending_users:
+        user_line = Text.assemble(
+            ("awaiting: ", "dim"),
+            (", ".join(f"@{u}" for u in pending_users), "cyan"),
+        )
 
     headline, others_line = comment_readout(pr.get("_threads") or [])
 
@@ -250,6 +257,11 @@ def pr_row(pr: dict) -> Group:
         Text(chk_text, style=chk_style),
     )
     grid.add_row("", "", meta, "")
+    if team_line is not None:
+        grid.add_row("", "", team_line, "")
+    if user_line is not None:
+        grid.add_row("", "", user_line, "")
+    grid.add_row("", "", "", "")
     grid.add_row("", "", headline, "")
     if others_line.plain:
         grid.add_row("", "", others_line, "")
