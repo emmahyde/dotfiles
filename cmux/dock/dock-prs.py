@@ -212,23 +212,11 @@ def pr_row(pr: dict) -> Group:
 
     approvals = pr.get("_approvals") or []
     n_appr = len(approvals)
-    appr_style = "green" if n_appr >= REQUIRED_APPROVALS else ("yellow" if n_appr > 0 else "dim")
+    appr_ok = n_appr >= REQUIRED_APPROVALS
+    appr_style = "green" if appr_ok else "yellow"
     appr_text = f"{n_appr}/{REQUIRED_APPROVALS} thumbs"
     if approvals:
         appr_text += " (" + ", ".join(f"@{a}" for a in approvals) + ")"
-
-    meta_parts = []
-    if age:
-        meta_parts.append(Text(f"{age} ago", style="dim"))
-    if pr.get("mergeable") == "CONFLICTING":
-        if meta_parts: meta_parts.append(Text(", ", style="dim"))
-        meta_parts.append(Text("⚠ merge conflict", style="bold red"))
-    elif pr.get("mergeStateStatus") == "BEHIND":
-        if meta_parts: meta_parts.append(Text(", ", style="dim"))
-        meta_parts.append(Text("behind base", style="yellow"))
-    if meta_parts: meta_parts.append(Text(", ", style="dim"))
-    meta_parts.append(Text(appr_text, style=appr_style))
-    meta = Text.assemble(*meta_parts)
 
     pending_teams = pr.get("_pending_teams") or []
     pending_users = pr.get("_pending_users") or []
@@ -236,6 +224,31 @@ def pr_row(pr: dict) -> Group:
     if pending_teams or pending_users:
         reqs = [f"@{t}" for t in pending_teams] + [f"@{u}" for u in pending_users]
         req_line = Text.assemble(("[req] ", "dim"), (", ".join(reqs), "magenta"))
+
+    ready = (appr_ok
+             and pr.get("mergeable") != "CONFLICTING"
+             and pr.get("mergeStateStatus") not in ("BEHIND", "DIRTY", "BLOCKED")
+             and chk_style == "green"
+             and not pending_teams and not pending_users)
+
+    if ready:
+        meta = Text.assemble(
+            (f"{age} ago, " if age else "", "dim"),
+            ("✓ ready to merge.", "bold bright_green"),
+        )
+    else:
+        meta_parts = []
+        if age:
+            meta_parts.append(Text(f"{age} ago", style="dim"))
+        if pr.get("mergeable") == "CONFLICTING":
+            if meta_parts: meta_parts.append(Text(", ", style="dim"))
+            meta_parts.append(Text("⚠ merge conflict", style="bold red"))
+        elif pr.get("mergeStateStatus") == "BEHIND":
+            if meta_parts: meta_parts.append(Text(", ", style="dim"))
+            meta_parts.append(Text("behind base", style="yellow"))
+        if meta_parts: meta_parts.append(Text(", ", style="dim"))
+        meta_parts.append(Text(appr_text, style=appr_style))
+        meta = Text.assemble(*meta_parts)
 
     headline, others_line = comment_readout(pr.get("_threads") or [])
     has_comment = (pr.get("_threads") or [])
