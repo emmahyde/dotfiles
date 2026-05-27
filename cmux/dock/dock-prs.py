@@ -29,13 +29,18 @@ def gh(*args: str) -> str | None:
 
 _PR_FRAGMENT = ("headRefName reviewDecision mergeable mergeStateStatus "
                 "statusCheckRollup{contexts(first:100){nodes{"
-                "...on CheckRun{conclusion status} ...on StatusContext{state}}}} "
+                "...on CheckRun{name conclusion status detailsUrl} "
+                "...on StatusContext{context state targetUrl}}}} "
                 "latestReviews(first:50){nodes{author{login} state}} "
                 "reviewRequests(first:20){nodes{requestedReviewer{"
                 "__typename ...on Team{name slug combinedSlug} "
                 "...on User{login}}}} "
                 "reviewThreads(first:50){nodes{isResolved isOutdated "
                 "comments(last:1){nodes{author{login} body url}}}}")
+
+_FAIL_STATES = {"FAILURE", "ERROR", "CANCELLED", "TIMED_OUT", "ACTION_REQUIRED"}
+_PENDING_STATES = {"PENDING", "IN_PROGRESS", "QUEUED", "WAITING"}
+_OK_STATES = {"SUCCESS", "NEUTRAL", "SKIPPED"}
 
 
 
@@ -139,19 +144,45 @@ def ensure_cache() -> tuple[list[dict], float, bool]:
     threading.Thread(target=_enrich_cache, args=(new_prs,), daemon=True).start()
     return new_prs, now, True
 
-def check_summary(rollup: list[dict]) -> tuple[str, str]:
+def check_summary(rollup: list[dict]) -> tuple[Text, str]:
+    """Returns (badge Text, status identifier) where identifier is one of
+    'green' / 'yellow' / 'red' / 'dim'. Identifier is used by the 'ready' gate."""
     if not rollup:
-        return "—", "dim"
-    states = Counter((c.get("conclusion") or c.get("state") or "").upper() for c in rollup)
-    fail = sum(states[s] for s in ("FAILURE", "ERROR", "CANCELLED", "TIMED_OUT", "ACTION_REQUIRED"))
-    pending = sum(states[s] for s in ("PENDING", "IN_PROGRESS", "QUEUED", "WAITING"))
-    ok = sum(states[s] for s in ("SUCCESS", "NEUTRAL", "SKIPPED"))
-    total = fail + pending + ok
-    if fail:
-        return f"✗ {fail} failing / {total}", "red"
+        return Text("—", style="dim"), "dim"
+    fail = pending = ok = 0
+    for c in rollup:
+        s = (c.get("conclusion") or c.get("state") or "").upper()
+        if s in _FAIL_STATES: fail += 1
+        elif s in _PENDING_STATES: pending += 1
+        elif s in _OK_STATES: ok += 1
+    parts: list = []
+    if ok:
+        parts.append(("✓", "green"))
+        parts.append((f"{ok}", "green"))
     if pending:
-        return f"⟳ {pending} pending / {total}", "yellow"
-    return f"✓ {ok}/{total}", "green"
+        if parts: parts.append((" ", ""))
+        parts.append(("⟳", "yellow"))
+        parts.append((f"{pending}", "yellow"))
+    if fail:
+        if parts: parts.append((" ", ""))
+        parts.append(("✗", "red"))
+        parts.append((f"{fail}", "red"))
+    badge = Text.assemble(*parts) if parts else Text("—", style="dim")
+    if fail: return badge, "red"
+    if pending: return badge, "yellow"
+    if ok: return badge, "green"
+    return badge, "dim"
+
+def failing_checks(rollup: list[dict]) -> list[dict]:
+    """Extract (name, url) for checks in a failure state. Used for the [fail] row."""
+    out = []
+    for c in rollup or []:
+        s = (c.get("conclusion") or c.get("state") or "").upper()
+        if s in _FAIL_STATES:
+            name = c.get("name") or c.get("context") or "check"
+            url = c.get("detailsUrl") or c.get("targetUrl") or ""
+            out.append({"name": name, "url": url})
+    return out
 
 def review_glyph(decision: str | None, draft: bool) -> tuple[str, str]:
     if draft:
@@ -175,7 +206,7 @@ def comment_readout(threads: list[dict]) -> tuple[Text, Text]:
     if len(body) > 140:
         body = body[:139] + "…"
     url = head.get("url") or ""
-    quote = Text(f'"{body}"', style="bright_yellow")
+    quote = Text(f'"{body}"', style="grey50")
     if url:
         quote.stylize(f"link {url}")
     headline = Text.assemble((f"@{author}: ", "hot_pink"), quote)
@@ -207,7 +238,9 @@ def pr_row(pr: dict) -> Group:
     num = pr.get("number")
     title = pr.get("title") or "(no title)"
     url = pr.get("url") or ""
-    chk_text, chk_style = check_summary(pr.get("statusCheckRollup") or [])
+    rollup = pr.get("statusCheckRollup") or []
+    chk_badge, chk_style = check_summary(rollup)
+    fails = failing_checks(rollup)
     age = fmt_age(pr.get("updatedAt", ""))
 
     approvals = pr.get("_approvals") or []
@@ -261,11 +294,24 @@ def pr_row(pr: dict) -> Group:
     title_grid.add_row(
         Text(f"#{num}", style="bold cyan"),
         Text(title, style=f"link {url}"),
-        Text(chk_text, style=chk_style),
+        chk_badge,
     )
+
+    fail_line = None
+    if fails:
+        fail_line = Text("[fail] ", style="red")
+        for i, f in enumerate(fails):
+            if i > 0:
+                fail_line.append(", ", style="dim")
+            seg = Text(f["name"], style="hot_pink")
+            if f.get("url"):
+                seg.stylize(f"link {f['url']}")
+            fail_line.append_text(seg)
 
     # Tree body: each row is (prefix, content). Last branch uses └, others use ├.
     tree_items: list[tuple[str, object]] = [("├─ ", meta)]
+    if fail_line is not None:
+        tree_items.append(("├─ ", fail_line))
     if req_line is not None:
         tree_items.append(("├─ ", req_line))
     if has_comment:
