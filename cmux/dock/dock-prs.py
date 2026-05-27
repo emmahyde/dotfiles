@@ -166,8 +166,10 @@ def check_summary(rollup: list[dict]) -> tuple[Text, str]:
         if parts: parts.append((" ", ""))
         parts.append((f" ✗ {fail} ", "bold white on red"))
     if parts:
+        # Use NBSP ( ) for the bg-styled trailing pad so Rich's right-alignment
+        # and terminal trailing-whitespace handling don't strip it.
         last_text, last_style = parts[-1]
-        parts[-1] = (last_text + " ", last_style)
+        parts[-1] = (last_text.rstrip() + "  ", last_style)
     badge = Text.assemble(*parts) if parts else Text("—", style="dim")
     if fail: return badge, "red"
     if pending: return badge, "yellow"
