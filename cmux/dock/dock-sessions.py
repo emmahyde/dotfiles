@@ -202,7 +202,7 @@ def session_block(mtime: float, jsonl: Path, sid: str,
     header.add_row(hot, Text(status_glyph, style=status_style), title_text,
                    Text(age, style="dim"))
 
-    snippet_text = Text.assemble(("> ", "dim"), (snippet, "yellow"))
+    snippet_text = Text.assemble(("▌ ", "grey50"), (snippet, "italic white"))
 
     lines: list = [header, snippet_text]
 
@@ -210,12 +210,16 @@ def session_block(mtime: float, jsonl: Path, sid: str,
     if tasks:
         open_tasks = [t for t in tasks if (t.get("status") or "pending").lower() != "completed"]
         done_count = co
+        if open_tasks:
+            lines.append(Text(""))
         for t in open_tasks:
             st = (t.get("status") or "pending").lower()
             glyph, color = TASK_GLYPH.get(st, ("○", "dim white"))
+            tid = t.get("id")
             subject = (t.get("subject") or t.get("content") or
                        (t.get("description") or "").split("\n")[0])[:70]
-            lines.append(Text.assemble(("  " + glyph + " ", color), (subject, color)))
+            prefix = f"[#{tid}] " if tid else ""
+            lines.append(Text.assemble(("  " + glyph + " ", color), (prefix + subject, color)))
         if done_count:
             lines.append(Text(f"  … +{done_count} completed", style="dim"))
 
