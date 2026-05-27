@@ -186,11 +186,11 @@ def session_block(mtime: float, jsonl: Path, sid: str,
     # Header row: hotkey, status glyph, project, workspace badge, age.
     status_glyph = "⟳" if ip > 0 else "·"
     status_style = "yellow" if ip > 0 else "cyan"
-    grid = Table.grid(padding=(0, 1), expand=True)
-    grid.add_column(no_wrap=True)
-    grid.add_column(no_wrap=True)
-    grid.add_column(ratio=1, no_wrap=True)
-    grid.add_column(justify="right", no_wrap=True)
+    header = Table.grid(padding=(0, 1), expand=True)
+    header.add_column(no_wrap=True)
+    header.add_column(no_wrap=True)
+    header.add_column(ratio=1, no_wrap=True)
+    header.add_column(justify="right", no_wrap=True)
     title_text = Text.assemble(
         (f"#{project_label}", "bold cyan"),
         ("  ", ""),
@@ -199,18 +199,19 @@ def session_block(mtime: float, jsonl: Path, sid: str,
         (f'"{ws_title}"' if ws_title else "", "italic dim"),
     )
     hot = Text(f"[{hotkey}]", style="bold green") if hotkey else Text("   ", style="dim")
-    grid.add_row(hot, Text(status_glyph, style=status_style), title_text,
-                 Text(age, style="dim"))
+    header.add_row(hot, Text(status_glyph, style=status_style), title_text,
+                   Text(age, style="dim"))
 
-    snippet_text = Text.assemble(("▌ ", "grey50"), (snippet, "italic white"))
-    grid.add_row("", "", snippet_text, "")
+    snippet_text = Text.assemble(("└─ ", "grey50"), (snippet, "italic white"))
+
+    lines: list = [header, snippet_text]
 
     # Inline task list: show open tasks, cap completed at 1 summary line.
     if tasks:
         open_tasks = [t for t in tasks if (t.get("status") or "pending").lower() != "completed"]
         done_count = co
         if open_tasks:
-            grid.add_row("", "", "", "")
+            lines.append(Text(""))
         for t in open_tasks:
             st = (t.get("status") or "pending").lower()
             tglyph, color = TASK_GLYPH.get(st, ("○", "dim white"))
@@ -218,13 +219,12 @@ def session_block(mtime: float, jsonl: Path, sid: str,
             subject = (t.get("subject") or t.get("content") or
                        (t.get("description") or "").split("\n")[0])[:70]
             prefix = f"[#{tid}] " if tid else ""
-            grid.add_row("", "",
-                         Text.assemble((tglyph + " ", color), (prefix + subject, color)), "")
+            lines.append(Text.assemble(("  " + tglyph + " ", color), (prefix + subject, color)))
         if done_count:
-            grid.add_row("", "", Text(f"… +{done_count} completed", style="dim"), "")
+            lines.append(Text(f"  … +{done_count} completed", style="dim"))
 
-    grid.add_row("", "", "", "")
-    return grid
+    lines.append(Text(""))
+    return Group(*lines)
 
 HOTKEYS = "123456789"  # 1-9 selects the corresponding row (absolute index)
 _SCROLL_OFFSET = 0
