@@ -202,7 +202,7 @@ def session_block(mtime: float, jsonl: Path, sid: str,
     header.add_row(hot, Text(status_glyph, style=status_style), title_text,
                    Text(age, style="dim"))
 
-    snippet_text = Text.assemble(("└─ ", "grey50"), (snippet, "italic white"))
+    snippet_text = Text.assemble(("  └─ ", "grey50"), (snippet, "italic white"))
 
     lines: list = [header, snippet_text]
 
