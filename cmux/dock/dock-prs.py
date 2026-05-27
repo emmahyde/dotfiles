@@ -275,15 +275,14 @@ def pr_row(pr: dict) -> Group:
 
     if ready:
         meta = Text.assemble(
-            (f"{age} ago, " if age else "", "dim"),
             ("✓ ready to merge.", "bold bright_green"),
+            (f", {age} ago" if age else "", "dim"),
         )
     else:
-        meta_parts = []
+        meta_parts = [Text(appr_text, style=appr_style)]
         if age:
+            meta_parts.append(Text(", ", style="dim"))
             meta_parts.append(Text(f"{age} ago", style="dim"))
-        if meta_parts: meta_parts.append(Text(", ", style="dim"))
-        meta_parts.append(Text(appr_text, style=appr_style))
         if pr.get("mergeable") == "CONFLICTING":
             meta_parts.append(Text(", ", style="dim"))
             meta_parts.append(Text("⚠ merge conflict", style="bold red"))
@@ -321,9 +320,9 @@ def pr_row(pr: dict) -> Group:
     # Tree body: each row is (prefix, content). Last branch uses └, others use ├.
     tree_items: list[tuple[str, object]] = [("├─ ", meta)]
     if fail_line is not None:
-        tree_items.append(("├─ ", fail_line))
+        tree_items.append(("├─  ", fail_line))
     if req_line is not None:
-        tree_items.append(("├─ ", req_line))
+        tree_items.append(("├─  ", req_line))
     if has_comment:
         tree_items.append(("│",   Text("")))
         tree_items.append(("└─  ", headline))
