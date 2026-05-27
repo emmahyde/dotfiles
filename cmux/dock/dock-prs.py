@@ -309,10 +309,12 @@ def pr_row(pr: dict) -> Group:
     title_grid.add_column(no_wrap=True)
     title_grid.add_column(ratio=1)
     title_grid.add_column(justify="right", no_wrap=True)
+    title_grid.add_column(no_wrap=True, width=1)  # explicit right-edge spacer so the pill never sits flush against the panel border
     title_grid.add_row(
         Text(f"#{num}", style="bold cyan"),
         Text(title, style=f"link {url}"),
-        Padding(chk_badge, (0, 1, 0, 0)),  # unstyled right margin so the pill isn't flush against the panel border
+        chk_badge,
+        " ",
     )
 
     fail_line = None
