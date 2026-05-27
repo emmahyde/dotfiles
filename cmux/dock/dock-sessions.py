@@ -183,11 +183,8 @@ def session_block(mtime: float, jsonl: Path, sid: str,
     snippet = last_assistant_text(jsonl) or "(no assistant text yet)"
     if len(snippet) > 90: snippet = snippet[:89] + "…"
 
-    # Header row: hotkey, status glyph, project, workspace badge, age.
-    status_glyph = "⟳" if ip > 0 else "·"
-    status_style = "yellow" if ip > 0 else "cyan"
+    # Header row: hotkey, project, workspace badge, age.
     header = Table.grid(padding=(0, 1), expand=True)
-    header.add_column(no_wrap=True)
     header.add_column(no_wrap=True)
     header.add_column(ratio=1, no_wrap=True)
     header.add_column(justify="right", no_wrap=True)
@@ -199,10 +196,9 @@ def session_block(mtime: float, jsonl: Path, sid: str,
         (f'"{ws_title}"' if ws_title else "", "italic dim"),
     )
     hot = Text(f"[{hotkey}]", style="bold green") if hotkey else Text("   ", style="dim")
-    header.add_row(hot, Text(status_glyph, style=status_style), title_text,
-                   Text(age, style="dim"))
+    header.add_row(hot, title_text, Text(age, style="dim"))
 
-    snippet_text = Text.assemble(("  └─ ", "grey50"), (snippet, "italic white"))
+    snippet_text = Text.assemble((" └─ ", "grey50"), (snippet, "italic white"))
 
     lines: list = [header, snippet_text]
 
@@ -214,12 +210,22 @@ def session_block(mtime: float, jsonl: Path, sid: str,
             lines.append(Text(""))
         for t in open_tasks:
             st = (t.get("status") or "pending").lower()
-            tglyph, color = TASK_GLYPH.get(st, ("○", "dim white"))
             tid = t.get("id")
             subject = (t.get("subject") or t.get("content") or
                        (t.get("description") or "").split("\n")[0])[:70]
             prefix = f"[#{tid}] " if tid else ""
-            lines.append(Text.assemble(("  " + tglyph + " ", color), (prefix + subject, color)))
+            if st == "in_progress":
+                lines.append(Text.assemble(
+                    ("  ○ ", "dim white"),
+                    (prefix, "dim white"),
+                    ("⟳ ", "green"),
+                    (subject, "white"),
+                ))
+            else:
+                lines.append(Text.assemble(
+                    ("  ○ ", "dim white"),
+                    (prefix + subject, "dim white"),
+                ))
         if done_count:
             lines.append(Text(f"  … +{done_count} completed", style="dim"))
 
