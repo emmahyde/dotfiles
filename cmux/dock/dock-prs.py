@@ -6,6 +6,7 @@ from collections import Counter
 from pathlib import Path
 from rich.console import Console, Group
 from rich.live import Live
+from rich.padding import Padding
 from rich.panel import Panel
 from rich.segment import Segment
 from rich.table import Table
@@ -167,7 +168,6 @@ def check_summary(rollup: list[dict]) -> tuple[Text, str]:
     if parts:
         last_text, last_style = parts[-1]
         parts[-1] = (last_text + " ", last_style)
-        parts.append(("  ", ""))  # unstyled right margin so badge doesn't sit flush against panel border
     badge = Text.assemble(*parts) if parts else Text("—", style="dim")
     if fail: return badge, "red"
     if pending: return badge, "yellow"
@@ -312,7 +312,7 @@ def pr_row(pr: dict) -> Group:
     title_grid.add_row(
         Text(f"#{num}", style="bold cyan"),
         Text(title, style=f"link {url}"),
-        chk_badge,
+        Padding(chk_badge, (0, 1, 0, 0)),  # unstyled right margin so the pill isn't flush against the panel border
     )
 
     fail_line = None
