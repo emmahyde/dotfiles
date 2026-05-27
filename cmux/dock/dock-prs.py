@@ -178,7 +178,7 @@ def comment_readout(threads: list[dict]) -> tuple[Text, Text]:
     quote = Text(f'"{body}"', style="bright_yellow")
     if url:
         quote.stylize(f"link {url}")
-    headline = Text.assemble((f"@{author}: ", "steel_blue"), quote)
+    headline = Text.assemble((f"@{author}: ", "hot_pink"), quote)
 
     others: Counter[str] = Counter()
     for t in threads[1:]:
@@ -223,7 +223,7 @@ def pr_row(pr: dict) -> Group:
     req_line = None
     if pending_teams or pending_users:
         reqs = [f"@{t}" for t in pending_teams] + [f"@{u}" for u in pending_users]
-        req_line = Text.assemble(("[req] ", "hot_pink"), (", ".join(reqs), "steel_blue"))
+        req_line = Text.assemble(("[req] ", "hot_pink"), (", ".join(reqs), "hot_pink"))
 
     ready = (appr_ok
              and pr.get("mergeable") != "CONFLICTING"
