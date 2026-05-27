@@ -157,13 +157,13 @@ def check_summary(rollup: list[dict]) -> tuple[Text, str]:
         elif s in _OK_STATES: ok += 1
     parts: list = []
     if ok:
-        parts.append((f" ✓ {ok} ", "black on bright_green"))
+        parts.append((f" ✓ {ok} ", "bold black on bright_green"))
     if pending:
         if parts: parts.append((" ", ""))
-        parts.append((f" ⟳ {pending} ", "black on yellow"))
+        parts.append((f" ⟳ {pending} ", "bold black on yellow"))
     if fail:
         if parts: parts.append((" ", ""))
-        parts.append((f" ✗ {fail} ", "white on hot_pink"))
+        parts.append((f" ✗ {fail} ", "bold white on red"))
     if parts:
         last_text, last_style = parts[-1]
         parts[-1] = (last_text + " ", last_style)
