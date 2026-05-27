@@ -317,6 +317,15 @@
             "timeout": 5
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash /Users/emma.hyde/.config/cmux/dock-session-register.sh",
+            "timeout": 3
+          }
+        ]
       }
     ],
     "PreCompact": [

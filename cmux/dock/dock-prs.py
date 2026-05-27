@@ -15,6 +15,7 @@ CACHE = Path.home() / ".claude" / "state" / "dock-prs.json"
 CACHE.parent.mkdir(parents=True, exist_ok=True)
 TTL_S = int(os.environ.get("DOCK_PRS_TTL", "300"))
 MAX_PRS = int(os.environ.get("DOCK_PRS_LIMIT", "10"))
+REQUIRED_APPROVALS = int(os.environ.get("DOCK_PRS_REQUIRED_APPROVALS", "2"))
 REFRESH = 2.0
 
 URL_RE = re.compile(r"github\.com/([^/]+)/([^/]+)/pull/(\d+)")
@@ -29,6 +30,10 @@ def gh(*args: str) -> str | None:
 _PR_FRAGMENT = ("headRefName reviewDecision "
                 "statusCheckRollup{contexts(first:100){nodes{"
                 "...on CheckRun{conclusion status} ...on StatusContext{state}}}} "
+                "latestReviews(first:50){nodes{author{login} state}} "
+                "reviewRequests(first:20){nodes{requestedReviewer{"
+                "__typename ...on Team{name slug combinedSlug} "
+                "...on User{login}}}} "
                 "reviewThreads(first:50){nodes{isResolved isOutdated "
                 "comments(last:1){nodes{author{login} body url}}}}")
 
@@ -72,6 +77,21 @@ def _enrich_cache(prs: list[dict]) -> None:
                                   .get("contexts", {}).get("nodes") or [])
         threads = (pull.get("reviewThreads") or {}).get("nodes") or []
         p["_threads"] = [n for n in threads if not n.get("isResolved")]
+        reviews = (pull.get("latestReviews") or {}).get("nodes") or []
+        approvers = {(r.get("author") or {}).get("login")
+                     for r in reviews if r.get("state") == "APPROVED"}
+        approvers.discard(None)
+        p["_approvals"] = sorted(approvers)
+        req_nodes = (pull.get("reviewRequests") or {}).get("nodes") or []
+        pending_teams, pending_users = [], []
+        for n in req_nodes:
+            rr = n.get("requestedReviewer") or {}
+            if rr.get("__typename") == "Team":
+                pending_teams.append(rr.get("combinedSlug") or rr.get("slug") or rr.get("name") or "")
+            elif rr.get("__typename") == "User":
+                pending_users.append(rr.get("login") or "")
+        p["_pending_teams"] = [t for t in pending_teams if t]
+        p["_pending_users"] = [u for u in pending_users if u]
     if got_data:
         save_cache(prs)
 
@@ -105,6 +125,9 @@ def ensure_cache() -> tuple[list[dict], float, bool]:
         p.setdefault("reviewDecision", old.get("reviewDecision"))
         p.setdefault("statusCheckRollup", old.get("statusCheckRollup", []))
         p.setdefault("_threads", old.get("_threads", []))
+        p.setdefault("_approvals", old.get("_approvals", []))
+        p.setdefault("_pending_teams", old.get("_pending_teams", []))
+        p.setdefault("_pending_users", old.get("_pending_users", []))
     # Write immediately with carried-over enrichment so UI updates fast.
     save_cache(new_prs)
     # Re-enrich in the background (updates cache again when done).
@@ -196,7 +219,24 @@ def pr_row(pr: dict) -> Group:
         Text(chk_text, style=chk_style),
     )
 
-    meta = Text(age, style="dim")
+    approvals = pr.get("_approvals") or []
+    n_appr = len(approvals)
+    appr_style = "green" if n_appr >= REQUIRED_APPROVALS else ("yellow" if n_appr > 0 else "dim")
+    appr_text = f"{n_appr}/{REQUIRED_APPROVALS} approvals"
+    if approvals:
+        appr_text += " (" + ", ".join(f"@{a}" for a in approvals) + ")"
+
+    pending_teams = pr.get("_pending_teams") or []
+    pending_users = pr.get("_pending_users") or []
+    meta_parts = [Text(age, style="dim"), Text("  ·  ", style="dim"),
+                  Text(appr_text, style=appr_style)]
+    if pending_teams:
+        meta_parts.append(Text("  ·  awaiting team ", style="dim"))
+        meta_parts.append(Text(", ".join(pending_teams), style="magenta"))
+    if pending_users:
+        meta_parts.append(Text("  ·  awaiting ", style="dim"))
+        meta_parts.append(Text(", ".join(f"@{u}" for u in pending_users), style="cyan"))
+    meta = Text.assemble(*meta_parts)
 
     headline, others_line = comment_readout(pr.get("_threads") or [])
     lines = [header, meta, headline]
