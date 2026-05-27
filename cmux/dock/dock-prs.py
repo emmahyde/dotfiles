@@ -166,10 +166,14 @@ def check_summary(rollup: list[dict]) -> tuple[Text, str]:
         if parts: parts.append((" ", ""))
         parts.append((f" ✗ {fail} ", "bold white on red"))
     if parts:
-        # Use NBSP ( ) for the bg-styled trailing pad so Rich's right-alignment
-        # and terminal trailing-whitespace handling don't strip it.
+        # rich.text.rstrip_end() strips trailing whitespace at render time,
+        # eating the bg-styled trailing space on the rightmost badge. Append
+        # an invisible (fg==bg) U+258F anchor so the line ends with a non-
+        # whitespace char and the interior bg-fill survives.
         last_text, last_style = parts[-1]
-        parts[-1] = (last_text.rstrip() + "  ", last_style)
+        bg = last_style.rsplit(" on ", 1)[-1].strip()
+        parts[-1] = (last_text.rstrip() + " ", last_style)
+        parts.append(("▏", f"{bg} on {bg}"))
     badge = Text.assemble(*parts) if parts else Text("—", style="dim")
     if fail: return badge, "red"
     if pending: return badge, "yellow"
