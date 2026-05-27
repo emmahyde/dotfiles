@@ -175,7 +175,7 @@ def comment_readout(threads: list[dict]) -> tuple[Text, Text]:
     if len(body) > 140:
         body = body[:139] + "…"
     url = head.get("url") or ""
-    quote = Text(f'"{body}"', style="yellow")
+    quote = Text(f'"{body}"', style="bright_yellow")
     if url:
         quote.stylize(f"link {url}")
     headline = Text.assemble((f"@{author}: ", "bold magenta"), quote)
