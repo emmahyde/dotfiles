@@ -1,0 +1,16 @@
+{
+  "controls": [
+    {
+      "id": "open-prs",
+      "title": "Open PRs",
+      "command": "python3 ~/.config/cmux/dock-prs.py",
+      "height": 700
+    },
+    {
+      "id": "claude-sessions",
+      "title": "Active Claude Sessions",
+      "command": "python3 ~/.config/cmux/dock-sessions.py",
+      "height": 300
+    }
+  ]
+}
