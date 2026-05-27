@@ -240,14 +240,14 @@ def pr_row(pr: dict) -> Group:
         meta_parts = []
         if age:
             meta_parts.append(Text(f"{age} ago", style="dim"))
-        if pr.get("mergeable") == "CONFLICTING":
-            if meta_parts: meta_parts.append(Text(", ", style="dim"))
-            meta_parts.append(Text("⚠ merge conflict", style="bold red"))
-        elif pr.get("mergeStateStatus") == "BEHIND":
-            if meta_parts: meta_parts.append(Text(", ", style="dim"))
-            meta_parts.append(Text("behind base", style="yellow"))
         if meta_parts: meta_parts.append(Text(", ", style="dim"))
         meta_parts.append(Text(appr_text, style=appr_style))
+        if pr.get("mergeable") == "CONFLICTING":
+            meta_parts.append(Text(", ", style="dim"))
+            meta_parts.append(Text("⚠ merge conflict", style="bold red"))
+        elif pr.get("mergeStateStatus") == "BEHIND":
+            meta_parts.append(Text(", ", style="dim"))
+            meta_parts.append(Text("behind base", style="yellow"))
         meta = Text.assemble(*meta_parts)
 
     headline, others_line = comment_readout(pr.get("_threads") or [])
