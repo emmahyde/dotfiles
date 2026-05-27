@@ -27,7 +27,7 @@ def gh(*args: str) -> str | None:
         return None
     return out.stdout if out.returncode == 0 else None
 
-_PR_FRAGMENT = ("headRefName reviewDecision "
+_PR_FRAGMENT = ("headRefName reviewDecision mergeable mergeStateStatus "
                 "statusCheckRollup{contexts(first:100){nodes{"
                 "...on CheckRun{conclusion status} ...on StatusContext{state}}}} "
                 "latestReviews(first:50){nodes{author{login} state}} "
@@ -73,6 +73,8 @@ def _enrich_cache(prs: list[dict]) -> None:
         got_data = True
         p["headRefName"] = pull.get("headRefName") or ""
         p["reviewDecision"] = pull.get("reviewDecision")
+        p["mergeable"] = pull.get("mergeable")
+        p["mergeStateStatus"] = pull.get("mergeStateStatus")
         p["statusCheckRollup"] = ((pull.get("statusCheckRollup") or {})
                                   .get("contexts", {}).get("nodes") or [])
         threads = (pull.get("reviewThreads") or {}).get("nodes") or []
@@ -128,6 +130,8 @@ def ensure_cache() -> tuple[list[dict], float, bool]:
         p.setdefault("_approvals", old.get("_approvals", []))
         p.setdefault("_pending_teams", old.get("_pending_teams", []))
         p.setdefault("_pending_users", old.get("_pending_users", []))
+        p.setdefault("mergeable", old.get("mergeable"))
+        p.setdefault("mergeStateStatus", old.get("mergeStateStatus"))
     # Write immediately with carried-over enrichment so UI updates fast.
     save_cache(new_prs)
     # Re-enrich in the background (updates cache again when done).
@@ -207,18 +211,6 @@ def pr_row(pr: dict) -> Group:
     rv_glyph, rv_style = review_glyph(pr.get("reviewDecision"), bool(pr.get("isDraft")))
     age = fmt_age(pr.get("updatedAt", ""))
 
-    header = Table.grid(padding=(0, 1), expand=True)
-    header.add_column(no_wrap=True)                       # review glyph
-    header.add_column(no_wrap=True)                       # #number — fixes hanging indent
-    header.add_column(ratio=1)                            # title wraps here
-    header.add_column(justify="right", no_wrap=True)      # checks
-    header.add_row(
-        Text(rv_glyph, style=rv_style),
-        Text(f"#{num}", style="bold cyan"),
-        Text(title, style=f"link {url}"),
-        Text(chk_text, style=chk_style),
-    )
-
     approvals = pr.get("_approvals") or []
     n_appr = len(approvals)
     appr_style = "green" if n_appr >= REQUIRED_APPROVALS else ("yellow" if n_appr > 0 else "dim")
@@ -230,6 +222,12 @@ def pr_row(pr: dict) -> Group:
     pending_users = pr.get("_pending_users") or []
     meta_parts = [Text(age, style="dim"), Text("  ·  ", style="dim"),
                   Text(appr_text, style=appr_style)]
+    if pr.get("mergeable") == "CONFLICTING":
+        meta_parts.append(Text("  ·  ", style="dim"))
+        meta_parts.append(Text("⚠ merge conflict", style="bold red"))
+    elif pr.get("mergeStateStatus") == "BEHIND":
+        meta_parts.append(Text("  ·  ", style="dim"))
+        meta_parts.append(Text("behind base", style="yellow"))
     if pending_teams:
         meta_parts.append(Text("  ·  awaiting team ", style="dim"))
         meta_parts.append(Text(", ".join(pending_teams), style="magenta"))
@@ -239,10 +237,23 @@ def pr_row(pr: dict) -> Group:
     meta = Text.assemble(*meta_parts)
 
     headline, others_line = comment_readout(pr.get("_threads") or [])
-    lines = [header, meta, headline]
+
+    grid = Table.grid(padding=(0, 1), expand=True)
+    grid.add_column(no_wrap=True)                       # review glyph
+    grid.add_column(no_wrap=True)                       # #number — fixes hanging indent
+    grid.add_column(ratio=1)                            # title + meta + comments share this column
+    grid.add_column(justify="right", no_wrap=True)      # checks
+    grid.add_row(
+        Text(rv_glyph, style=rv_style),
+        Text(f"#{num}", style="bold cyan"),
+        Text(title, style=f"link {url}"),
+        Text(chk_text, style=chk_style),
+    )
+    grid.add_row("", "", meta, "")
+    grid.add_row("", "", headline, "")
     if others_line.plain:
-        lines.append(others_line)
-    return Group(*lines)
+        grid.add_row("", "", others_line, "")
+    return grid
 
 def repo_block(repo: str, prs: list[dict]) -> Panel:
     """All PRs for one repo in a titled panel."""
