@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# Fake gh CLI for gh-similar-repos eval.
+# Routes by detecting which -f fields are present after 'api graphql'.
+
+if [[ "$1" != "api" ]]; then
+  echo "gh version 2.42.0 (2024-01-01)"
+  exit 0
+fi
+
+HAS_OWNER=false
+HAS_Q=false
+
+for arg in "$@"; do
+  case "$arg" in
+    owner=*) HAS_OWNER=true ;;
+    q=*)     HAS_Q=true ;;
+  esac
+done
+
+if $HAS_OWNER; then
+  cat /case/fixtures/repo-metadata.json
+  exit 0
+fi
+
+if $HAS_Q; then
+  cat /case/fixtures/search-results.json
+  exit 0
+fi
+
+echo '{"data":{}}'

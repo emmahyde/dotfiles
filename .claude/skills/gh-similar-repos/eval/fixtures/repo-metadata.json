@@ -1,0 +1,18 @@
+{
+  "data": {
+    "repository": {
+      "description": "A simple and easy-to-use library to enjoy videogames programming",
+      "primaryLanguage": { "name": "C" },
+      "repositoryTopics": {
+        "nodes": [
+          { "topic": { "name": "game-development" } },
+          { "topic": { "name": "opengl" } },
+          { "topic": { "name": "graphics" } },
+          { "topic": { "name": "gamedev" } },
+          { "topic": { "name": "c" } }
+        ]
+      },
+      "stargazerCount": 32000
+    }
+  }
+}
