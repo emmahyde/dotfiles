@@ -317,25 +317,20 @@ def pr_row(pr: dict) -> Group:
             names.append_text(seg)
         fail_line = _label_grid("[fail] ", "red", names)
 
-    # Tree body: meta is the only level-1 child of the PR title.
-    # Everything else (fail / required / comment) nests UNDER meta so the
-    # branches appear to fork off "1/2 thumbs" instead of off "#NNNN".
-    tree_items: list[tuple[str, object]] = [("└─ ", meta)]
-    children: list[tuple[str, object]] = []
+    # Tree body: each row is (prefix, content). Last branch uses └, others use ├.
+    tree_items: list[tuple[str, object]] = [("├─ ", meta)]
     if fail_line is not None:
-        children.append(("   ├─ ", fail_line))
+        tree_items.append(("├─  ", fail_line))
     if req_line is not None:
-        children.append(("   ├─ ", req_line))
+        tree_items.append(("├─  ", req_line))
     if has_comment:
-        children.append(("   │",   Text("")))
-        children.append(("   └─ ", headline))
+        tree_items.append(("│",   Text("")))
+        tree_items.append(("└─  ", headline))
         if others_line.plain:
-            children.append(("      ", others_line))
+            tree_items.append(("    ", others_line))
     else:
-        if children:
-            prefix, content = children[-1]
-            children[-1] = (prefix.replace("├", "└"), content)
-    tree_items.extend(children)
+        prefix, content = tree_items[-1]
+        tree_items[-1] = (prefix.replace("├", "└"), content)
 
     tree = Table.grid(padding=(0, 0))
     tree.add_column(no_wrap=True)
