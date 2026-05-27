@@ -208,64 +208,69 @@ def pr_row(pr: dict) -> Group:
     title = pr.get("title") or "(no title)"
     url = pr.get("url") or ""
     chk_text, chk_style = check_summary(pr.get("statusCheckRollup") or [])
-    rv_glyph, rv_style = review_glyph(pr.get("reviewDecision"), bool(pr.get("isDraft")))
     age = fmt_age(pr.get("updatedAt", ""))
 
     approvals = pr.get("_approvals") or []
     n_appr = len(approvals)
     appr_style = "green" if n_appr >= REQUIRED_APPROVALS else ("yellow" if n_appr > 0 else "dim")
-    appr_text = f"{n_appr}/{REQUIRED_APPROVALS} approvals"
+    appr_text = f"{n_appr}/{REQUIRED_APPROVALS} thumbs"
     if approvals:
         appr_text += " (" + ", ".join(f"@{a}" for a in approvals) + ")"
 
-    pending_teams = pr.get("_pending_teams") or []
-    pending_users = pr.get("_pending_users") or []
-    meta_parts = [Text(age, style="dim"), Text("  ·  ", style="dim"),
-                  Text(appr_text, style=appr_style)]
+    meta_parts = []
+    if age:
+        meta_parts.append(Text(f"{age} ago", style="dim"))
     if pr.get("mergeable") == "CONFLICTING":
-        meta_parts.append(Text("  ·  ", style="dim"))
+        if meta_parts: meta_parts.append(Text(", ", style="dim"))
         meta_parts.append(Text("⚠ merge conflict", style="bold red"))
     elif pr.get("mergeStateStatus") == "BEHIND":
-        meta_parts.append(Text("  ·  ", style="dim"))
+        if meta_parts: meta_parts.append(Text(", ", style="dim"))
         meta_parts.append(Text("behind base", style="yellow"))
+    if meta_parts: meta_parts.append(Text(", ", style="dim"))
+    meta_parts.append(Text(appr_text, style=appr_style))
     meta = Text.assemble(*meta_parts)
 
-    team_line = None
-    if pending_teams:
-        team_line = Text.assemble(
-            (f"awaiting team{'s' if len(pending_teams) > 1 else ''}: ", "dim"),
-            (", ".join(f"@{t}" for t in pending_teams), "magenta"),
-        )
-    user_line = None
-    if pending_users:
-        user_line = Text.assemble(
-            ("awaiting: ", "dim"),
-            (", ".join(f"@{u}" for u in pending_users), "cyan"),
-        )
+    pending_teams = pr.get("_pending_teams") or []
+    pending_users = pr.get("_pending_users") or []
+    req_line = None
+    if pending_teams or pending_users:
+        reqs = [f"@{t}" for t in pending_teams] + [f"@{u}" for u in pending_users]
+        req_line = Text.assemble(("[req] ", "dim"), (", ".join(reqs), "magenta"))
 
     headline, others_line = comment_readout(pr.get("_threads") or [])
+    has_comment = (pr.get("_threads") or [])
 
-    grid = Table.grid(padding=(0, 1), expand=True)
-    grid.add_column(no_wrap=True)                       # review glyph
-    grid.add_column(no_wrap=True)                       # #number — fixes hanging indent
-    grid.add_column(ratio=1)                            # title + meta + comments share this column
-    grid.add_column(justify="right", no_wrap=True)      # checks
-    grid.add_row(
-        Text(rv_glyph, style=rv_style),
+    # Title row: drop review glyph; align checks to the right.
+    title_grid = Table.grid(padding=(0, 1), expand=True)
+    title_grid.add_column(no_wrap=True)
+    title_grid.add_column(ratio=1)
+    title_grid.add_column(justify="right", no_wrap=True)
+    title_grid.add_row(
         Text(f"#{num}", style="bold cyan"),
         Text(title, style=f"link {url}"),
         Text(chk_text, style=chk_style),
     )
-    grid.add_row("", "", meta, "")
-    if team_line is not None:
-        grid.add_row("", "", team_line, "")
-    if user_line is not None:
-        grid.add_row("", "", user_line, "")
-    grid.add_row("", "", "", "")
-    grid.add_row("", "", headline, "")
-    if others_line.plain:
-        grid.add_row("", "", others_line, "")
-    return grid
+
+    # Tree body: each row is (prefix, content). Last branch uses └, others use ├.
+    tree_items: list[tuple[str, object]] = [("├─ ", meta)]
+    if req_line is not None:
+        tree_items.append(("├─ ", req_line))
+    if has_comment:
+        tree_items.append(("│",   Text("")))
+        tree_items.append(("└─  ", headline))
+        if others_line.plain:
+            tree_items.append(("    ", others_line))
+    else:
+        prefix, content = tree_items[-1]
+        tree_items[-1] = (prefix.replace("├", "└"), content)
+
+    tree = Table.grid(padding=(0, 0))
+    tree.add_column(no_wrap=True)
+    tree.add_column(ratio=1, overflow="fold")
+    for prefix, content in tree_items:
+        tree.add_row(Text(" " + prefix, style="grey50"), content)
+
+    return Group(title_grid, tree)
 
 def repo_block(repo: str, prs: list[dict]) -> Panel:
     """All PRs for one repo in a titled panel."""
