@@ -256,7 +256,7 @@ def pr_row(pr: dict) -> Group:
     req_line = None
     if pending_teams or pending_users:
         reqs = [f"@{t}" for t in pending_teams] + [f"@{u}" for u in pending_users]
-        req_line = Text.assemble(("[req] ", "hot_pink"), (", ".join(reqs), "hot_pink"))
+        req_line = Text.assemble(("[required] ", "grey50"), (", ".join(reqs), "hot_pink"))
 
     ready = (appr_ok
              and pr.get("mergeable") != "CONFLICTING"
