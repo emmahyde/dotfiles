@@ -157,16 +157,13 @@ def check_summary(rollup: list[dict]) -> tuple[Text, str]:
         elif s in _OK_STATES: ok += 1
     parts: list = []
     if ok:
-        parts.append(("✓", "green"))
-        parts.append((f"{ok}", "green"))
+        parts.append((f" ✓ {ok} ", "black on green"))
     if pending:
         if parts: parts.append((" ", ""))
-        parts.append(("⟳", "yellow"))
-        parts.append((f"{pending}", "yellow"))
+        parts.append((f" ⟳ {pending} ", "black on yellow"))
     if fail:
         if parts: parts.append((" ", ""))
-        parts.append(("✗", "red"))
-        parts.append((f"{fail}", "red"))
+        parts.append((f" ✗ {fail} ", "white on red"))
     badge = Text.assemble(*parts) if parts else Text("—", style="dim")
     if fail: return badge, "red"
     if pending: return badge, "yellow"
