@@ -303,7 +303,7 @@ def pr_row(pr: dict) -> Group:
         for i, f in enumerate(fails):
             if i > 0:
                 fail_line.append(", ", style="dim")
-            seg = Text(f["name"], style="hot_pink")
+            seg = Text(f["name"], style="red")
             if f.get("url"):
                 seg.stylize(f"link {f['url']}")
             fail_line.append_text(seg)
