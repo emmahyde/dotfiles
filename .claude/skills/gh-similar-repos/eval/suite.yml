@@ -1,0 +1,25 @@
+name: gh-similar-repos-eval
+references: ./references
+models:
+  - openrouter/anthropic/claude-sonnet-4-5
+timeoutSeconds: 300
+
+appendSystemPrompt: |
+  Use the skill at /work/gh-similar-repos/SKILL.md to complete the task.
+  Save your final ranked recommendation list as result.md at the top level of /work.
+  The `gh` CLI is available and authenticated.
+
+cases:
+  - name: slug-input
+    task: |
+      Find repos similar to raysan5/raylib
+    graders:
+      - name: output-quality
+        command: node $CASE/checks/grade-output.mjs
+
+  - name: keyword-input
+    task: |
+      Show me repos like simple C game libraries for beginners — no engine, just get something on screen fast
+    graders:
+      - name: output-quality
+        command: node $CASE/checks/grade-output.mjs

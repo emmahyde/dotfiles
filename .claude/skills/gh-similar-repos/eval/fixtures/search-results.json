@@ -1,0 +1,86 @@
+{
+  "data": {
+    "search": {
+      "nodes": [
+        {
+          "nameWithOwner": "libsdl-org/SDL",
+          "description": "Simple Directmedia Layer — cross-platform multimedia library",
+          "stargazerCount": 15000,
+          "forkCount": 2800,
+          "isArchived": false,
+          "primaryLanguage": { "name": "C" },
+          "repositoryTopics": {
+            "nodes": [
+              { "topic": { "name": "game-development" } },
+              { "topic": { "name": "opengl" } },
+              { "topic": { "name": "graphics" } }
+            ]
+          },
+          "url": "https://github.com/libsdl-org/SDL",
+          "pushedAt": "2024-06-01T00:00:00Z"
+        },
+        {
+          "nameWithOwner": "SFML/SFML",
+          "description": "Simple and Fast Multimedia Library",
+          "stargazerCount": 11000,
+          "forkCount": 3500,
+          "isArchived": false,
+          "primaryLanguage": { "name": "C++" },
+          "repositoryTopics": {
+            "nodes": [
+              { "topic": { "name": "game-development" } },
+              { "topic": { "name": "graphics" } }
+            ]
+          },
+          "url": "https://github.com/SFML/SFML",
+          "pushedAt": "2024-05-15T00:00:00Z"
+        },
+        {
+          "nameWithOwner": "floooh/sokol",
+          "description": "minimal cross-platform standalone C headers",
+          "stargazerCount": 9000,
+          "forkCount": 800,
+          "isArchived": false,
+          "primaryLanguage": { "name": "C" },
+          "repositoryTopics": {
+            "nodes": [
+              { "topic": { "name": "opengl" } },
+              { "topic": { "name": "c" } },
+              { "topic": { "name": "graphics" } }
+            ]
+          },
+          "url": "https://github.com/floooh/sokol",
+          "pushedAt": "2024-06-10T00:00:00Z"
+        },
+        {
+          "nameWithOwner": "love2d/love",
+          "description": "LÖVE is an awesome 2D game framework for Lua",
+          "stargazerCount": 8300,
+          "forkCount": 900,
+          "isArchived": false,
+          "primaryLanguage": { "name": "C++" },
+          "repositoryTopics": {
+            "nodes": [
+              { "topic": { "name": "game-development" } },
+              { "topic": { "name": "gamedev" } }
+            ]
+          },
+          "url": "https://github.com/love2d/love",
+          "pushedAt": "2024-04-20T00:00:00Z"
+        },
+        {
+          "nameWithOwner": "nicktindall/cyclon.p2p",
+          "description": "Cyclon peer-sampling protocol — noise entry for filtering test",
+          "stargazerCount": 6,
+          "forkCount": 1,
+          "isArchived": false,
+          "primaryLanguage": { "name": "JavaScript" },
+          "repositoryTopics": { "nodes": [] },
+          "url": "https://github.com/nicktindall/cyclon.p2p",
+          "pushedAt": "2021-01-01T00:00:00Z"
+        }
+      ],
+      "repositoryCount": 5
+    }
+  }
+}
