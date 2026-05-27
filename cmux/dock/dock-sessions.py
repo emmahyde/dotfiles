@@ -198,7 +198,7 @@ def session_block(mtime: float, jsonl: Path, sid: str,
     hot = Text(f"[{hotkey}]", style="bold green") if hotkey else Text("   ", style="dim")
     header.add_row(hot, title_text, Text(age, style="dim"))
 
-    snippet_text = Text.assemble((" └─ ", "grey50"), (snippet, "italic white"))
+    snippet_text = Text.assemble((" └─ ", "grey50"), (snippet, "italic grey50"))
 
     lines: list = [header, snippet_text]
 
@@ -223,11 +223,11 @@ def session_block(mtime: float, jsonl: Path, sid: str,
                 ))
             else:
                 lines.append(Text.assemble(
-                    ("  ○ ", "dim white"),
-                    (prefix + subject, "dim white"),
+                    ("  ○ ", "white"),
+                    (prefix + subject, "white"),
                 ))
         if done_count:
-            lines.append(Text(f"  … +{done_count} completed", style="dim"))
+            lines.append(Text(f"  … +{done_count} completed", style="dim italic"))
 
     lines.append(Text(""))
     return Group(*lines)
