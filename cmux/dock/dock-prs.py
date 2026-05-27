@@ -236,10 +236,19 @@ def fmt_age(updated_iso: str) -> str:
 
 def _label_grid(label: str, label_style: str, content: Text) -> Table:
     """Inline 2-col grid so wrapped content hangs under the first char after `label`."""
-    g = Table.grid(padding=(0, 0))
+    g = Table.grid(padding=(0, 0), expand=True)
     g.add_column(no_wrap=True)
     g.add_column(ratio=1, overflow="fold")
     g.add_row(Text(label, style=label_style), content)
+    return g
+
+def _tree_row(prefix: str, content) -> Table:
+    """One tree row whose prefix column is sized to *this* row's prefix only.
+    Per-row grids avoid the outer Table.grid auto-padding all prefixes to the widest."""
+    g = Table.grid(padding=(0, 0), expand=True)
+    g.add_column(no_wrap=True)
+    g.add_column(ratio=1, overflow="fold")
+    g.add_row(Text(prefix, style="grey50"), content)
     return g
 
 def pr_row(pr: dict) -> Group:
@@ -352,13 +361,8 @@ def pr_row(pr: dict) -> Group:
     if has_comment and others_line.plain:
         tree_items.append(("    ", others_line))
 
-    tree = Table.grid(padding=(0, 0))
-    tree.add_column(no_wrap=True)
-    tree.add_column(ratio=1, overflow="fold")
-    for prefix, content in tree_items:
-        tree.add_row(Text(" " + prefix, style="grey50"), content)
-
-    return Group(title_grid, tree)
+    tree_rows = [_tree_row(" " + prefix, content) for prefix, content in tree_items]
+    return Group(title_grid, *tree_rows)
 
 def repo_block(repo: str, prs: list[dict]) -> Panel:
     """All PRs for one repo in a titled panel."""
