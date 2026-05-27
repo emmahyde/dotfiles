@@ -217,9 +217,9 @@ def session_block(mtime: float, jsonl: Path, sid: str,
             if st == "in_progress":
                 lines.append(Text.assemble(
                     ("  ○ ", "dim white"),
-                    (prefix, "dim white"),
+                    (prefix, "green"),
                     ("⟳ ", "green"),
-                    (subject, "white"),
+                    (subject, "green"),
                 ))
             else:
                 lines.append(Text.assemble(
