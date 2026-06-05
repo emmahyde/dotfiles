@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "name": "skill-evolution",
+  "owner": "yonatangross",
+  "repo": "skillforge-claude-plugin",
+  "path": "plugins/ork/skills/skill-evolution",
+  "branch": "main",
+  "sha": "a3dc591d9bc74eeb5c3b0d93ea9f738d3fc8e855",
+  "source": "manual"
+}
