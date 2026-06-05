@@ -1,0 +1,19 @@
+{
+  "name": "cmux",
+  "version": "0.1.0",
+  "description": "A collection of cmux + Claude Code workflow tools: spin off tasks into new sessions, hand tickets to the minions pipeline, branch sessions across cmux panes, and annotate browser surfaces.",
+  "author": {
+    "name": "Emma Hyde & Drew Chandler"
+  },
+  "keywords": [
+    "cmux",
+    "spin-off",
+    "delegate",
+    "minion",
+    "branch",
+    "browser-annotate",
+    "worktree",
+    "jira",
+    "parallel"
+  ]
+}

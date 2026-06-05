@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Assigns a Jira ticket to the current user and moves it to In Progress.
+# Usage: transition-ticket TICKET-ID
+set -euo pipefail
+
+if [[ $# -ne 1 ]]; then
+  echo "Usage: transition-ticket TICKET-ID" >&2
+  exit 1
+fi
+
+TICKET_ID="$1"
+
+acli jira workitem edit --key "$TICKET_ID" --assignee @me || {
+  echo "Failed to assign $TICKET_ID to @me" >&2
+  exit 1
+}
+
+acli jira workitem transition --key "$TICKET_ID" --status "In Progress" || \
+  echo "Note: could not transition $TICKET_ID (may already be In Progress)" >&2

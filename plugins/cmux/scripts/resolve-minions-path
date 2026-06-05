@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Resolves the local path to the Gusto/minions repo.
+# Echoes the path and exits 0 on success; exits 1 if not found.
+set -euo pipefail
+
+KNOWN_LOCATIONS=(
+  "$HOME/work/guideline/minions"
+  "$HOME/guideline/minions"
+  "$HOME/workspace/minions"
+)
+
+for loc in "${KNOWN_LOCATIONS[@]}"; do
+  if [[ -d "$loc" ]]; then
+    echo "$loc"
+    exit 0
+  fi
+done
+
+exit 1
