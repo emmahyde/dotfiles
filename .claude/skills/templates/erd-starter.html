@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>ERD</title>
+<style>
+  /* ← Replace tokens with your chosen aesthetic direction */
+  :root {
+    --bg: #f7f4f2; --surface: #ffffff; --surface-dim: #eee9e5;
+    --primary: #0a8080; --blue: #2563eb; --green: #059669;
+    --amber: #d97706; --gray: #6b7280; --highlight: #f45d48;
+    --text: #1a2a2a; --text-dim: #6b7280; --text-faint: #9ca3af;
+    --font: "DM Sans", -apple-system, sans-serif;
+    --mono: "JetBrains Mono", "SF Mono", monospace;
+    --row-h: 22; --header-h: 32; --col-w: 280; --pad: 12;
+  }
+  body { margin: 0; background: var(--bg); font-family: var(--font); }
+  .wrap { padding: 32px; overflow: auto; }
+  svg { display: block; }
+  .tip {
+    position: fixed; background: #222525; color: #e0e4ea;
+    font-size: 12px; line-height: 1.5; padding: 10px 14px;
+    border-radius: 6px; max-width: 320px; pointer-events: none;
+    opacity: 0; transition: opacity .12s; z-index: 10;
+  }
+  .tip b { color: #f0f2f5; display: block; margin-bottom: 2px; }
+</style>
+<div class="tip" id="tip"></div>
+<div class="wrap" id="erd"></div>
+
+<script type="module">
+import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
+
+// ============================================================
+// DATA — Define tables, columns, positions, and FK relationships
+// ============================================================
+
+const ROW_H = 22, HEADER_H = 32, PAD = 12, COL_W = 280;
+
+const tables = [
+  {
+    id: "users", label: "users", x: 40, y: 40,
+    color: "#0a8080",  // header bar color
+    columns: [
+      { name: "id",         type: "UUID PK",    pk: true },
+      { name: "email",      type: "TEXT",       unique: true },
+      { name: "name",       type: "TEXT" },
+      { name: "created_at", type: "TIMESTAMP" },
+    ]
+  },
+  {
+    id: "posts", label: "posts", x: 420, y: 40,
+    color: "#2563eb",
+    columns: [
+      { name: "id",         type: "SERIAL PK",  pk: true },
+      { name: "user_id",    type: "UUID",       fk: "users.id" },
+      { name: "title",      type: "TEXT" },
+      { name: "body",       type: "TEXT" },
+      { name: "created_at", type: "TIMESTAMP" },
+    ]
+  },
+  {
+    id: "comments", label: "comments", x: 420, y: 260,
+    color: "#059669",
+    columns: [
+      { name: "id",         type: "SERIAL PK",  pk: true },
+      { name: "post_id",    type: "INT",        fk: "posts.id" },
+      { name: "user_id",    type: "UUID",       fk: "users.id" },
+      { name: "body",       type: "TEXT" },
+      { name: "created_at", type: "TIMESTAMP" },
+    ]
+  },
+];
+
+// FK lines: source table.column → target table.column
+// Derived automatically from fk annotations above
+const fkLines = [];
+tables.forEach(t => {
+  t.columns.forEach((col, i) => {
+    if (!col.fk) return;
+    const [targetTable, targetCol] = col.fk.split(".");
+    const target = tables.find(tt => tt.id === targetTable);
+    if (!target) return;
+    const targetIdx = target.columns.findIndex(c => c.name === targetCol);
+    if (targetIdx < 0) return;
+    fkLines.push({
+      from: { table: t, colIdx: i },
+      to:   { table: target, colIdx: targetIdx },
+      label: col.name,
+      color: target.color,
+    });
+  });
+});
+
+// ============================================================
+// LAYOUT HELPERS
+// ============================================================
+
+function tableHeight(t) { return HEADER_H + t.columns.length * ROW_H + 4; }
+function colY(t, colIdx) { return t.y + HEADER_H + colIdx * ROW_H + ROW_H / 2; }
+function tableRight(t) { return t.x + COL_W; }
+function tableLeft(t) { return t.x; }
+
+// Orthogonal FK path: exits right from source, enters left of target
+// (or vice versa depending on relative positions)
+function fkPath(fk) {
+  const sy = colY(fk.from.table, fk.from.colIdx);
+  const ty = colY(fk.to.table, fk.to.colIdx);
+  const sRight = tableRight(fk.from.table);
+  const sLeft = tableLeft(fk.from.table);
+  const tRight = tableRight(fk.to.table);
+  const tLeft = tableLeft(fk.to.table);
+
+  // Determine direction: source exits toward target
+  let sx, tx, midX;
+  if (sRight <= tLeft) {
+    // source is left of target
+    sx = sRight; tx = tLeft;
+    midX = (sx + tx) / 2;
+  } else if (sLeft >= tRight) {
+    // source is right of target
+    sx = sLeft; tx = tRight;
+    midX = (sx + tx) / 2;
+  } else {
+    // overlapping x — route around
+    sx = sRight; tx = tRight;
+    midX = Math.max(sx, tx) + 30;
+  }
+
+  return `M${sx},${sy} H${midX} V${ty} H${tx}`;
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+
+const allRight = Math.max(...tables.map(t => t.x + COL_W)) + 60;
+const allBottom = Math.max(...tables.map(t => t.y + tableHeight(t))) + 60;
+
+const svg = d3.select("#erd").append("svg")
+  .attr("viewBox", `0 0 ${allRight} ${allBottom}`)
+  .attr("width", Math.min(allRight, 1200))
+  .attr("height", Math.min(allBottom, 800));
+
+// Arrow markers per color
+const usedColors = [...new Set(fkLines.map(f => f.color))];
+const defs = svg.append("defs");
+usedColors.forEach(c => {
+  defs.append("marker")
+    .attr("id", `fk-arrow-${c.replace("#","")}`)
+    .attr("viewBox", "0 0 8 6").attr("refX", 8).attr("refY", 3)
+    .attr("markerWidth", 7).attr("markerHeight", 5).attr("orient", "auto")
+    .append("path").attr("d", "M0,0.5 L8,3 L0,5.5").attr("fill", c);
+});
+
+// FK lines (draw first so they're behind tables)
+const fkGroup = svg.append("g");
+fkLines.forEach(fk => {
+  fkGroup.append("path")
+    .attr("d", fkPath(fk))
+    .attr("fill", "none")
+    .attr("stroke", fk.color)
+    .attr("stroke-width", 1.5)
+    .attr("stroke-opacity", 0.4)
+    .attr("marker-end", `url(#fk-arrow-${fk.color.replace("#","")})`)
+    .attr("stroke-dasharray", "5,3");
+
+  // Label at midpoint of the path
+  const sy = colY(fk.from.table, fk.from.colIdx);
+  const ty = colY(fk.to.table, fk.to.colIdx);
+  const mx = (tableRight(fk.from.table) + tableLeft(fk.to.table)) / 2;
+  const my = (sy + ty) / 2;
+  // Background pill
+  const labelW = fk.label.length * 6.5 + 10;
+  fkGroup.append("rect")
+    .attr("x", mx - labelW/2).attr("y", my - 8)
+    .attr("width", labelW).attr("height", 16).attr("rx", 3)
+    .attr("fill", "var(--bg)").attr("stroke", "var(--surface-dim)").attr("stroke-width", 0.5);
+  fkGroup.append("text")
+    .attr("x", mx).attr("y", my + 1)
+    .attr("text-anchor", "middle").attr("dominant-baseline", "middle")
+    .attr("font-family", "var(--mono)").attr("font-size", "9px")
+    .attr("fill", fk.color).attr("font-weight", 600)
+    .text(fk.label);
+});
+
+// Tables
+const tableGroup = svg.append("g");
+tables.forEach(t => {
+  const h = tableHeight(t);
+  const g = tableGroup.append("g").attr("transform", `translate(${t.x},${t.y})`);
+
+  // Shadow
+  g.append("rect").attr("width", COL_W).attr("height", h).attr("rx", 6)
+    .attr("fill", "none").attr("stroke", "var(--surface-dim)").attr("stroke-width", 1);
+
+  // Background
+  g.append("rect").attr("width", COL_W).attr("height", h).attr("rx", 6)
+    .attr("fill", "var(--surface)").attr("stroke", t.color).attr("stroke-width", 2);
+
+  // Header bar
+  g.append("rect").attr("width", COL_W).attr("height", HEADER_H).attr("rx", 6)
+    .attr("fill", t.color);
+  // Cover bottom corners of header
+  g.append("rect").attr("width", COL_W).attr("height", 6).attr("y", HEADER_H - 6)
+    .attr("fill", t.color);
+
+  // Table name
+  g.append("text").attr("x", PAD).attr("y", HEADER_H / 2 + 1)
+    .attr("dominant-baseline", "middle")
+    .attr("font-size", "13px").attr("font-weight", 700).attr("fill", "white")
+    .attr("font-family", "var(--font)")
+    .text(t.label);
+
+  // Columns
+  t.columns.forEach((col, i) => {
+    const y = HEADER_H + i * ROW_H + ROW_H / 2;
+
+    // Separator line
+    if (i > 0) {
+      g.append("line")
+        .attr("x1", 0).attr("x2", COL_W)
+        .attr("y1", HEADER_H + i * ROW_H).attr("y2", HEADER_H + i * ROW_H)
+        .attr("stroke", "var(--surface-dim)").attr("stroke-width", 0.5);
+    }
+
+    // PK/FK badge
+    if (col.pk) {
+      g.append("text").attr("x", PAD).attr("y", y)
+        .attr("dominant-baseline", "middle")
+        .attr("font-family", "var(--mono)").attr("font-size", "9px")
+        .attr("fill", "var(--highlight)").attr("font-weight", 700)
+        .text("PK");
+    } else if (col.fk) {
+      g.append("text").attr("x", PAD).attr("y", y)
+        .attr("dominant-baseline", "middle")
+        .attr("font-family", "var(--mono)").attr("font-size", "9px")
+        .attr("fill", "var(--blue)").attr("font-weight", 600)
+        .text("FK");
+    }
+
+    // Column name
+    g.append("text").attr("x", PAD + (col.pk || col.fk ? 24 : 0)).attr("y", y)
+      .attr("dominant-baseline", "middle")
+      .attr("font-family", "var(--mono)").attr("font-size", "11px")
+      .attr("fill", "var(--text)")
+      .text(col.name);
+
+    // Column type (right-aligned)
+    g.append("text").attr("x", COL_W - PAD).attr("y", y)
+      .attr("dominant-baseline", "middle").attr("text-anchor", "end")
+      .attr("font-family", "var(--mono)").attr("font-size", "10px")
+      .attr("fill", "var(--text-faint)")
+      .text(col.type);
+  });
+});
+</script>
