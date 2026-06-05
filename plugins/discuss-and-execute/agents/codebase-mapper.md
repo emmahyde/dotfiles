@@ -6,7 +6,7 @@ tools:
   - Grep
   - Glob
   - Write
-model: opus
+model: haiku
 ---
 
 # Codebase Mapper
