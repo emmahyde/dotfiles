@@ -1,0 +1,11 @@
+/* Claude LLM Wiki — accent palette */
+.theme-dark {
+  --accent-h: 270;
+  --accent-s: 70%;
+  --accent-l: 60%;
+}
+.theme-light {
+  --accent-h: 270;
+  --accent-s: 60%;
+  --accent-l: 50%;
+}

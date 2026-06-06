@@ -1,0 +1,227 @@
+{
+  "version": 1,
+  "triggerBehavior": "auto-on-open",
+  "confidenceThreshold": 70,
+  "detectorConfigurations": {
+    "vscode-ml": {
+      "enabled": true,
+      "confidenceThreshold": 70,
+      "order": 0,
+      "config": {}
+    },
+    "highlight-js": {
+      "enabled": true,
+      "confidenceThreshold": 70,
+      "order": 1,
+      "config": {}
+    },
+    "pattern-matching": {
+      "enabled": true,
+      "confidenceThreshold": 70,
+      "order": 2,
+      "config": {
+        "enabledLanguages": [
+          "javascript",
+          "typescript",
+          "python",
+          "java",
+          "cpp",
+          "bash"
+        ]
+      }
+    }
+  },
+  "enableHistory": true,
+  "maxHistoryEntries": 100,
+  "showNotifications": true,
+  "enabledPatternLanguages": [
+    "javascript",
+    "typescript",
+    "python",
+    "java",
+    "cpp",
+    "bash"
+  ],
+  "processingScope": "current-note",
+  "historyData": [
+    {
+      "fileName": "Self-Teaching Tools for codemode-mcp.md",
+      "filePath": "wiki/personal-llmwiki/wiki/ideas/Self-Teaching Tools for codemode-mcp.md",
+      "codeBlock": {
+        "content": "AUTHORING THE SOURCE — what the Python body must look like:\n  • A self-contained script. The call's arguments arrive as a dict named `input`.\n  • Network/IO only via the injected `tools` object, all calls SYNCHRONOUS:\n      tools.kv.get/set/delete/list      — small structured state\n      tools.http.fetch(url, ...)         — GET, allowlisted hosts only\n      tools.forward.<server>.<tool>(...) — wired external MCP servers\n      tools.files.read/write/list/delete — persistent workspace\n  • Standard library only — assume no third-party packages.\n  • Print concise JSON to stdout; that is the tool's result. Handle missing\n    input keys and failed tools.* calls explicitly rather than crashing.\n  • Prove it first: run via `execute` until ok:true before promoting here.\nFull namespace schemas: list_tools(schemas=true).",
+        "startLine": 60,
+        "endLine": 73,
+        "hasLanguage": false
+      },
+      "detectedLanguage": "ini",
+      "confidence": 86,
+      "method": "vscode-ml",
+      "applied": true,
+      "id": "1780770133101-e603ueq6v",
+      "timestamp": 1780770133101
+    },
+    {
+      "fileName": "E6 PR-Watching Fidelity Tech Spec.md",
+      "filePath": "wiki/codebases/groot/projects/factory-port/techspecs/E6 PR-Watching Fidelity Tech Spec.md",
+      "codeBlock": {
+        "content": "if commits_made && head_sha && so[\"summary\"].present?\n  current_body = Github.get_pull_request_body(repo_full_name: repo, number: pr_number, access_token: token)\n  new_body     = append_architectural_decision(current_body, so[\"summary\"], head_sha)\n  Github.update_pull_request_body(repo_full_name: repo, number: pr_number, body: new_body, access_token: token)\nend\n\ndef append_architectural_decision(body, summary, sha)\n  anchor  = \"## Architectural Decisions\"\n  entry   = \"- `#{sha[0,7]}`: #{summary.strip}\"\n  if body.include?(anchor)\n    body.sub(/#{Regexp.escape(anchor)}/, \"#{anchor}\\n#{entry}\")\n    # prepend newest entry under the heading so chronological order is top-down\n  else\n    \"#{body.rstrip}\\n\\n#{anchor}\\n#{entry}\\n\"\n  end\nend",
+        "startLine": 323,
+        "endLine": 340,
+        "hasLanguage": false
+      },
+      "detectedLanguage": "ruby",
+      "confidence": 87,
+      "method": "vscode-ml",
+      "applied": true,
+      "id": "1780766350151-kpq12qt5r",
+      "timestamp": 1780766350151
+    },
+    {
+      "fileName": "E6 PR-Watching Fidelity Tech Spec.md",
+      "filePath": "wiki/codebases/groot/projects/factory-port/techspecs/E6 PR-Watching Fidelity Tech Spec.md",
+      "codeBlock": {
+        "content": "BatchPrSweeper#perform(batch_id):\n  return unless Minions::PrPoller.enabled?    # reuse existing gate\n\n  batch    = Batch.find_by(id: batch_id)\n  return unless batch\n\n  watching = batch.minions.where(state: \"running\", phase: \"watching_pr\").to_a\n  return if watching.empty?\n\n  BatchRefresher.new(watching).run             # one GraphQL query, distribute results\n\n  watching.each do |minion|\n    Minions::Orchestrator.new.evaluate(minion, source: :pr_poller)\n  end\n\n  minion_still_watching = batch.minions.where(state: \"running\", phase: \"watching_pr\").exists?\n  self.class.perform_in(INTERVAL, batch_id) if minion_still_watching",
+        "startLine": 196,
+        "endLine": 214,
+        "hasLanguage": false
+      },
+      "detectedLanguage": "pgsql",
+      "confidence": 100,
+      "method": "highlight-js",
+      "applied": true,
+      "id": "1780766350150-8qdgrm5gj",
+      "timestamp": 1780766350150
+    },
+    {
+      "fileName": "E6 PR-Watching Fidelity Tech Spec.md",
+      "filePath": "wiki/codebases/groot/projects/factory-port/techspecs/E6 PR-Watching Fidelity Tech Spec.md",
+      "codeBlock": {
+        "content": "BatchRefresher#run:\n  return if @minions.empty?\n\n  access_token = Github.installation_token(repos: repos_for(@minions)).token\n  pr_numbers   = @minions.map { |m| [m, extract_pr_number(m.pr_url)] }.to_h   # pr_url from OpeningPr result\n  query        = build_batch_graphql_query(pr_numbers.values.compact, repo_full_name: repo_full_name)\n  data         = Github::GraphQl.query(query: query, access_token: access_token)  # single round-trip\n\n  @minions.each do |minion|\n    pr_n = pr_numbers[minion]\n    next unless pr_n\n    pr_data = data[\"pr_#{pr_n}\"]                                                # aliased in the query\n    next unless pr_data\n    dispatch_single(minion, pr_data)                                            # normalise + call Refresher sub-step\n  end",
+        "startLine": 216,
+        "endLine": 232,
+        "hasLanguage": false
+      },
+      "detectedLanguage": "ruby",
+      "confidence": 100,
+      "method": "highlight-js",
+      "applied": true,
+      "id": "1780766350150-91z80b0dg",
+      "timestamp": 1780766350150
+    },
+    {
+      "fileName": "E6 PR-Watching Fidelity Tech Spec.md",
+      "filePath": "wiki/codebases/groot/projects/factory-port/techspecs/E6 PR-Watching Fidelity Tech Spec.md",
+      "codeBlock": {
+        "content": "CodeReviewing#build_commands!:\n  current_sha   = minion.flags[\"pr_head_sha\"]\n  reviewed_sha  = minion.flags[\"reviewed_head_sha\"]\n  force         = param(:force).present?\n\n  if !force && current_sha.present? && current_sha == reviewed_sha\n    update!(result: { \"skipped\" => true, \"reason\" => \"already reviewed sha #{current_sha}\" })\n    complete!   # short-circuit: no claude_query commands enqueued\n    return\n  end\n\n  # existing pass-build logic (PASSES.each { claude_query … })",
+        "startLine": 261,
+        "endLine": 274,
+        "hasLanguage": false
+      },
+      "detectedLanguage": "ruby",
+      "confidence": 84,
+      "method": "vscode-ml",
+      "applied": true,
+      "id": "1780766350150-bcw94q5ta",
+      "timestamp": 1780766350150
+    },
+    {
+      "fileName": "E6 PR-Watching Fidelity Tech Spec.md",
+      "filePath": "wiki/codebases/groot/projects/factory-port/techspecs/E6 PR-Watching Fidelity Tech Spec.md",
+      "codeBlock": {
+        "content": "CodeReviewing#post_process! (after existing logic):\n  # stamp the reviewed SHA so the next bounce can skip\n  head_sha = minion.flags[\"pr_head_sha\"]\n  minion.update!(flags: minion.flags.merge(\"reviewed_head_sha\" => head_sha)) if head_sha",
+        "startLine": 276,
+        "endLine": 281,
+        "hasLanguage": false
+      },
+      "detectedLanguage": "pf",
+      "confidence": 90,
+      "method": "highlight-js",
+      "applied": true,
+      "id": "1780766350150-i8xtzbkii",
+      "timestamp": 1780766350150
+    },
+    {
+      "fileName": "E6 PR-Watching Fidelity Tech Spec.md",
+      "filePath": "wiki/codebases/groot/projects/factory-port/techspecs/E6 PR-Watching Fidelity Tech Spec.md",
+      "codeBlock": {
+        "content": "findings.each do |f|\n  next unless f.state == \"declined\"\n  next if f.replied_at                          # Replier already handled it\n\n  reasoning = f.decision_reasoning.to_s.strip\n  Events.emit(\n    subject: minion,\n    type:    \"minion.no_action_finding\",\n    payload: { finding_id: f.id, external_id: f.external_id, reasoning: reasoning },\n    actor:   nil\n  )\nend",
+        "startLine": 287,
+        "endLine": 300,
+        "hasLanguage": false
+      },
+      "detectedLanguage": "php",
+      "confidence": 100,
+      "method": "highlight-js",
+      "applied": true,
+      "id": "1780766350150-u3v6bmx5e",
+      "timestamp": 1780766350150
+    },
+    {
+      "fileName": "E6 PR-Watching Fidelity Tech Spec.md",
+      "filePath": "wiki/codebases/groot/projects/factory-port/techspecs/E6 PR-Watching Fidelity Tech Spec.md",
+      "codeBlock": {
+        "content": "if so[\"scope_drift\"]\n  Events.emit(\n    subject: minion,\n    type:    \"minion.scope_drift\",\n    payload: { reason: so[\"scope_drift_reason\"].to_s, head_sha: head_sha },\n    actor:   nil\n  )\nend",
+        "startLine": 308,
+        "endLine": 317,
+        "hasLanguage": false
+      },
+      "detectedLanguage": "nix",
+      "confidence": 90,
+      "method": "highlight-js",
+      "applied": true,
+      "id": "1780766350150-fg3cpadl2",
+      "timestamp": 1780766350150
+    },
+    {
+      "fileName": "E3 Jira Port Tech Spec.md",
+      "filePath": "wiki/codebases/groot/projects/factory-port/techspecs/E3 Jira Port Tech Spec.md",
+      "codeBlock": {
+        "content": "SeedService#seed_from_epic(epic_key, batch_params:):\n  tickets = tracker.children_of(epic_key)   # one Jira HTTP call; [TicketRef]\n  batch = Batch.create!(state: \"draft\", jira_epic_key: epic_key,\n                        writeback_config: batch_params[:writeback_config],\n                        **batch_params.except(:writeback_config))\n  tickets.each do |ref|\n    Minion.create!(batch: batch, prompt: build_prompt(ref),\n                   jira_key: ref.key, jira_snapshot: ref.to_snapshot_h, **minion_defaults)\n  end\n  Events.emit(subject: batch, type: \"trackers.seeded_from_epic\",\n              payload: { epic_key:, ticket_count: tickets.size })\n  batch",
+        "startLine": 190,
+        "endLine": 203,
+        "hasLanguage": false
+      },
+      "detectedLanguage": "mipsasm",
+      "confidence": 100,
+      "method": "highlight-js",
+      "applied": true,
+      "id": "1780766289427-u7d29n095",
+      "timestamp": 1780766289427
+    },
+    {
+      "fileName": "E3 Jira Port Tech Spec.md",
+      "filePath": "wiki/codebases/groot/projects/factory-port/techspecs/E3 Jira Port Tech Spec.md",
+      "codeBlock": {
+        "content": "WritebackService#on_pr_opened(minion):\n  return unless minion.jira_key.present?\n  return unless minion.batch&.writeback_config&.dig(\"transition_on_pr_open\")\n  tracker.transition(minion.jira_key, to: \"In Review\")\n  Events.emit(subject: minion, type: \"trackers.transitioned\",\n              payload: { jira_key: minion.jira_key, to: \"In Review\", trigger: \"pr_opened\" })\n\nWritebackService#on_pr_merged(minion):  # same shape → \"Done\", trigger \"pr_merged\"\n\nWritebackService#create_tickets_from_plan(batch):\n  return unless batch.writeback_config&.dig(\"create_tickets_from_plan\")\n  batch.minions.where(jira_key: nil).each do |m|\n    key = tracker.create({ summary: m.display_title, description: m.prompt })\n    m.update!(jira_key: key, jira_snapshot: { summary: m.display_title, description: m.prompt })\n    Events.emit(subject: m, type: \"trackers.created\", payload: { jira_key: key, minion_id: m.id })\n  end",
+        "startLine": 232,
+        "endLine": 249,
+        "hasLanguage": false
+      },
+      "detectedLanguage": "leaf",
+      "confidence": 100,
+      "method": "highlight-js",
+      "applied": true,
+      "id": "1780766289427-b101ah8vk",
+      "timestamp": 1780766289427
+    },
+    {
+      "fileName": "E4 Steering Verbs Tech Spec.md",
+      "filePath": "wiki/codebases/groot/projects/factory-port/techspecs/E4 Steering Verbs Tech Spec.md",
+      "codeBlock": {
+        "content": "verb(batch, selector, ..., actor:):\n  minions = resolve(batch, selector)          # raises OutOfBatchError on scope escape\n  minions.each do |minion|\n    Minion.with_advisory_lock(\"minion:#{minion.id}\", timeout_seconds: 5) do\n      minion.reload\n      next if minion.terminal?                # idempotent: skip terminal Minions\n      apply_mutation(minion, ...)\n      Events.emit(\n        subject: minion,\n        type:    \"steering.<verb>\",\n        payload: { selector: selector.to_h, actor_type: actor.class.name, diff: ... },\n        actor:   actor,\n        batch_id: batch.id\n      )\n    end\n  end",
+        "startLine": 155,
+        "endLine": 172,
+        "hasLanguage": false
+      },
+      "detectedLanguage": "php",
+      "confidence": 100,
+      "method": "highlight-js",
+      "applied": true,
+      "id": "1780766288778-nw9i5ubso",
+      "timestamp": 1780766288778
+    }
+  ],
+  "uiState": {
+    "expandedDetectorCards": {}
+  }
+}
