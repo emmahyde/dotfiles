@@ -79,10 +79,31 @@ One JSON object per line: a natural task + a **deterministic** grader. See `asse
 
 These were learned the hard way and are now wired into the runner/config so you don't re-hit them — but know they exist:
 
+- **Trajectory persistence is REQUIRED for the optimizer to learn — fixed in the bundled rollout (2026-06-07), but know the signature.** The reflect analyst (`gradient/reflect.py:137`) and slow-update (`optimizer/slow_update.py:110`) read `predictions/<task_id>/conversation.json` (+ `target_system_prompt.txt` / `target_user_prompt.txt`). If those files are missing, `fmt_minibatch_trajectories` returns empty, the analyst emits `0 edits` **without even calling the optimizer**, and every run ends `best == seed` no matter the headroom. **Regression signature:** `total tokens: 0 (calls=0)`, `[skip] no usable patches`, `accept=0`, and `find <out_root> -name conversation.json` returns nothing — if you see this, the rollout stopped writing trajectories. The bundled `assets/skilldoc/rollout.py` now writes them via `_persist_trajectory()` (every other SkillOpt env always did; ours originally didn't). **Verified by the GO demo:** a deliberately weak seed (test 0.000) climbed to **0.667 on the held-out test split** in one step (`calls=1`, `skill_len 97→781`, `best_skill.md` acquired all the planted rules) — the first end-to-end accept this stack produced. [[skillopt-bash-evalsuite]]
 - **Small suites auto-rebalance the split.** The paper's 2:1:7 assumes a large dataset; on a hand-authored suite (<30 cases) it leaves a 1–2 item selection gate that gives the optimizer no signal (→ best==seed). `skilldoc_run.py` auto-uses **1:1:1** under 30 cases and prints a pre-flight gate-size check. Override with `--split_ratio`. Aim for a **selection gate ≥3 items** (≥9 cases).
 - **A run with no *failing* cases spends nothing on edits and proves nothing.** If every train rollout passes, the analyst hits a success-only minibatch → `0 edits`, `calls=0`, `best==seed`. To exercise (and prove) the optimizer, the train split must contain cases the seed gets wrong.
 - **`OPENAI_API_KEY` is auto-mapped** to the `AZURE_OPENAI_*` names SkillOpt actually reads — just export it.
 - **Re-use before re-train.** Try transferring an existing `best_skill.md` before launching a fresh run.
+
+## Expectations vs reality — calibrate before you get your hopes up
+
+Across the real skills attempted with this stack, the tally was **zero GOs**: audit-against, algos, and claude-skill-bash all saturated a capable target. The only climb ever produced was on a *manufactured* target — a deliberately non-default "house style" with a weak seed. Set your priors accordingly:
+
+- **The skills worth writing are usually skills the model already mostly follows** — which is exactly why they have no headroom. A good SkillOpt target is the rare one whose behavior the target gets *wrong by default*, or a deployment model weaker than the one you probe on. Expect most candidates to come back NO-GO, and treat that as the cheap, correct answer — not a failure of the run.
+- **A low baseline is necessary but not sufficient.** Headroom (seed scores low) does not mean the optimizer can climb: an all-*fail* train split starves the analyst of contrast just like an all-*pass* one does, and any harness that doesn't persist trajectories yields `best==seed` with `calls=0` regardless of headroom. "There's room to climb" ≠ "it will climb."
+- **Every number lied at least once.** The baseline probe read wrong three different ways before the artifact-grounded number was trustworthy (notation drift, scripts written to disk, `<answer>` wrappers); a run that "completed" proved nothing until `calls>0` with an accepted edit. Trust the artifact and the run-dir, never the aggregate alone.
+
+## Running it solo — the gate sequence and the false-signals each step catches
+
+You won't have a reviewer watching mid-run. These mechanical cross-checks are the substitute; each catches a specific way the loop silently lies:
+
+1. **Probe the seed before any spend.** Saturated (~>0.9) → STOP. *(Catches: optimizer budget burned on a no-headroom target.)*
+2. **Grade on the real artifact, not the response text.** Read a few saved rollouts *and* the work dir. *(Catches: false-low from disk-written files / `<answer>` tags.)*
+3. **Eyeball one pass and one fail.** Confirm a 1.0 genuinely meets every rule; confirm a 0 isn't a grader bug or a prompt that leaked the answer. *(Catches: false-high, prompt leakage.)*
+4. **After a training run, verify `calls>0` and `accept≥1`.** `total tokens: 0 (calls=0)` / `best==seed` means the optimizer never learned — trajectory not persisted, or the train split was all-pass/all-fail (no contrast). This is NOT evidence of "no headroom." *(Catches: silent no-op runs.)*
+5. **Report the TEST number, and distrust it when the split is tiny.** A 3-case test swings 0.33 per stochastic rollout. *(Catches: selection-overfit and small-sample noise mistaken for quality.)*
+
+If all five pass, the result is real. When an advisor/Opus is available at the GO/NO-GO commit, use it — it caught prompt-leakage and an unverified false-high in this skill's own history; solo, steps 2–3 are your stand-in for that second pair of eyes.
 
 ## Phase 0 — build the eval set (do this, don't skip)
 
@@ -137,7 +158,7 @@ Edit `assets/skilldoc.config.yaml` (re-run bootstrap to sync) for permanent chan
 
 - Frozen target, strong optimizer — don't conflate roles.
 - Rollout harness == deployment harness (default: Claude Code exec).
-- Selection gates edits; test reports — keep disjoint, report test only.
+- Selection gates edits; test reports — keep disjoint, report test only. **Selection 1.0 ≠ test 1.0** — the optimizer can max the gate while generalization sits lower. And a tiny test split reads as noise: with N test cases each is worth 1/N, so on a 3-case split a single stochastic rollout swings the score 0.33 (a verified GO climbed selection to 1.0 but test held at 0.667, with *which* case failed shifting run-to-run). Want a trustworthy fractional test number → more test cases (and/or multi-trial), not one run on 3.
 - Plant cases with **headroom** and **unambiguous** ground truth.
 - Keep edits bounded; lean on the rejected-edit buffer over big rewrites.
 - Re-use before re-train: try transferring an existing `best_skill.md` first.
