@@ -76,9 +76,22 @@ Partition all harvested/authored cases into **train : selection : test**, defaul
 With a small hand-authored set (≥5), weight toward selection+test so the gate and
 the reported result are both trustworthy; expand train as you harvest more.
 
+## Graders must *teach*, not just judge — failure detail is the optimizer's gradient
+
+This is load-bearing and easy to miss. The optimizer never sees your grader code or the raw score alone — it sees the grader's **`detail` string**, surfaced as `Failure reason:` in the reflection prompt (`reflect.py`). A grader that returns a bare pass/fail gives the optimizer **nothing to act on**: it knows the rollout scored 0 but not *what was wrong*, so it can't propose the edit that fixes it, and the skill can't climb. The detail string is literally the gradient SkillOpt descends.
+
+So author every grader to emit an **actionable, prescriptive** failure message — name what was missing and what the skill should say to fix it:
+
+- **`command` graders:** the last ~400 chars of your check script's **stdout+stderr** become `detail` (prefixed `exit=<code> ::`). On failure, *print the reason*: not `check failed`, but `FAIL no-set-e: script uses 'set -e'; the skill must mandate explicit error handling instead`. Write it as if instructing the skill author — because that text is what the optimizer reads to rewrite the skill.
+- **`contains_all` / `regex_all`:** already report which expected substrings/patterns were missing — keep `expect` items specific so the miss is legible.
+- **`all` composite:** preserves each sub-grader's detail with its soft score (`[0.00] FAIL …`), so a continuous composite of detail-emitting sub-checks gives the optimizer both a gradient *and* a per-rule diagnosis. This is the preferred shape.
+
+A grader that judges silently is why a conceptually-fittable skill can still flatline at `best == seed`: there was headroom, but the optimizer was never told where.
+
 ## Quality bar (mirror these into the graders)
 
 - Deterministic over subjective — a grader must give the same verdict every run.
+- **Actionable detail on failure** — see above; the `detail` string is the optimizer's only feedback channel.
 - Prefer the **real** CLI/API/scorer. Mock only when the mock exactly matches the
   real command surface, validation, outputs, and failure modes — else you
   optimize the skill against the mock, not reality.

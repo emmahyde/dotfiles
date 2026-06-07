@@ -1,0 +1,23 @@
+{
+  "skill_name": "gh-similar-repos",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "Find repos similar to nicktindall/cyclon",
+      "expected_output": "A ranked list of 5-10 repos with reasons why they're similar, including topics and language overlap",
+      "files": []
+    },
+    {
+      "id": 1,
+      "prompt": "What are things like MonoGame for C# game dev?",
+      "expected_output": "Recommendations for C# game frameworks/libraries with reasons linking to MonoGame's niche",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Show me repos like raylib",
+      "expected_output": "Similar C/cross-platform game/graphics libs, ranked, with topic and language reasoning",
+      "files": []
+    }
+  ]
+}

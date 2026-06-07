@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Architecture &mdash; SYSTEM_NAME</title>
+<style>
+  :root {
+    --bg: #1a1a1a; --panel: #232323; --line: #333;
+    --ink: #e6e6e6; --dim: #888; --accent: #a3e635;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, ui-sans-serif, sans-serif; font-size: 14px; line-height: 1.45; }
+  header { padding: 18px 24px 0; border-bottom: 1px solid var(--line); }
+  h1 { margin: 0 0 4px; font-size: 18px; font-weight: 600; }
+  .sub { color: var(--dim); font-size: 12px; margin-bottom: 14px; }
+  nav.tabs { display: flex; margin-top: 6px; }
+  nav.tabs button { background: transparent; color: var(--dim); border: none;
+    border-bottom: 2px solid transparent; padding: 10px 18px; cursor: pointer;
+    font: inherit; font-weight: 500; transition: color .15s, border-color .15s; }
+  nav.tabs button:hover { color: var(--ink); }
+  nav.tabs button.active { color: var(--accent); border-bottom-color: var(--accent); }
+  main { padding: 24px; max-width: 1400px; margin: 0 auto; }
+  .pane { display: none; } .pane.active { display: block; }
+  section { background: var(--panel); border: 1px solid var(--line); border-radius: 6px;
+    margin-bottom: 22px; padding: 16px 20px 20px; }
+  section h2 { margin: 0 0 4px; font-size: 15px; font-weight: 600; color: var(--accent); }
+  section p.lede { margin: 0 0 14px; color: var(--dim); font-size: 12.5px; }
+  .mermaid { background: #111; border: 1px solid var(--line); border-radius: 4px;
+    padding: 14px; overflow-x: auto; }
+
+  /* token highlighting (class-diagram attributes) */
+  .mermaid svg .tok-type { fill: #6cb6ff; color: #6cb6ff; }
+  .mermaid svg .tok-name { fill: #cfe7a3; color: #cfe7a3; }
+  .mermaid svg .tok-key  { fill: #f4b942; color: #f4b942; font-weight: 700; }
+
+  /* node category coloring (flowcharts) */
+  .mermaid svg g.node[class*="cat-"] rect,
+  .mermaid svg g.node[class*="cat-"] polygon,
+  .mermaid svg g.node[class*="cat-"] path,
+  .mermaid svg g.node[class*="cat-"] ellipse { stroke-width: 1.6px !important; }
+
+  .mermaid svg g.node.cat-file rect, .mermaid svg g.node.cat-file polygon, .mermaid svg g.node.cat-file path { fill: #10243a !important; stroke: #5fa8e0 !important; }
+  .mermaid svg g.node.cat-file .nodeLabel, .mermaid svg g.node.cat-file .nodeLabel * { color: #9cd0f5 !important; fill: #9cd0f5 !important; }
+
+  .mermaid svg g.node.cat-env rect, .mermaid svg g.node.cat-env polygon, .mermaid svg g.node.cat-env path { fill: #2e2210 !important; stroke: #f4b942 !important; }
+  .mermaid svg g.node.cat-env .nodeLabel, .mermaid svg g.node.cat-env .nodeLabel * { color: #f4b942 !important; fill: #f4b942 !important; font-weight: 600 !important; }
+
+  .mermaid svg g.node.cat-module rect, .mermaid svg g.node.cat-module polygon, .mermaid svg g.node.cat-module path { fill: #1a2a10 !important; stroke: #a3e635 !important; }
+  .mermaid svg g.node.cat-module .nodeLabel, .mermaid svg g.node.cat-module .nodeLabel * { color: #cfe7a3 !important; fill: #cfe7a3 !important; }
+
+  .mermaid svg g.node.cat-class rect, .mermaid svg g.node.cat-class polygon, .mermaid svg g.node.cat-class path { fill: #102a26 !important; stroke: #6dd6c3 !important; }
+  .mermaid svg g.node.cat-class .nodeLabel, .mermaid svg g.node.cat-class .nodeLabel * { color: #9eecdb !important; fill: #9eecdb !important; }
+
+  .mermaid svg g.node.cat-func rect, .mermaid svg g.node.cat-func polygon, .mermaid svg g.node.cat-func path { fill: #2a1030 !important; stroke: #e879f9 !important; }
+  .mermaid svg g.node.cat-func .nodeLabel, .mermaid svg g.node.cat-func .nodeLabel * { color: #f0b3ff !important; fill: #f0b3ff !important; }
+
+  .mermaid svg g.node.cat-db rect, .mermaid svg g.node.cat-db polygon, .mermaid svg g.node.cat-db path, .mermaid svg g.node.cat-db ellipse { fill: #102a18 !important; stroke: #7dd181 !important; }
+  .mermaid svg g.node.cat-db .nodeLabel, .mermaid svg g.node.cat-db .nodeLabel * { color: #a8eba8 !important; fill: #a8eba8 !important; }
+
+  .mermaid svg g.node.cat-ext rect, .mermaid svg g.node.cat-ext polygon, .mermaid svg g.node.cat-ext path { fill: #2e1a14 !important; stroke: #ff8a65 !important; }
+  .mermaid svg g.node.cat-ext .nodeLabel, .mermaid svg g.node.cat-ext .nodeLabel * { color: #ffb59c !important; fill: #ffb59c !important; }
+
+  .mermaid svg g.node.cat-runtime rect, .mermaid svg g.node.cat-runtime polygon, .mermaid svg g.node.cat-runtime path { fill: #1f1530 !important; stroke: #c792ea !important; }
+  .mermaid svg g.node.cat-runtime .nodeLabel, .mermaid svg g.node.cat-runtime .nodeLabel * { color: #d9b6f7 !important; fill: #d9b6f7 !important; }
+
+  .mermaid svg g.node.cat-cli rect, .mermaid svg g.node.cat-cli polygon, .mermaid svg g.node.cat-cli path { fill: #2a2010 !important; stroke: #d8a657 !important; }
+  .mermaid svg g.node.cat-cli .nodeLabel, .mermaid svg g.node.cat-cli .nodeLabel * { color: #ecc987 !important; fill: #ecc987 !important; }
+
+  .mermaid svg g.node.cat-decision rect, .mermaid svg g.node.cat-decision polygon, .mermaid svg g.node.cat-decision path { fill: #2e2710 !important; stroke: #ffd166 !important; stroke-width: 2px !important; }
+  .mermaid svg g.node.cat-decision .nodeLabel, .mermaid svg g.node.cat-decision .nodeLabel * { color: #ffd166 !important; fill: #ffd166 !important; font-style: italic !important; }
+
+  /* legend */
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 10px; padding: 8px 12px;
+    background: #161616; border: 1px solid var(--line); border-radius: 4px;
+    margin-bottom: 12px; font-size: 11.5px; }
+  .legend .chip { display: inline-flex; align-items: center; padding: 2px 8px;
+    border-radius: 10px; border: 1px solid; font-family: ui-monospace, monospace; }
+  .chip.l-file    { background: #10243a; border-color: #5fa8e0; color: #9cd0f5; }
+  .chip.l-env     { background: #2e2210; border-color: #f4b942; color: #f4b942; }
+  .chip.l-module  { background: #1a2a10; border-color: #a3e635; color: #cfe7a3; }
+  .chip.l-class   { background: #102a26; border-color: #6dd6c3; color: #9eecdb; }
+  .chip.l-func    { background: #2a1030; border-color: #e879f9; color: #f0b3ff; }
+  .chip.l-db      { background: #102a18; border-color: #7dd181; color: #a8eba8; }
+  .chip.l-ext     { background: #2e1a14; border-color: #ff8a65; color: #ffb59c; }
+  .chip.l-runtime { background: #1f1530; border-color: #c792ea; color: #d9b6f7; }
+  .chip.l-cli     { background: #2a2010; border-color: #d8a657; color: #ecc987; }
+  .chip.l-decision { background: #2e2710; border-color: #ffd166; color: #ffd166;
+    font-style: italic; border-radius: 999px; padding: 2px 12px; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 980px) { .grid2 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>SYSTEM_NAME &mdash; Architecture</h1>
+  <div class="sub">ERD &middot; flowcharts &middot; swimlanes</div>
+  <nav class="tabs">
+    <button class="active" data-tab="A">tab-a</button>
+    <button data-tab="B">tab-b</button>
+  </nav>
+</header>
+
+<main>
+  <div class="pane active" id="tab-A">
+    <div class="legend">
+      <span class="chip l-module">module.py</span>
+      <span class="chip l-class">PascalClass</span>
+      <span class="chip l-func">fn() / pkg.method</span>
+      <span class="chip l-file">~/path/file.md</span>
+      <span class="chip l-db">db / sqlite</span>
+      <span class="chip l-env">ENV_VAR</span>
+      <span class="chip l-ext">external service</span>
+      <span class="chip l-runtime">hook / skill</span>
+      <span class="chip l-cli">cli / subprocess</span>
+      <span class="chip l-decision">decisive event</span>
+    </div>
+
+    <section>
+      <h2>Overarching flow</h2>
+<div class="mermaid">
+flowchart LR
+  A[start] --> B(["decision"]):::cat-decision
+  B -->|ok| C[end]
+</div>
+    </section>
+
+    <section>
+      <h2>ERD</h2>
+<div class="mermaid">
+classDiagram
+  direction LR
+  class Foo {
+    string id PK
+    string name
+  }
+  class Bar {
+    string id PK
+    string foo_id FK
+  }
+  Foo "1" --> "*" Bar : has
+</div>
+    </section>
+  </div>
+
+  <div class="pane" id="tab-B">
+    <!-- duplicate legend, then content -->
+  </div>
+</main>
+
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.esm.min.mjs'
+  import elkLayouts from 'https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.7/dist/mermaid-layout-elk.esm.min.mjs'
+
+  mermaid.registerLayoutLoaders(elkLayouts)
+  mermaid.initialize({
+    startOnLoad: false,
+    theme: 'dark',
+    layout: 'elk',
+    themeVariables: {
+      darkMode: true, background: '#111', primaryColor: '#1a2a1a',
+      primaryTextColor: '#e6e6e6', primaryBorderColor: '#a3e635', lineColor: '#9aa',
+      fontFamily: 'ui-monospace, Menlo, monospace', fontSize: '12px'
+    },
+    flowchart: { curve: 'linear', htmlLabels: true, defaultRenderer: 'elk' },
+    elk: {
+      'elk.algorithm': 'layered',
+      'elk.edgeRouting': 'ORTHOGONAL',
+      'elk.layered.spacing.nodeNodeBetweenLayers': 50,
+      'elk.spacing.nodeNode': 40,
+      'elk.layered.nodePlacement.strategy': 'NETWORK_SIMPLEX',
+      'elk.layered.mergeEdges': true,
+      'elk.hierarchyHandling': 'INCLUDE_CHILDREN'
+    }
+  })
+
+  const TYPE_KW = new Set(['string','int','float','bool','blob','json','timestamp','double','date','number','uuid','text'])
+  const KEY_KW = new Set(['PK','FK','UK','NN'])
+  const classifyToken = (tok) => {
+    if (TYPE_KW.has(tok.toLowerCase())) return 'tok-type'
+    if (KEY_KW.has(tok)) return 'tok-key'
+    return 'tok-name'
+  }
+
+  const tokenizeSvgText = (textEl) => {
+    if (textEl.dataset.tokenized === '1') return
+    const raw = textEl.textContent.trim()
+    const parts = raw.split(/\s+/)
+    if (parts.length < 2 || !TYPE_KW.has(parts[0].toLowerCase())) return
+    const x = textEl.getAttribute('x'), y = textEl.getAttribute('y')
+    while (textEl.firstChild) textEl.removeChild(textEl.firstChild)
+    parts.forEach((p, i) => {
+      const t = document.createElementNS('http://www.w3.org/2000/svg', 'tspan')
+      t.setAttribute('class', classifyToken(p))
+      if (i === 0) { if (x) t.setAttribute('x', x); if (y) t.setAttribute('y', y) }
+      else { t.setAttribute('dx', '0.5em') }
+      t.textContent = p
+      textEl.appendChild(t)
+    })
+    textEl.dataset.tokenized = '1'
+  }
+
+  const tokenizeHtmlLabel = (el) => {
+    if (el.dataset.tokenized === '1') return
+    const raw = el.textContent.trim()
+    const parts = raw.split(/\s+/)
+    if (parts.length < 2 || !TYPE_KW.has(parts[0].toLowerCase())) return
+    el.innerHTML = parts.map(p => `<span class="${classifyToken(p)}">${p}</span>`).join(' ')
+    el.dataset.tokenized = '1'
+  }
+
+  const FILE_EXT_RE = /\.(md|jsonl|py|json|sqlite|db|toml|yml|yaml|tsx?|jsx?|html|css|cs|csproj|sln)\b/i
+  const ENV_RE = /^[A-Z][A-Z0-9]+(?:_[A-Z0-9]+){1,}$/
+  const PASCAL_RE = /^[A-Z][a-z0-9]+(?:[A-Z][a-z0-9]+)+$/
+  const FUNC_RE = /\([^)]*\)\s*$/
+  const DOTTED_RE = /^[a-z][a-z0-9_]*(?:\.[a-z_][a-zA-Z0-9_]*)+$/
+  const DB_RE = /\b(sqlite|sqlite-vec|database|\.db\b|table|cursors)\b/i
+  const EXT_RE = /\b(Anthropic|OpenAI|LiteLLM|Bedrock|GitHub|API|providers?)\b/
+  const RUNTIME_RE = /^(hooks?|skills?|scripts?|tools?|tests?|core|apps?|packages?)\//i
+  const CLI_RE = /^claude\b|\bsubprocess\b|\b-p\b|\bcron\b|\brepomix\b|\bast-grep\b|\bgraphify\b/i
+  const PATH_RE = /^[~./]/
+
+  const classifyNode = (text) => {
+    const t = text.trim()
+    if (!t) return null
+    if (ENV_RE.test(t)) return 'cat-env'
+    if (RUNTIME_RE.test(t)) return 'cat-runtime'
+    if (FILE_EXT_RE.test(t) && /[\/.]/.test(t)) {
+      if (/\.py\b/.test(t) && !/[\/~]/.test(t)) return 'cat-module'
+      return 'cat-file'
+    }
+    if (PATH_RE.test(t) && /\//.test(t)) return 'cat-file'
+    if (/^[a-z][a-z0-9_]*\.py$/.test(t)) return 'cat-module'
+    if (DB_RE.test(t)) return 'cat-db'
+    if (EXT_RE.test(t)) return 'cat-ext'
+    if (CLI_RE.test(t)) return 'cat-cli'
+    if (FUNC_RE.test(t) || DOTTED_RE.test(t)) return 'cat-func'
+    if (PASCAL_RE.test(t)) return 'cat-class'
+    if (/^[a-z][a-z0-9_]*$/.test(t)) return 'cat-module'
+    return null
+  }
+
+  const categorizeNodes = () => {
+    document.querySelectorAll('.mermaid').forEach(container => {
+      if ((container.dataset.kind || 'flowchart') !== 'flowchart') return
+      container.querySelectorAll('svg g.node').forEach(g => {
+        if (g.dataset.cat) return
+        if (g.classList.contains('cluster')) return
+        const isDiamond = !!g.querySelector('polygon')
+        const label = g.querySelector('.nodeLabel, foreignObject span, foreignObject p, text')
+        if (!label) return
+        const text = (label.textContent || '').trim()
+        if (!text) return
+        const cat = isDiamond ? 'cat-decision' : classifyNode(text)
+        if (cat) { g.classList.add(cat); g.dataset.cat = cat }
+      })
+    })
+  }
+
+  const colorize = () => {
+    document.querySelectorAll('.mermaid svg text').forEach(tokenizeSvgText)
+    document.querySelectorAll('.mermaid svg foreignObject .nodeLabel, .mermaid svg foreignObject p, .mermaid svg foreignObject span.label').forEach(tokenizeHtmlLabel)
+    categorizeNodes()
+  }
+
+  const renderAll = async () => {
+    document.querySelectorAll('.mermaid').forEach(m => {
+      const src = (m.textContent || '').trim()
+      let kind = 'flowchart'
+      if (/^classDiagram\b/.test(src)) kind = 'class'
+      else if (/^erDiagram\b/.test(src)) kind = 'er'
+      else if (/^sequenceDiagram\b/.test(src)) kind = 'sequence'
+      m.dataset.kind = kind
+    })
+    const panes = document.querySelectorAll('.pane')
+    panes.forEach(p => { p.dataset.wasActive = p.classList.contains('active') ? '1' : '0'; p.classList.add('active') })
+    try { await mermaid.run({ querySelector: '.mermaid' }) } catch (e) { console.error(e) }
+    panes.forEach(p => { if (p.dataset.wasActive !== '1') p.classList.remove('active') })
+    colorize()
+    setTimeout(colorize, 400)
+    setTimeout(colorize, 1200)
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', renderAll)
+  else renderAll()
+
+  new MutationObserver(() => colorize()).observe(document.body, { childList: true, subtree: true })
+
+  const tabs = document.querySelectorAll('nav.tabs button')
+  const panes = document.querySelectorAll('.pane')
+  tabs.forEach(t => t.addEventListener('click', () => {
+    tabs.forEach(x => x.classList.remove('active'))
+    panes.forEach(x => x.classList.remove('active'))
+    t.classList.add('active')
+    document.getElementById('tab-' + t.dataset.tab).classList.add('active')
+  }))
+</script>
+</body>
+</html>
