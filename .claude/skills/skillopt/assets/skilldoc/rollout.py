@@ -74,6 +74,40 @@ def _chat_rollout(
     return response
 
 
+def _persist_trajectory(
+    pred_dir: str, item: dict, skill_content: str, response: str
+) -> None:
+    """Write the trajectory files the reflect analyst reads — REQUIRED for training.
+
+    The minibatch analyst (``gradient/reflect.py:fmt_minibatch_trajectories``) and
+    the slow-update reader (``optimizer/slow_update.py``) load
+    ``<pred_dir>/conversation.json`` plus ``target_system_prompt.txt`` /
+    ``target_user_prompt.txt``. Without them the analyst sees empty text, emits
+    ``0 edits`` *without calling the optimizer*, and every run ends ``best == seed``
+    (``calls=0``) no matter the headroom. Every other SkillOpt env writes these; the
+    skilldoc env must too. ``conversation.json`` is a list of ``{role, content}``
+    turns; the prescriptive grader ``detail`` already rides in on ``fail_reason``."""
+    try:
+        conversation = [
+            {"role": "user", "content": item.get("task", "")},
+            {"role": "assistant", "content": response or ""},
+        ]
+        with open(
+            os.path.join(pred_dir, "conversation.json"), "w", encoding="utf-8"
+        ) as fh:
+            json.dump(conversation, fh, ensure_ascii=False, indent=2)
+        with open(
+            os.path.join(pred_dir, "target_system_prompt.txt"), "w", encoding="utf-8"
+        ) as fh:
+            fh.write(skill_content or "")
+        with open(
+            os.path.join(pred_dir, "target_user_prompt.txt"), "w", encoding="utf-8"
+        ) as fh:
+            fh.write(item.get("task", ""))
+    except OSError:
+        pass
+
+
 def process_one(
     item: dict,
     out_root: str,
@@ -121,12 +155,15 @@ def process_one(
             soft=graded.soft,
             grade_detail=graded.detail,
         )
+        result["n_turns"] = 1
         if not graded.hard:
             result["fail_reason"] = (
                 f"grade failed (soft={graded.soft:.2f}): {graded.detail}"
             )
         with open(os.path.join(pred_dir, "result.json"), "w", encoding="utf-8") as fh:
             json.dump(result, fh, ensure_ascii=False, indent=2)
+        # REQUIRED: persist the trajectory so the optimizer can actually learn.
+        _persist_trajectory(pred_dir, item, skill_content, response)
     except Exception as exc:  # noqa: BLE001
         result["fail_reason"] = f"error: {type(exc).__name__}: {exc}"
         result["grade_detail"] = traceback.format_exc()[-600:]
