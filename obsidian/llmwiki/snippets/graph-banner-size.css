@@ -1,0 +1,20 @@
+/* graph-banner ships no CSS — size the banner here.
+   Without a defined height the embedded local-graph leaf collapses to a small box. */
+
+.graph-banner-content {
+	width: 100%;
+	height: var(--graph-banner-height, 320px);
+	position: relative;
+	overflow: hidden;
+	border-radius: var(--radius-m, 8px);
+}
+
+/* The graph is a workspace leaf inside the container; force it to fill. */
+.graph-banner-content .workspace-leaf,
+.graph-banner-content .workspace-leaf-content,
+.graph-banner-content .view-content,
+.graph-banner-content .graph-view-container,
+.graph-banner-content canvas {
+	width: 100% !important;
+	height: 100% !important;
+}
