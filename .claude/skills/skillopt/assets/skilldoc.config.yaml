@@ -1,0 +1,46 @@
+# Generic skilldoc config — optimize any skill.md against any cases.jsonl.
+# Copied into <SkillOpt>/configs/skilldoc/default.yaml by bootstrap.sh.
+#
+# Default surface = Claude Code agentic loop (rollout == deployment), so the
+# validation gate accepts edits that help where the skill actually ships.
+# Rollouts use the `claude` CLI (your existing Claude Code auth — no API key).
+# The optimizer/judge uses OpenAI (openai_chat). Set OPENAI_API_KEY — the runner
+# maps it to the AZURE_OPENAI_* names SkillOpt's openai_chat backend reads
+# (there is no OPENAI_API_KEY knob in SkillOpt itself). Override via flags.
+_base_: ../_base_/default.yaml
+
+model:
+  target_backend: claude_code_exec   # faithful Claude Code loop; rollout == deploy
+  target: claude-haiku-4-5           # cheap/fast frozen target under optimization
+  optimizer_backend: openai_chat     # strong editor proposes + gates edits (OpenAI)
+  optimizer: gpt-5.5
+  reasoning_effort: medium
+
+train:
+  num_epochs: 2          # bump to 4 for a production run
+  train_size: 0          # 0 = derive from the split
+  batch_size: 8          # small: toy/plug-and-play default; raise for scale
+  seed: 42
+
+gradient:
+  minibatch_size: 4
+  merge_batch_size: 4
+  analyst_workers: 8
+
+optimizer:
+  learning_rate: 4       # max edits/step (textual LR); keep bounded
+  min_learning_rate: 2
+  lr_scheduler: cosine
+  skill_update_mode: patch
+  use_slow_update: true
+
+evaluation:
+  use_gate: true         # strict-improvement acceptance on the selection split
+  eval_test: true        # report on held-out test only
+
+env:
+  name: skilldoc
+  split_mode: ratio      # one cases.jsonl → deterministic 2:1:7 split
+  split_ratio: "2:1:7"
+  split_seed: 42
+  exec_timeout: 180

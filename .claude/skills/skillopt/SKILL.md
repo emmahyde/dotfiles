@@ -10,271 +10,145 @@ description: >-
   training the skill document instead of hand-tuning prompts.
 ---
 
-# SkillOpt: train skill.md as a frozen agent's external state
+# SkillOpt — plug-and-play skill optimization
 
-SkillOpt (Microsoft + SJTU/Tongji/Fudan, arXiv:2605.23904, May 2026) treats the
-**skill document as the trainable state** of a **frozen** target model. A
-separate **frontier optimizer model** reads scored rollouts and emits **bounded
-add/delete/replace edits** to a single skill.md; an edit is kept **only if it
-strictly improves a held-out validation (selection) score**. The output is one
-static `best_skill.md` that adds **zero inference-time model calls** at
-deployment. Reported: best-or-tied on all 52 (model, benchmark, harness) cells;
-on GPT-5.5, +23.5 pts in direct chat, +24.8 in Codex, +19.1 in Claude Code. The
-optimized skill transfers across model scales, across Codex↔Claude Code, and to
-nearby benchmarks without re-optimizing.
+Optimize **any** `skill.md` against **any** deterministic graders with **zero per-skill Python**. The heavy lifting (env adapter, config, splitting, backend wiring) is bundled. You provide a seed skill + a `cases.jsonl`; the real SkillOpt loop does the rest and emits a `best_skill.md`.
 
-Code: **https://github.com/microsoft/SkillOpt** (`pip install skillopt`). Docs:
-`docs/guide/configuration.md`, `docs/guide/new-backend.md`, `docs/reference/cli.md`.
+## Agent execution contract — be assertive, don't deliberate
 
-## Default setup — DeepSeek-v4-flash rollout fan-out + Gemini 3.5 Flash judge
+When this skill is invoked, **act, don't survey**. The architecture is already built and validated. Default behavior:
 
-This skill is configured to run, by default, with **a ton of cheap
-`deepseek-v4-flash` agents doing the rollouts** (the frozen *target*) and
-**Gemini 3.5 Flash as the optimizer/judge** (reflection + the model that
-proposes and gates edits). DeepSeek is OpenAI-API-compatible, so it rides the
-built-in `openai_chat` backend with a custom base URL. Gemini is **not** a
-built-in backend, so the judge runs on a one-time `gemini_chat` backend — Gemini
-exposes an OpenAI-compatible endpoint, so it's a copy of the `minimax` template
-(≈15 lines). Keeping the judge on its own backend avoids any `OPENAI_*` key
-collision with the DeepSeek target. See `references/deepseek-flash-default.md`
-for the copy-paste registration.
+1. **Run `scripts/bootstrap.sh` immediately** (idempotent — safe to re-run). Do not ask permission to set up; just set up.
+2. **If the user named or pointed at a skill**, treat it as the seed and move to building cases. **If not**, ask exactly one thing: "Which skill.md do you want to optimize?" — nothing else.
+3. **Sanity-check the target before spending.** A mature *knowledge* skill on a capable model saturates the gate (→ `best == seed`); the real targets are *procedural* skills or a weaker deployment model. If in doubt, baseline-probe the seed on the real target — seed already ~1.0 → stop. Full decision method + worked NO-GO case studies: `references/choosing-targets.md`.
+4. **Build the eval set** (Phase 0 below) — this is the *only* irreducible user input, because the gate is only as good as the cases. Harvest from transcripts if the user has run the task before; otherwise author ≥5 with them, fast.
+5. **Run `skilldoc_run.py`** and report the `best_skill.md` path + test score.
+6. **Run the Phase 2 audit**, apply fixes, re-score, ship.
+
+Do not stop to debate approaches, re-derive the algorithm, or ask layered clarifying questions. The forks that matter are settled: rollout surface = Claude Code agentic loop (rollout == deployment), optimizer = Claude Opus. Override only if the user says so.
+
+## The whole flow — three commands
 
 ```bash
-# 1. Credentials (.env)
-export OPENAI_API_KEY="<your DeepSeek API key>"      # openai_chat → DeepSeek
-export OPENAI_BASE_URL="https://api.deepseek.com/v1"
-export GEMINI_API_KEY="<your Google AI Studio key>"  # gemini_chat judge
-export GEMINI_BASE_URL="https://generativelanguage.googleapis.com/v1beta/openai/"
+SKILL_DIR=~/.claude/skills/skillopt          # this skill's dir
 
-# 2. Register the gemini_chat backend once (see references/), then:
-# 3. One-shot default run (or use scripts/run-skillopt-default.sh)
-python scripts/train.py \
-    --config configs/searchqa/default.yaml \
-    --target_backend openai_chat \
-    --target_model deepseek-v4-flash \
-    --optimizer_backend gemini_chat \
-    --optimizer_model gemini-3.5-flash \
-    --workers 64 \
-    --batch_size 64 \
-    --num_epochs 4 \
-    --out_root outputs/deepseek-flash-run
+# 1. One-time setup (clones SkillOpt, wires in the generic `skilldoc` env)
+bash $SKILL_DIR/scripts/bootstrap.sh
+
+# 2. Author cases.jsonl (see assets/cases.example.jsonl for the schema)
+
+# 3. Optimize — invokes the real SkillOpt training loop
+python3 $SKILL_DIR/assets/skilldoc_run.py \
+    --skill path/to/your/skill.md \
+    --cases path/to/cases.jsonl \
+    --out outputs/my-skill-run
 ```
 
-> The `openai_chat` backend reads `OPENAI_BASE_URL` (set above) to reach DeepSeek
-> — no base-url flag needed. If your repo build exposes a per-role
-> `--target_openai_chat_base_url` (the README documents this pattern only for
-> `qwen_chat`), it can override the env var; confirm with
-> `python scripts/train.py --help` before relying on it. **Model ids
-> (`deepseek-v4-flash`, `gemini-3.5-flash`) change at release — verify the exact
-> strings on your DeepSeek / Google AI Studio accounts.**
+`best_skill.md` lands in `--out`. Pass `--dry-run` to see the command first; `--epochs/--batch_size/--workers` to scale; `--target_backend openai_chat` (etc.) to change the surface.
 
-- **"A ton of agents"** = `--workers` (parallel rollout workers) × `--batch_size`
-  (tasks rolled out per step). DeepSeek-flash is cheap and fast, so push these
-  high (64–128) for wide parallel exploration; cost stays low because only the
-  rollouts use it.
-- **Judge = Gemini 3.5 Flash** = `--optimizer_backend gemini_chat
-  --optimizer_model gemini-3.5-flash`. The optimizer/judge analyzes
-  trajectories, proposes add/delete/replace edits, and the validation gate
-  accepts only score-improving ones. It runs **only during training** — the
-  deployed `best_skill.md` calls neither model, just whatever target you ship on.
-  Gemini Flash is cheap too, so even the judge stays inexpensive; swap to a
-  frontier optimizer (`gpt-5.5`, Claude Sonnet) if you want stronger edits.
-- Replace `gemini-3.5-flash` / `deepseek-v4-flash` with the exact model names
-  your accounts expose. See `references/deepseek-flash-default.md` for the
-  `gemini_chat` registration, the dedicated-`deepseek_chat` path, and cost/worker
-  tuning.
+### What bootstrap wires up
 
-## Provenance — what's grounded vs. what to verify
+- Clones `github.com/microsoft/SkillOpt` → `$SKILLOPT_ROOT` (default `~/.cache/skillopt/SkillOpt`), pip-installs it.
+- Copies the bundled generic env → `skillopt/envs/skilldoc/` and config → `configs/skilldoc/default.yaml`, registers `skilldoc` in `train.py`.
+- **Per-skill work after this touches zero Python** — only `skill.md` + `cases.jsonl`. That is the definition of done for the plug-and-play layer.
 
-This skill is built from the **arXiv paper** (primary source). Everything in
-"How it works," "The loop," and the options table is from the paper and is
-accurate. **Do not trust the `from skillopt import SkillOptimizer` /
-`optimizer.optimize(...)` snippet circulating in blog write-ups** — that API is
-illustrative and not in the paper. For the real entry point and flag names,
-read the README at `github.com/microsoft/SkillOpt`; map the paper's
-hyperparameters (below) to whatever the repo exposes.
+### Credentials (default Claude Code surface)
 
-## How it works (the real mechanism)
+- **Rollouts** run via the `claude` CLI using your existing Claude Code auth — **no API key needed**.
+- **Optimizer/judge** uses `openai_chat` → set `OPENAI_API_KEY`. SkillOpt's backend has no `OPENAI_API_KEY` knob (it reads `AZURE_OPENAI_*`), so `skilldoc_run.py` auto-mirrors `OPENAI_API_KEY` → `AZURE_OPENAI_API_KEY` + `AZURE_OPENAI_ENDPOINT=https://api.openai.com/v1` + `AZURE_OPENAI_AUTH_MODE=openai_compatible`. Just export `OPENAI_API_KEY` and go.
+- Prefer Anthropic for the optimizer instead? Pass `--optimizer_backend claude_chat --optimizer_model claude-opus-4-5` with `ANTHROPIC_API_KEY` set.
 
-- **Two models, asymmetric roles.** The *target* model executes tasks with the
-  current skill and stays frozen. A separate *optimizer* model (ideally stronger
-  — optimizer strength is a training-time lever with no deploy cost) proposes
-  skill edits from rollout evidence.
-- **Patch-mode edits.** Each update is restricted to four atomic ops: `append`,
-  `insert_after`, `replace`, `delete`. (A `rewrite` mode also exists.) Bounded
-  edits preserve good rules instead of clobbering the doc.
-- **Validation gate.** Every candidate skill is scored on the selection split
-  with the same frozen target+harness. It's accepted only if it beats the
-  current selection score; if it also beats the best-so-far it becomes
-  `best_skill.md`. Otherwise rejected. This turns reflection into
-  propose-and-test, not unconditional self-editing.
-- **Rejected-edit buffer.** Rejected edits + the score drops they caused are
-  kept in an epoch-local buffer and fed to later optimizer calls, so the loop
-  gets negative feedback without any inference-time cost.
-- **Slow/meta update.** At each epoch boundary a protected section (delimited
-  `SLOW_UPDATE_START`/`SLOW_UPDATE_END`, off-limits to step-level edits) is
-  consolidated from a longitudinal comparison of the same sampled tasks under
-  the old vs. new skill — then still passes the same validation gate.
+## cases.jsonl — the one thing you author
 
-## The loop
+One JSON object per line: a natural task + a **deterministic** grader. See `assets/cases.example.jsonl`. Grader types (in `graders.py`):
+
+| type | use | scores |
+| --- | --- | --- |
+| `contains_all` / `contains_any` | substring presence | partial credit on `_all` |
+| `not_contains` | safety / no-action controls | pass/fail |
+| `exact` | exact-match answers | pass/fail |
+| `regex_all` | structured output | partial credit |
+| `command` | native scorer / file check / compile-run (`{response_file}` → temp file, exit 0 = pass) | pass/fail |
+| `all` | composite | mean of sub-scores |
+
+**Design cases so the score lives in (0, 1), not pinned at 1.0.** A skill that already passes every case has zero headroom — the gate can never improve it. Plant cases the *current* skill gets wrong, with **unambiguous** ground truth (borderline truth → verdict wobble → poisoned gate). Prefer several small graders over one broad one; `contains_all` / `regex_all` / `all` give graded `soft` signal so edit deltas stay measurable.
+
+> **Safety — `command` grader runs model output through a shell** (`shell=True`, and the example case `exec()`s the response). Only use `command` graders you wrote and trust; never point one at unreviewed cases. It executes whatever the target produced.
+
+## Baked-in lessons (defaults that bootstrap past known misses)
+
+These were learned the hard way and are now wired into the runner/config so you don't re-hit them — but know they exist:
+
+- **Small suites auto-rebalance the split.** The paper's 2:1:7 assumes a large dataset; on a hand-authored suite (<30 cases) it leaves a 1–2 item selection gate that gives the optimizer no signal (→ best==seed). `skilldoc_run.py` auto-uses **1:1:1** under 30 cases and prints a pre-flight gate-size check. Override with `--split_ratio`. Aim for a **selection gate ≥3 items** (≥9 cases).
+- **A run with no *failing* cases spends nothing on edits and proves nothing.** If every train rollout passes, the analyst hits a success-only minibatch → `0 edits`, `calls=0`, `best==seed`. To exercise (and prove) the optimizer, the train split must contain cases the seed gets wrong.
+- **`OPENAI_API_KEY` is auto-mapped** to the `AZURE_OPENAI_*` names SkillOpt actually reads — just export it.
+- **Re-use before re-train.** Try transferring an existing `best_skill.md` before launching a fresh run.
+
+## Phase 0 — build the eval set (do this, don't skip)
+
+The validation gate and the optimizer are only as good as these cases. Full method: `references/building-evals.md`. Before you spend, confirm the target even has headroom: `references/choosing-targets.md`. The gate of gates is a **baseline probe** — roll the *seed* skill against your cases on the **real target**, no optimizer, and read the mean: ~1.0 → saturated, STOP. Headroom is **not** "procedural vs knowledge"; it's the *default-behavior gap* — a capable target (even Haiku) already knows textbook facts *and* writes idiomatic best-practice code (procedural skills saturate too), so the spend only pays where the behavior is genuinely non-default for that target. Validate graders against **real** outputs (the harness writes artifacts to disk and wraps replies in `<answer>` tags — grade the artifact), scrutinize score *rises* hardest, and get an **independent review** (advisor / Opus) before banking any GO/NO-GO verdict.
+
+- **Ask once:** "Have you run into a task like this in the last ~30 days?"
+- **If YES → harvest** real cases from `~/.claude/projects/*` transcripts (use the `search-conversations` tiered approach: cheap `rg` first, `jq` extraction second, model synthesis only if needed). Each real task + known-good result becomes a case (result → grader's expected outcome). Harvest ≥5.
+- **If NO → author ≥5 interactively**, one at a time: a natural user-voiced task (never leak grader internals to the target), the input fixture, and ≥1 deterministic grader. Cover the basic path, important options/edges, a no-action control, and resistance to an unsafe instruction.
+- The runner auto-splits one `cases.jsonl` **2:1:7** (`split_seed=42`): selection gates edits, **test** is the only split you report. With few cases, raise the val/test share or author more — a 1-item gate is noise.
+
+## How it works (the real mechanism — keep it faithful)
+
+- **Two models, asymmetric roles.** The *target* executes tasks under the current skill and stays **frozen**. A separate *optimizer* (stronger is fine — no deploy cost) proposes edits from rollout evidence.
+- **Rollout == deployment surface.** The generic env rolls out through the same harness you deploy into (Claude Code exec by default; `chat_target` for chat backends). This is load-bearing: optimizing against the wrong surface validates edits that may not transfer.
+- **Patch-mode edits.** Four atomic ops: `append`, `insert_after`, `replace`, `delete`. Bounded edits preserve good rules.
+- **Validation gate.** Each candidate is scored on the selection split with the frozen target+harness; kept only if it strictly improves. Beats best-so-far → becomes `best_skill.md`.
+- **Rejected-edit buffer** feeds failures back to later optimizer calls.
+- **Slow/meta update** consolidates a protected section at each epoch boundary, still passing the gate.
 
 ```
-Seed skill.md  (or start empty)
-┌──────────────────────────────────────────────┐
-│ per step:                                     │
-│  1. Roll out a batch of training tasks        │
-│     with the current skill (frozen target)    │
-│  2. Optimizer analyzes successes/failures     │
-│     over reflection minibatches               │
-│  3. Propose add/delete/replace edits;         │
-│     merge duplicates, rank by utility,        │
-│     clip to the edit budget L_t               │
-│  4. Score candidate on the SELECTION split    │
-│  5. Accept iff it strictly improves; else     │
-│     reject → buffer the failure               │
-│ per epoch: slow/meta consolidation            │
-└──────────────────────────────────────────────┘
-Export: best_skill.md  (static, target-model-only)
+Seed skill.md
+  per step:  roll out batch (frozen target) → optimizer reflects → propose
+             edits, clip to budget L_t → score on SELECTION split → accept iff
+             strictly better, else reject → buffer the failure
+  per epoch: slow/meta consolidation
+Export: best_skill.md  (static, target-model-only, zero inference-time calls)
 ```
 
-There is no turn-by-turn interactive wizard — SkillOpt is an **offline training
-loop**. You steer it entirely through the data splits, the eval/scorer, and the
-hyperparameters below, then let it run the epochs.
+## Phase 2 — budgeted Opus audit, then ship
 
-## Phase 0 — Establish the eval set (run BEFORE any optimization)
+The gate guarantees the selection score rose; it does **not** guarantee the artifact is faithful, well-triggered, or anti-pattern-free.
 
-SkillOpt's validation gate, and the Gemini judge that proposes edits, are only as
-good as the evals you score against. Do not skip to training. First build a set
-of deterministic eval cases the judge can test on. Full method:
-`references/building-evals.md` (folds in the skill-optimizer-evals workbench:
-case = natural task + deterministic graders).
+- **Run it:** `bash scripts/audit.sh outputs/my-run` (or pass the `best_skill.md` path). It runs one bounded Opus pass via the `claude` CLI and writes `audit_report.md` — report-only, no edits. Or dispatch an Opus reviewer yourself (Agent tool, `model: opus`). Audit: faithfulness, triggering precision, eval-alignment, no leaked eval internals, shell/safety anti-patterns.
+- **Hard gate: max 2 review→fix rounds.** Soft target ~150k tokens. After a round with no FAIL-tier item, STOP.
+- Apply fixes, **re-score the patched skill on held-out test** so a hand-fix doesn't silently regress the gate. Ship only what passes both gate and audit.
 
-**Step 0a — Ask the user about prior experience.** Ask, verbatim intent:
-
-> "Have you run into a task like this in the last ~30 days?"
-
-**Step 0b — If YES → harvest real cases from past transcripts.** Search across
-`~/.claude/projects/*` session transcripts (and the tool outputs inside them) for
-those prior occurrences, and turn each real task + its known-good result into an
-eval case (the result becomes the grader's expected outcome). Search
-**conservatively** — use the tiered approach from the `search-conversations`
-skill (cheap `rg`/`grep` first, structured `jq` extraction second, model
-synthesis only when needed) so you never read raw `.jsonl` wholesale. A starting
-sweep:
-
-```bash
-# 1. Find candidate sessions by keyword (cheap, filenames + line hits only)
-rg -l -i '<task keyword>' ~/.claude/projects/*/*.jsonl
-# 2. Extract just the user turns + tool results from a hit, structured
-jq -rc 'select(.type=="user" or .type=="tool_result")' <session>.jsonl | rg -i '<keyword>'
-```
-
-Harvest ≥5 real cases this way; each becomes one eval case + grader.
-
-**Step 0c — If NO → author at least 5 evals interactively.** Walk the user
-through writing ≥5 cases, one at a time. For each, capture: (1) a natural,
-user-voiced task (never mention graders/answers/eval internals), (2) the concrete
-input fixture, and (3) one or more **deterministic** graders (exact-match / file
-checks / native benchmark scorer) that exit non-zero on failure. Cover the task's
-real surface: the basic path, the important options/edge cases, a no-action
-control, and resistance to an unsafe instruction. Prefer several small graders
-over one broad one.
-
-**Step 0d — Split the cases.** Partition the harvested/authored cases into
-train / selection / test (SkillOpt default ratio 2:1:7, `split_seed=42`). The
-**selection** split is what the Gemini judge gates edits on; the **test** split
-is held out for the only numbers you report. Then proceed to Quick start.
-
-## Quick start (fastest path to a result)
-
-1. **Define one task + one scorer.** Use the benchmark's native evaluator (hard
-   success / exact-match). The gate optimizes whatever this returns.
-2. **Make deterministic train/selection/test splits.** Paper default ratio
-   **2:1:7** with `split_seed=42`. Selection is used *only* to accept/reject
-   edits; all headline numbers come from the disjoint held-out test split — so
-   you measure generalization, not validation-set fit.
-3. **Models are pre-wired** (see Default setup): target = `deepseek-v4-flash`
-   (many parallel rollout agents), optimizer/judge = `gemini-3.5-flash`. Set the
-   two API keys and register the `gemini_chat` backend once.
-4. **Run** `scripts/run-skillopt-default.sh <config> <split_dir>` (or the explicit
-   command above), then read scores on the **test** split.
-5. **Verify, then deploy `best_skill.md`** — run Phase 2 (budgeted Opus audit)
-   first; the artifact is static and calls neither the DeepSeek target nor the
-   Gemini judge at inference time.
-
-## Phase 2 — Opus quality verification (budgeted), then fix
-
-The validation gate guarantees the edits raised the selection score; it does NOT
-guarantee the resulting `best_skill.md` is faithful, well-triggered, or free of
-anti-patterns. Before deploying, run a **budgeted Opus audit** and address what it
-finds. This is a final human-grade acceptance check on the artifact, complementary
-to the automated gate.
-
-**Run it.** Dispatch an Opus reviewer (Agent tool, `model: opus`) over the
-produced `best_skill.md` (and any references it ships). Audit dimensions:
-faithfulness to the task, triggering precision, deterministic-eval alignment, no
-instructions that leak eval internals to the target, and shell/safety
-anti-patterns. Ask for a verdict table + prioritized findings, each with
-file-level evidence and a concrete fix. **Report only — the auditor does not edit.**
-
-**Budget it.** Bound the audit so it can't run away. The token figure is a
-*soft* target you pass to the reviewer (it self-limits, best-effort); the
-**round count is the hard gate the workflow actually enforces**:
-
-- **Hard gate — max 2 review→fix rounds.** One audit pass + one fix pass is the
-  default. After each round, if no FAIL-tier item remains, STOP — never start a
-  third pass. This is the real cap.
-- **Soft target — ~150k tokens** (`MAX_AUDIT_BUDGET`). Tell the reviewer to keep
-  the audit to a single bounded pass within this and not to loop.
-- If the round limit is reached with open CONCERN-tier items, ship with them
-  logged in the run's `out_root` rather than spending another round.
-
-**Address issues.** Apply the auditor's fixes to `best_skill.md` (or feed them
-back as a seed for one more SkillOpt step). Then **re-score the patched skill on
-the held-out test split** so a hand-fix doesn't silently regress the gate. Only a
-skill that passes both the gate and the budgeted audit gets deployed.
-
-## Options (paper defaults — map to the repo's actual flags)
+## Options (paper defaults — set via skilldoc_run.py flags or the config)
 
 | Knob | Default | What it does |
 | --- | --- | --- |
-| epochs | 4 | Full passes; epoch boundary triggers slow/meta update |
-| rollout batch size | 40 | Tasks rolled out per step to gather evidence |
-| reflection minibatch | 8 | Failed/successful trajectories per analyst reflection (16 analyst workers in parallel, merge batch 8) |
-| textual learning rate (edit budget `L_t`) | 4 | Max edits applied per step; ranked pool is clipped to top-`L_t` |
-| LR schedule | cosine (min 2) | `constant` / `linear` / `cosine` / `autonomous`; cosine starts large, decays to small consolidation steps |
-| edit mode | patch | `patch` (append/insert_after/replace/delete) or `rewrite` (full skill rewrite) |
-| validation gating | on | Strict-improvement acceptance on the selection split |
-| slow update | on, 20 samples | Epoch-boundary consolidation of the protected `SLOW_UPDATE` section |
-| optimizer-side meta skill | on | Optimizer keeps its own meta guidance across epochs |
-| split ratio / seed | 2:1:7, seed 42 | train : selection : test partition |
+| epochs | 2 (paper 4) | Full passes; epoch boundary triggers slow/meta update |
+| batch_size | 8 (paper 40) | Tasks rolled out per step |
+| learning_rate (`L_t`) | 4 | Max edits/step; keep small — bounded edits are the point |
+| lr_scheduler | cosine | explore early, consolidate late |
+| skill_update_mode | patch | `patch` or `rewrite` |
+| use_gate | on | strict-improvement acceptance on selection |
+| split ratio / seed | 2:1:7 / 42 | train : selection : test |
 
-### How to set them
-
-- **Optimizer model (judge)**: default `gemini-3.5-flash` — cheap, and it runs
-  only during training, so it raises skill quality for free at inference. Bump to
-  a frontier optimizer (`gpt-5.5`, Claude Sonnet) for stronger edits if budget
-  allows.
-- **Target / rollout fan-out**: default `deepseek-v4-flash` with high `--workers`
-  and `--batch_size`. It's the model under optimization and the one you'll
-  realistically deploy; keeping it cheap is the whole economic point.
-- **Edit budget (`L_t`)**: keep it small. Bounded edits are the whole point;
-  large budgets erase useful rules and overfit local failures.
-- **Schedule**: cosine is a safe default (explore early, consolidate late).
-- **Splits**: never report on the selection split; only `best_skill.md` chosen by
-  the gate, scored on held-out test, is a real number.
-- **Epochs/batch**: 4 epochs × batch 40 is the paper's standard; scale down for a
-  toy validation run before spending budget on production data.
+Edit `assets/skilldoc.config.yaml` (re-run bootstrap to sync) for permanent changes; use runner flags for one-offs.
 
 ## Effective-results checklist
 
-- Frozen target, strong optimizer — don't conflate the two roles.
-- Native evaluator as the scorer; a weak scorer yields a weak skill.
-- Selection split gates edits; test split reports results — keep them disjoint.
-- Trust the gate: plausible textual "diagnoses" can still hurt the target, which
-  is exactly why every edit must beat held-out validation before it's kept.
-- Keep edits bounded; lean on the rejected-edit buffer instead of bigger rewrites.
-- Re-use before re-train: try transferring an existing `best_skill.md` across
-  model/harness/benchmark before launching a fresh run.
-- For the real invocation, read the README at `github.com/microsoft/SkillOpt` and
-  translate these knobs to its flags.
+- Frozen target, strong optimizer — don't conflate roles.
+- Rollout harness == deployment harness (default: Claude Code exec).
+- Selection gates edits; test reports — keep disjoint, report test only.
+- Plant cases with **headroom** and **unambiguous** ground truth.
+- Keep edits bounded; lean on the rejected-edit buffer over big rewrites.
+- Re-use before re-train: try transferring an existing `best_skill.md` first.
+
+## Maintaining the skilldoc env (contributor notes)
+
+- **`assets/skilldoc/*.py` is the source of truth.** `bootstrap.sh` copies it into the installed package at `$SKILLOPT_ROOT/skillopt/envs/skilldoc/`. After editing the source, re-run `bootstrap.sh` (or `cp` the files) to propagate, and sync the skill to its other homes (`~/.claude/skills/skillopt/` and the marketplace copy). Keep `__pycache__`/`*.pyc` out of the shipped dirs.
+- **`skilldoc_run.py` is a standalone launcher — it deliberately does NOT `import skillopt`** (it subprocess-invokes `train.py`, and skillopt may live in a different venv). So its small JSONL-count / split-parse helpers are intentionally local duplicates of `skillopt.datasets.base`; do not "DRY" them into skillopt imports.
+- **`adapter.py` mirrors the reference env `skillopt/envs/officeqa/`** (the `build_env_from_batch` indirection, the `getattr(self, "_cfg", {})` read). Keep that shape for consistency with sibling envs rather than refactoring it away.
+- **Scoring lives in `rollout.py`'s grader, not in an `evaluate()` method** — `hard` (0/1) is what the gate optimizes, `soft` (0-1) is graded partial credit.
+
+## Provenance
+
+Built from the arXiv paper (primary). The mechanism, loop, and options are from the paper. The real entry point is `scripts/train.py` in `github.com/microsoft/SkillOpt` — the bundled `skilldoc` env and `skilldoc_run.py` wrap it without reimplementing the loop. Do **not** trust the `from skillopt import SkillOptimizer` snippet from blog write-ups — it's not real.
