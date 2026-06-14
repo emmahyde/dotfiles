@@ -93,6 +93,34 @@
       "author": {
         "name": "Emma Hyde"
       }
+    },
+    {
+      "name": "code-aware",
+      "source": "./plugins/code-aware",
+      "description": "Code-intelligence-first investigation: route discovery/impact/structure/complexity to lumen·sem·grepai·ast-grep·lizard·ctx7 instead of grep/Read, and never assume behavior without source verification. Ships the codebase-investigation skill + once-per-session reminder hook. install.sh wizards the full system+config setup.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Emma Hyde"
+      },
+      "dependencies": [
+        {
+          "name": "lumen",
+          "marketplace": "ory"
+        },
+        {
+          "name": "agentmemory",
+          "marketplace": "agentmemory"
+        },
+        {
+          "name": "codemode",
+          "marketplace": "codemode-mcp"
+        }
+      ]
     }
+  ],
+  "allowCrossMarketplaceDependenciesOn": [
+    "agentmemory",
+    "codemode-mcp",
+    "ory"
   ]
 }
