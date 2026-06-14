@@ -1,0 +1,10 @@
+{
+  "name": "code-aware",
+  "version": "1.0.0",
+  "description": "Code-intelligence-first investigation discipline: route discovery/impact/structure/complexity to purpose-built tools (lumen, sem, grepai, ast-grep, lizard, ctx7) instead of grep/Read, and never assume behavior without source verification. Ships the codebase-investigation skill + a once-per-session reminder hook.",
+  "author": {
+    "name": "Emma Hyde"
+  },
+  "homepage": "https://github.com/emmahyde/dotfiles/tree/master/plugins/code-aware",
+  "keywords": ["code-intelligence", "semantic-search", "impact-analysis", "ast-grep", "lumen", "investigation", "grep-replacement"]
+}

@@ -1,0 +1,41 @@
+{
+  "env": {
+    "ENABLE_TOOL_SEARCH": "1",
+    "ENABLE_CLAUDEAI_MCP_SERVERS": "0",
+    "CLAUDE_CODE_SUBAGENT_MODEL": "sonnet"
+  },
+  "model": "opus[1m]",
+  "statusLine": {
+    "type": "command",
+    "command": "printf '\\033[01;32m%s@%s\\033[00m:\\033[01;34m%s\\033[00m' \"$(whoami)\" \"$(hostname -s)\" \"$(pwd)\""
+  },
+  "extraKnownMarketplaces": {
+    "claude-design-skillstack": {
+      "source": { "source": "github", "repo": "freshtechbro/claudedesignskills" }
+    },
+    "emmahyde": {
+      "source": { "source": "github", "repo": "emmahyde/dotfiles" }
+    },
+    "codemode-mcp": {
+      "source": { "source": "github", "repo": "emmahyde/codemode-mcp" }
+    },
+    "ory": {
+      "source": { "source": "github", "repo": "ory/claude-plugins" }
+    },
+    "agentmemory": {
+      "source": { "source": "git", "url": "https://github.com/rohitg00/agentmemory.git" }
+    }
+  },
+  "enabledPlugins": {
+    "code-aware@emmahyde": true,
+    "codemode@codemode-mcp": true,
+    "lumen@ory": true,
+    "agentmemory@agentmemory": true
+  },
+  "alwaysThinkingEnabled": true,
+  "effortLevel": "medium",
+  "skipDangerousModePermissionPrompt": true,
+  "theme": "dark-daltonized",
+  "verbose": true,
+  "agentPushNotifEnabled": true
+}
