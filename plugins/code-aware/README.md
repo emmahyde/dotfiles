@@ -18,7 +18,7 @@ It ships:
 /plugin install code-aware@emmahyde
 ```
 
-`code-aware` declares cross-marketplace **dependencies** on `lumen@ory`, `agentmemory@agentmemory`, and `codemode@codemode-mcp` (the MCP servers behind the stack), so those are pulled in with it.
+`code-aware` declares cross-marketplace **dependencies** on `lumen@ory`, `agentmemory@agentmemory`, `codemode@codemode-mcp` (the MCP servers behind the stack), and `grepai-complete@grepai-skills` (call-graph skills), so those are pulled in with it.
 
 ### B. The full environment (system tools + global config)
 
@@ -46,11 +46,11 @@ It is **idempotent** and **backs up** before every write. Flags:
 
 ## What the wizard does
 
-1. **System deps** — `brew install ast-grep ctx7 sem-cli`; verifies `uvx` for `lizard`; installs **Ollama** (official script, with confirmation) and pulls the `nomic-embed-text` embed model. `grepai` is treated as optional (no verified package source — it points you to the `grepai-installation` skill).
-2. **Marketplaces + plugins** — merges the 5 marketplaces and enables `code-aware`, `lumen`, `agentmemory`, `codemode` via `settings.json`. Claude Code resolves and installs them on next launch.
-3. **settings.json** — recursive `jq` merge of `env`, `model`, `statusLine`, `theme`, and the rest. Existing unrelated keys are preserved; the global SessionStart hook is intentionally **not** added (the plugin owns it, to avoid double-firing).
+1. **System deps** — `brew install ast-grep ctx7 sem-cli` and `brew install yoanbernabeu/tap/grepai` (curl installer when brew is absent); verifies `uvx` for `lizard`; installs **Ollama** (official script, with confirmation) and pulls the `nomic-embed-text` embed model.
+2. **agentmemory daemon** — `mise use -g npm:@agentmemory/agentmemory@latest` installs it as a mise-managed global tool, so its shim is version-stable (no node-version-locked path). A launchd LaunchAgent (`dev.agentmemory.daemon`) runs that shim to keep the memory server alive on `:3111`. The plugin's MCP client (`@agentmemory/mcp`) talks to it; the installer does **not** run `agentmemory connect`, which would double-register that MCP server.
+3. **Marketplaces + plugins** — recursive `jq` merge into `settings.json` that registers the 5 marketplaces and enables `code-aware`, `lumen`, `agentmemory`, `codemode`, `grepai-complete`. Only these plugin/marketplace keys are written — **no personal settings** (theme, model, statusLine, env, …) are touched. Existing keys are preserved; Claude Code resolves and installs the plugins on next launch.
 4. **CLAUDE.md** — injects the behavioral + investigation rules between managed markers (re-runnable), and appends an **auto-detected environment block** (`scripts/detect-env.sh`) that reports *actual* tool resolution rather than trusting a version manager.
-5. **grepai integration** *(per-repo, optional)* — `grepai init` + `grepai agent-setup` (and `--with-subagent` for the `.claude/agents/deep-explore.md` exploration agent). Verified commands, run only inside a git repo.
+5. **grepai integration** *(per-repo)* — `grepai init` + `grepai agent-setup` (and `--with-subagent` for the `.claude/agents/deep-explore.md` exploration agent). Run only inside a git repo.
 6. **firecrawl MCP** *(optional)* — prompts for the API key; **never** hardcoded.
 
 On a successful run it writes `~/.claude/.code-aware-configured`, which silences the `/wizard` nudge.
