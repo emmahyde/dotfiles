@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # code-aware installer — wizards through the full "code-intelligence-first" setup:
-#   1. system deps (ast-grep, ctx7, sem, lizard, ollama + embed model; grepai optional)
-#   2. Claude Code marketplaces + dependency plugins (lumen, agentmemory, codemode, code-aware)
-#   3. ~/.claude/settings.json (env, model, theme, statusline, ...) — idempotent jq merge
+#   1. system deps (ast-grep, ctx7, sem, grepai, lizard, ollama + embed model)
+#   2. agentmemory memory daemon (mise-managed: npm:@agentmemory/agentmemory) + launchd autostart
+#   3. Claude Code marketplaces + dependency plugins — idempotent jq merge (plugins only, no personal settings)
 #   4. ~/.claude/CLAUDE.md behavioral + investigation rules + auto-detected environment block
 #   5. optional firecrawl MCP (prompts for the API key; never hardcoded)
 #
@@ -64,9 +64,9 @@ if [ "$DO_DEPS" = 1 ] && ask "Install / verify the code-intelligence CLI stack?"
   elif have uvx; then ok "lizard available via 'uvx lizard' (no install needed)"
   else warn "Neither 'lizard' nor 'uvx' found — install uv (https://docs.astral.sh/uv) to use lizard."; fi
 
-  # grepai: static binary, no verified package manager — detect only, never guess an installer.
-  if have grepai; then ok "grepai present"
-  else warn "grepai not found (optional — lumen covers semantic search). To add call-graph tracing, install grepai per the 'grepai-installation' skill / https://grepai.dev, then 'grepai init && grepai watch'."; fi
+  if have grepai; then ok "grepai present ($(grepai version 2>/dev/null | head -1))"
+  elif have brew; then say "brew install yoanbernabeu/tap/grepai"; run "brew install yoanbernabeu/tap/grepai" && ok "grepai installed" || err "grepai failed"
+  else say "curl install grepai"; run "curl -sSL https://raw.githubusercontent.com/yoanbernabeu/grepai/main/install.sh | sh" && ok "grepai installed" || err "grepai failed"; fi
 
   # ollama + embed model (powers lumen / grepai local embeddings)
   if have ollama; then ok "ollama present"
@@ -82,21 +82,68 @@ if [ "$DO_DEPS" = 1 ] && ask "Install / verify the code-intelligence CLI stack?"
   fi
 fi
 
-# ── 2 & 3. MARKETPLACES + PLUGINS + SETTINGS (one jq merge) ───────────────────
-if [ "$DO_SETTINGS" = 1 ] && ask "Merge marketplaces, plugins, and settings into $SETTINGS?"; then
+# ── 2. AGENTMEMORY DAEMON (mise-managed) + launchd autostart ───────────────────────────
+if [ "$DO_DEPS" = 1 ] && ask "Install + autostart the agentmemory memory daemon?"; then
+  say "agentmemory daemon"
+  if ! have mise; then
+    warn "mise not found — install mise (https://mise.jdx.dev), then re-run. Skipping agentmemory."
+  else
+    # mise owns the package (npm backend), so its shim floats across node versions — no version-locked path.
+    say "mise use -g npm:@agentmemory/agentmemory@latest"
+    run "mise use -g \"npm:@agentmemory/agentmemory@latest\"" && ok "agentmemory installed (mise-managed)" || err "mise install failed"
+    [ "$DRY" = 1 ] || mise reshim >/dev/null 2>&1 || true
+
+    shims="${MISE_DATA_DIR:-$HOME/.local/share/mise}/shims"
+    if have launchctl && { [ "$DRY" = 1 ] || [ -x "$shims/agentmemory" ]; }; then
+      mise_bin="$(dirname "$(command -v mise)")"
+      plist="$HOME/Library/LaunchAgents/dev.agentmemory.daemon.plist"
+      mkdir -p "$HOME/Library/LaunchAgents" "$HOME/.agentmemory"
+      # Don't run `agentmemory connect` — the enabled plugin already registers this MCP server (avoids double-wiring).
+      if [ "$DRY" = 1 ]; then warn "[dry-run] would write $plist (ProgramArguments=$shims/agentmemory) + launchctl load"
+      else
+        cat > "$plist" <<PLIST
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>Label</key><string>dev.agentmemory.daemon</string>
+  <key>ProgramArguments</key><array><string>$shims/agentmemory</string></array>
+  <key>EnvironmentVariables</key><dict>
+    <key>PATH</key><string>$shims:$mise_bin:/usr/local/bin:/usr/bin:/bin</string>
+    <key>HOME</key><string>$HOME</string>
+  </dict>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <key>StandardOutPath</key><string>$HOME/.agentmemory/daemon.log</string>
+  <key>StandardErrorPath</key><string>$HOME/.agentmemory/daemon.err</string>
+</dict></plist>
+PLIST
+        launchctl unload "$plist" 2>/dev/null || true
+        run "launchctl load \"$plist\"" && ok "autostart installed (launchd: dev.agentmemory.daemon → mise shim)"
+        # iii engine is fetched on first boot, so poll livez briefly before declaring health.
+        for _ in 1 2 3 4 5 6 7 8 9 10; do curl -fsS --max-time 2 http://localhost:3111/agentmemory/livez >/dev/null 2>&1 && break; sleep 1; done
+        curl -fsS --max-time 2 http://localhost:3111/agentmemory/livez >/dev/null 2>&1 \
+          && ok "daemon healthy on :3111" || warn "daemon not answering yet — see $HOME/.agentmemory/daemon.err"
+      fi
+    elif [ -x "$shims/agentmemory" ]; then
+      warn "no launchctl — start the daemon manually: 'agentmemory &' (the plugin's MCP client needs it on :3111)."
+    fi
+  fi
+fi
+
+# ── 3. MARKETPLACES + PLUGINS (one jq merge; plugins only, no personal settings) ───────────────────
+if [ "$DO_SETTINGS" = 1 ] && ask "Register marketplaces + enable the dependency plugins in $SETTINGS?"; then
   require_jq
-  say "Claude Code settings (idempotent merge)"
+  say "Claude Code marketplaces + plugins (idempotent merge)"
   merge="$SCRIPT_DIR/templates/settings.merge.json"
   [ -f "$SETTINGS" ] || echo '{}' > "$SETTINGS"
   backup "$SETTINGS"
-  # Recursive object merge: nested objects (env, enabledPlugins, extraKnownMarketplaces)
-  # merge by key; scalars from the template win. Existing unrelated keys are preserved.
+  # Deep-merge writes only enabledPlugins + extraKnownMarketplaces; the user's other settings stay untouched.
   if [ "$DRY" = 1 ]; then
     printf '   [dry-run] jq -s ".[0] * .[1]" %s %s\n' "$SETTINGS" "$merge"
     jq -s '.[0] * .[1]' "$SETTINGS" "$merge" | head -40
   else
     tmp="$(mktemp)"; jq -s '.[0] * .[1]' "$SETTINGS" "$merge" > "$tmp" && mv "$tmp" "$SETTINGS" \
-      && ok "settings merged (marketplaces + plugins: code-aware, lumen, agentmemory, codemode)" \
+      && ok "plugins enabled (code-aware, lumen, agentmemory, codemode, grepai-complete) + marketplaces" \
       || err "settings merge failed (original restored from .bak)"
   fi
   warn "Claude Code resolves new marketplaces & installs enabled plugins on next launch."
