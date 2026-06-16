@@ -20,7 +20,7 @@ Multi-step projects: maintain WORKLOG.md with task starts, decisions, file chang
 
 ## Sandbox
 
-`git worktree` and `git commit` allowed. No pushing to remotes.
+`git worktree`, `git commit`, and `git push` allowed.
 
 ## Tone and style
 
