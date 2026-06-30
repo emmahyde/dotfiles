@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  launchd template for the llmwiki session-watcher.
+
+  This is a TEMPLATE. Every ALL-CAPS name wrapped in double underscores below is
+  a placeholder that install.sh fills in at install time (it knows your vault
+  path, username, and claude binary). To wire it up by hand, replace each
+  placeholder yourself per the token table in README.md, then write the result
+  to ~/Library/LaunchAgents/<Label>.plist.
+
+  launchd ProgramArguments require ABSOLUTE paths -- "~" is not expanded -- which
+  is why the script path and log paths are fully-qualified tokens.
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>__LABEL__</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>__SCRIPT__</string>
+    </array>
+
+    <!-- launchd hands the job a bare environment; set PATH explicitly so
+         claude/jq/uuidgen resolve, and pass the watcher's tunables here. -->
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>__PATH__</string>
+        <key>WIKI_DIR</key>
+        <string>__WIKI_DIR__</string>
+        <key>CLAUDE_BIN</key>
+        <string>__CLAUDE_BIN__</string>
+        <key>WATCHER_MODEL</key>
+        <string>__MODEL__</string>
+        <key>IDLE_SECONDS</key>
+        <string>__IDLE_SECONDS__</string>
+    </dict>
+
+    <!-- Tick cadence. The watcher is cheap when idle (a few jq passes) and
+         self-throttles via MAX_PER_RUN + an atomic lock, so a run that
+         outlasts the interval just makes the next tick skip. -->
+    <key>StartInterval</key>
+    <integer>__INTERVAL__</integer>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>StandardOutPath</key>
+    <string>__STDOUT__</string>
+    <key>StandardErrorPath</key>
+    <string>__STDERR__</string>
+</dict>
+</plist>
