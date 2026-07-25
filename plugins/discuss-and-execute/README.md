@@ -57,7 +57,7 @@ flowchart LR
 
 ## Install
 
-Via the Guideline plugin marketplace, or directly:
+Via the internal plugin marketplace, or directly:
 
 ```bash
 claude --plugin-dir /path/to/discuss-and-execute

@@ -2,7 +2,7 @@
 
 ## BAD
 
-> RETIRE-7570 is in flight. There's a PR open. The HoS eligibility work is being built out. Some related migrations have been written.
+> TICKET-1234 is in flight. There's a PR open. The HoS eligibility work is being built out. Some related migrations have been written.
 
 Why this is bad:
 
@@ -22,7 +22,7 @@ Why this is bad:
 - `Public::Determinations::Service` read interface — `subsystems/defcon_participants/hours_of_service/public/services/determinations/service.rb`. Methods `satisfied_date` and `determination_exists?`.
 - Three private models: `Entry`, `WindowTotal`, `Determination` — all under `subsystems/defcon_participants/hours_of_service/private/models/`. **Zero non-test writers** anywhere in the codebase.
 
-### Incomplete but ticketed (RETIRE-7570 PR branch)
+### Incomplete but ticketed (TICKET-1234 PR branch)
 
 - PR adds `dc_plan_configuration_id` and `eligibility_rule` fields to `ParticipantEligibility::V2::PlanDesign`.
 - PR adds `hours_of_service?` predicate and HoS branch in `EligibilityPeriodForPlanDesignCalculator#eligible_service_on`.
@@ -39,7 +39,7 @@ Why this is bad:
 
 ### /audit on gaps
 
-`/audit RETIRE-7570 PR scope completeness` would surface: read path being built without a write path, schema-level decoupling for Entry that has not been propagated to Determination/WindowTotal, no migration for `eligibility_rule_signature` or equivalent, no product confirmation on additive-accrual semantics. None of these gaps is currently tracked in JIRA.
+`/audit TICKET-1234 PR scope completeness` would surface: read path being built without a write path, schema-level decoupling for Entry that has not been propagated to Determination/WindowTotal, no migration for `eligibility_rule_signature` or equivalent, no product confirmation on additive-accrual semantics. None of these gaps is currently tracked in JIRA.
 
 Why this is good:
 

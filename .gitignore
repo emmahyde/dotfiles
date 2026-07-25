@@ -1,2 +1,10 @@
 .DS_Store
 *.DS_Store
+
+# These two plugins derive their data.json from vault *content* rather than
+# settings — codeblock-language-detector caches indexed code blocks verbatim,
+# colored-tags accumulates every tag name it has seen. Both have leaked private
+# notes into this public repo before. Other plugin-data/ files are static
+# settings that install.sh needs, so they stay tracked.
+obsidian/plugin-data/codeblock-language-detector/data.json
+obsidian/plugin-data/colored-tags/data.json

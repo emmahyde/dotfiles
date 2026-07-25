@@ -15,7 +15,7 @@ If the script exits 0, `minions_path` is set and you can proceed.
 
 If the script exits non-zero (path not found at any known location), ask the user:
 
-> "Where is your Gusto/minions repo checked out? (e.g., `~/work/guideline/minions`)"
+> "Where is your minions repo checked out? (e.g., `~/work/your-org/minions`)"
 
 Expand the path (resolve `~`) and verify the directory exists before proceeding.
 

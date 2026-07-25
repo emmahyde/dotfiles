@@ -5,7 +5,7 @@ Voice interaction with Claude Code via [Wispr Flow](https://wispr.com) dictation
 ## Install
 
 ```
-claude plugin install wispr-voice@gusto-claude-code
+claude plugin install wispr-voice@your-org-claude-code
 ```
 
 ## Setup

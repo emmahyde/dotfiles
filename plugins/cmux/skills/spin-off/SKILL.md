@@ -11,7 +11,7 @@ Delegate a task to a new Claude Code session. Can optionally create a Jira ticke
 
 Accepts a free-form description of the task to spin off. May include:
 
-- A Jira ticket ID (e.g., `RETIRE-7996`) to skip ticket creation
+- A Jira ticket ID (e.g., `TICKET-1234`) to skip ticket creation
 - A project key + description to create a new ticket (e.g., "RETIRE: migrate legacy auth tokens")
 - An indication that no ticket or worktree is needed (e.g., "no worktree needed", "no ticket")
 - Just a task description if no ticket is needed
@@ -145,7 +145,7 @@ If no ticket was created, omit the ticket line.
 ## Examples
 
 ```
-/spin-off RETIRE-7996 -- Investigate the tenant-not-set error in chat analytics and write a fix with tests
+/spin-off TICKET-1234 -- Investigate the tenant-not-set error in chat analytics and write a fix with tests
 /spin-off RETIRE: migrate legacy auth tokens -- Move the old token format to the new encrypted scheme
 /spin-off Fix the flaky test in spec/models/user_spec.rb line 42
 /spin-off Review PR #59826, no worktree or ticket needed

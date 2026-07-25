@@ -39,7 +39,7 @@ allowing it to approve tool use would be unsafe.
 
 1. Add the local marketplace (from project root):
    ```
-   /plugin marketplace add /Users/emmahyde/projects/memesis/tools/channels
+   /plugin marketplace add $HOME/projects/memesis/tools/channels
    ```
 
 2. Install the plugin:
@@ -49,7 +49,7 @@ allowing it to approve tool use would be unsafe.
 
 3. Point the plugin at a transcript before launch (read once at startup):
    ```bash
-   export REVIEW_CANVAS_TRANSCRIPT=/Users/emmahyde/.claude/projects/<project>/<session>.jsonl
+   export REVIEW_CANVAS_TRANSCRIPT=$HOME/.claude/projects/<project>/<session>.jsonl
    ```
 
 4. Exit Claude Code, then relaunch with the dev flag:

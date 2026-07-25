@@ -11,7 +11,7 @@ Hand a Jira ticket off to the minions implement pipeline, which autonomously pla
 
 Accepts a Jira ticket ID or enough information to create one:
 
-- A ticket ID (e.g., `RETIRE-9202`) to use an existing ticket
+- A ticket ID (e.g., `TICKET-1234`) to use an existing ticket
 - A project key + description to create a new ticket (e.g., "RETIRE: migrate legacy auth tokens")
 
 No task prompt is needed — the Jira ticket is the task.
@@ -92,9 +92,9 @@ The pipeline runs autonomously — no further action needed.
 ## Examples
 
 ```
-/minion RETIRE-9202
-/minion RETIRE: migrate legacy auth tokens -- Move the old token format to the new encrypted scheme
-minion RETIRE-9202
-spin off a minion for RETIRE-9202
-implement with minion RETIRE-9202
+/minion TICKET-1234
+/minion TICKET: migrate legacy auth tokens -- Move the old token format to the new encrypted scheme
+minion TICKET-1234
+spin off a minion for TICKET-1234
+implement with minion TICKET-1234
 ```

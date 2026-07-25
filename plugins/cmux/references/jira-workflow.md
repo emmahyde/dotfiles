@@ -30,14 +30,14 @@ plugin_dir=$(cd "${CLAUDE_SKILL_DIR}/../.." && pwd)
 
 ### If creating a new ticket
 
-Prefer the `gusto-essentials:create-jira-ticket` skill if it is installed — it handles ADF formatting and gathers details interactively. After it creates the ticket, run transition on the returned key:
+Prefer the `your-org-essentials:create-jira-ticket` skill if it is installed — it handles ADF formatting and gathers details interactively. After it creates the ticket, run transition on the returned key:
 
 ```bash
 plugin_dir=$(cd "${CLAUDE_SKILL_DIR}/../.." && pwd)
 "${plugin_dir}/scripts/transition-ticket" {TICKET_KEY}
 ```
 
-If `gusto-essentials:create-jira-ticket` is not available, fall back to:
+If `your-org-essentials:create-jira-ticket` is not available, fall back to:
 
 ```bash
 acli jira workitem create \
@@ -64,8 +64,8 @@ Ask the user for a branch name to use instead. Skip the transition step.
 
 After this step you should have:
 
-- `TICKET_ID` — the ticket key (e.g., `RETIRE-9202`)
-- `TICKET_URL` — `https://gustohq.atlassian.net/browse/{TICKET_ID}`
+- `TICKET_ID` — the ticket key (e.g., `TICKET-1234`)
+- `TICKET_URL` — `https://your-org.atlassian.net/browse/{TICKET_ID}`
 - `TICKET_SUMMARY` — the ticket's summary/title
 
 Report the ticket key and URL to the user before proceeding.

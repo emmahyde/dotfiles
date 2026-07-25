@@ -79,7 +79,7 @@ Present the generated plan — wave by wave:
 - **Cross-wave handoffs** — files owned by tasks in different waves. Call these out explicitly:
   ```
   Cross-wave handoffs (files touched by multiple waves):
-  - `lib/minions/epic.rb` — Task 2.2 (flock) -> Task 3.1 (parallel fetch)
+  - `lib/pipeline/epic.rb` — Task 2.2 (flock) -> Task 3.1 (parallel fetch)
   - `test/test_helper.rb` — Task 1.2 (FatalError) -> Task 4.1 (async support)
   ```
   If none: "No cross-wave handoffs — clean ownership."
