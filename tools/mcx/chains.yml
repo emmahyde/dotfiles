@@ -1,0 +1,44 @@
+batch-edit-jira:
+  description: Apply the same field edits to many Jira issues; return per-issue confirmations.
+  language: ruby
+  path: chains/batch_edit_jira.rb
+
+batch_triage:
+  description: Flip one custom field across many Jira issues; return only a count.
+  language: ruby
+  path: chains/batch_triage.rb
+
+fanout_get_jira:
+  description: Fetch N Jira issues in one call and return a compact table.
+  language: ruby
+  path: chains/fanout_get_jira.rb
+
+jira_notion_crossref:
+  description: Pull one Jira issue and one Notion page and report how they reference each other.
+  language: ruby
+  path: chains/jira_notion_crossref.rb
+
+notion_jira_reconcile:
+  description: Cross-reference a Notion roadmap against live Jira epics; report gaps.
+  language: ruby
+  path: chains/notion_jira_reconcile.rb
+
+search_jira:
+  description: Run a JQL search and return one compact row per hit.
+  language: ruby
+  path: chains/search_jira.rb
+
+slack-daily-threads-digest:
+  description: Read the day's PR-review Slack threads and return only PRs still needing review.
+  language: ruby
+  path: chains/slack_daily_threads_digest.rb
+
+slack_to_bug:
+  description: Read a Slack thread and draft a triaged bug ticket.
+  language: ruby
+  path: chains/slack_to_bug.rb
+
+sprint_to_sheet:
+  description: Roll up the open sprint into status/assignee counts and dry-run Sheet rows.
+  language: ruby
+  path: chains/sprint_to_sheet.rb

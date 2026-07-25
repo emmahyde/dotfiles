@@ -1,0 +1,9 @@
+# Keeps the shipped plugin binary (scripts/mcx, invoked by hooks via
+# ${CLAUDE_PLUGIN_ROOT}) in lockstep with Go source on every commit.
+# Replaces a CI refresh job: Actions is disabled org-wide on this repo.
+# Run `lefthook install` once per clone to activate.
+pre-commit:
+  commands:
+    rebuild-binary:
+      glob: "*.go"
+      run: CGO_ENABLED=0 go build -trimpath -o scripts/mcx ./cmd/mcx && git add scripts/mcx

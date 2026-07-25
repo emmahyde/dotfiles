@@ -1,0 +1,19 @@
+{
+  "issues": [
+    {
+      "id": "1000001",
+      "key": "PROJ-1234",
+      "fields": {
+        "summary": "Sanitized search result",
+        "status": {
+          "name": "In Progress"
+        },
+        "assignee": {
+          "displayName": "Example User"
+        }
+      }
+    }
+  ],
+  "nextPageToken": "next-page-token",
+  "isLast": false
+}

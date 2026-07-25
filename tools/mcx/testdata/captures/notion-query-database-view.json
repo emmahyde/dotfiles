@@ -1,0 +1,13 @@
+{
+  "name": "APIResponseError",
+  "code": "validation_error",
+  "status": 400,
+  "headers": {},
+  "body": "{\"object\":\"error\",\"status\":400,\"code\":\"validation_error\",\"message\":\"Invalid database view URL\"}",
+  "additional_data": {
+    "tool_error_code": "invalid_view_url",
+    "tool_error_class": "validation",
+    "tool_error_retryable": "false"
+  },
+  "request_id": "sanitized-request-id"
+}

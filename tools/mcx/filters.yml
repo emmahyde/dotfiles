@@ -1,0 +1,72 @@
+mcp__jiraconfluencegusto__getJiraIssue:
+  transforms:
+    - type: parse
+      field: fields.description
+      format: adf
+      output: description_text
+    - type: project
+      into:
+        key: key
+        summary: fields.summary
+        status: fields.status.name
+        assignee:
+          source: fields.assignee.displayName
+          default: Unassigned
+        priority: fields.priority.name
+        updated: fields.updated
+        comments:
+          source: fields.comment.comments
+          op: length
+        description: description_text
+    - type: truncate
+      field: description
+      length: 400
+      suffix: "…"
+
+mcp__jiraconfluencegusto__editJiraIssue:
+  keep:
+    - key
+    - id
+    - fields.description
+    - fields.status.name
+    - fields.parent
+
+mcp__jiraconfluencegusto__searchJiraIssuesUsingJql:
+  keep:
+    - issues
+    - nextPageToken
+    - isLast
+
+mcp__slackgusto__slack_read_thread:
+  keep:
+    - messages
+    - pagination_info
+
+mcp__slackgusto__slack_read_channel:
+  keep:
+    - messages
+    - pagination_info
+
+mcp__slackgusto__slack_search_public_and_private:
+  keep:
+    - results
+    - pagination_info
+
+mcp__notiongusto__notion-fetch:
+  keep:
+    - metadata
+    - title
+    - url
+    - text
+
+mcp__notiongusto__notion-query-database-view:
+  keep:
+    - results
+    - next_cursor
+    - has_more
+
+mcp__notiongusto__notion-search:
+  keep:
+    - results
+    - next_cursor
+    - has_more

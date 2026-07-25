@@ -1,0 +1,33 @@
+{
+  "description": "mcx: auto-filter MCP tool results and impose an explicit /mcx:new routing gate once 2+ MCP calls land in one session, or on a bloated result (PostToolUse). New multi-call workflows run as heredoc-fed ad-hoc source; /mcx:save is reserved for explicit persistence requests. UserPromptSubmit routes literal mcx mentions to /mcx:mcx. All handlers are fail-open — a failure never breaks the tool call or prompt. Opt out with MCX_FILTER=off, MCX_OBSERVE=off, or MCX_NUDGE=off.",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "mcp__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/mcx filter --config ${CLAUDE_PLUGIN_ROOT}/filters.yml",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/mcx observe --config ${CLAUDE_PLUGIN_ROOT}/filters.yml",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/mcx nudge",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

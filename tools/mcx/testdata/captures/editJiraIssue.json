@@ -1,0 +1,13 @@
+{
+  "id": "1000002",
+  "key": "PROJ-1235",
+  "fields": {
+    "description": "Updated issue description.",
+    "status": {
+      "name": "In Progress"
+    },
+    "parent": {
+      "key": "PROJ-1000"
+    }
+  }
+}

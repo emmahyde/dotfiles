@@ -1,0 +1,13 @@
+{
+  "results": [
+    {
+      "id": "00000000-0000-0000-0000-000000000002",
+      "title": "Sanitized planning page",
+      "url": "notion://sanitized-page",
+      "type": "page",
+      "highlight": "Sanitized search result"
+    }
+  ],
+  "next_cursor": "next-cursor",
+  "has_more": false
+}

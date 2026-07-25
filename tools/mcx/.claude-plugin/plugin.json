@@ -1,0 +1,10 @@
+{
+  "name": "mcx",
+  "version": "0.1.2",
+  "description": "Two registries that cut MCP context bloat: declarative filters that auto-filter every tool result (PostToolUse), and chains that fan out MCP calls in one sandboxed run and return only a digest.",
+  "author": {
+    "name": "Jane Doe"
+  },
+  "repository": "https://github.com/your-org/mcx",
+  "keywords": ["mcp", "context", "token-reduction", "filter", "chains", "hooks"]
+}

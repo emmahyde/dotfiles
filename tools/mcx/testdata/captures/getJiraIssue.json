@@ -1,0 +1,106 @@
+{
+  "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+  "id": "1000001",
+  "self": "https://example.atlassian.net/rest/api/3/issue/1000001",
+  "key": "PROJ-1234",
+  "fields": {
+    "summary": "Sanitized example issue summary",
+    "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+    "created": "2026-01-02T09:00:00.000-0800",
+    "updated": "2026-01-03T11:30:00.000-0800",
+    "labels": ["example-label"],
+    "issuetype": {
+      "self": "https://example.atlassian.net/rest/api/3/issuetype/10001",
+      "id": "10001",
+      "description": "A task that needs to be done.",
+      "iconUrl": "https://example.atlassian.net/images/icons/issuetypes/task.svg",
+      "name": "Task",
+      "hierarchyLevel": 0,
+      "avatarId": 20001
+    },
+    "priority": {
+      "self": "https://example.atlassian.net/rest/api/3/priority/3",
+      "iconUrl": "https://example.atlassian.net/images/icons/priorities/medium.svg",
+      "name": "Medium",
+      "id": "3"
+    },
+    "status": {
+      "self": "https://example.atlassian.net/rest/api/3/status/10002",
+      "description": "Work is in progress.",
+      "iconUrl": "https://example.atlassian.net/images/icons/statuses/inprogress.png",
+      "name": "In Progress",
+      "id": "10002",
+      "statusCategory": {
+        "self": "https://example.atlassian.net/rest/api/3/statuscategory/4",
+        "id": 4,
+        "key": "indeterminate",
+        "colorName": "yellow",
+        "name": "In Progress"
+      }
+    },
+    "project": {
+      "self": "https://example.atlassian.net/rest/api/3/project/30001",
+      "id": "30001",
+      "key": "PROJ",
+      "name": "Example Project",
+      "projectTypeKey": "software",
+      "avatarUrls": {
+        "48x48": "https://example.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/48",
+        "24x24": "https://example.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/24",
+        "16x16": "https://example.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/16",
+        "32x32": "https://example.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/32"
+      }
+    },
+    "reporter": {
+      "self": "https://example.atlassian.net/rest/api/3/user?accountId=aaaaaaaaaaaaaaaaaaaaaaaa",
+      "accountId": "aaaaaaaaaaaaaaaaaaaaaaaa",
+      "emailAddress": "reporter@example.com",
+      "displayName": "Example Reporter",
+      "active": true,
+      "timeZone": "America/Los_Angeles",
+      "accountType": "atlassian",
+      "avatarUrls": {
+        "48x48": "https://avatar.example.com/48",
+        "24x24": "https://avatar.example.com/24",
+        "16x16": "https://avatar.example.com/16",
+        "32x32": "https://avatar.example.com/32"
+      }
+    },
+    "components": [
+      {
+        "self": "https://example.atlassian.net/rest/api/3/component/40001",
+        "id": "40001",
+        "name": "component-a",
+        "description": "First component."
+      },
+      {
+        "self": "https://example.atlassian.net/rest/api/3/component/40002",
+        "id": "40002",
+        "name": "component-b",
+        "description": "Second component."
+      }
+    ],
+    "assignee": {
+      "self": "https://example.atlassian.net/rest/api/3/user?accountId=cccccccccccccccccccccccc",
+      "accountId": "cccccccccccccccccccccccc",
+      "emailAddress": "assignee@example.com",
+      "displayName": "Example Assignee",
+      "active": true,
+      "timeZone": "America/Los_Angeles",
+      "accountType": "atlassian",
+      "avatarUrls": {
+        "48x48": "https://avatar.example.com/48",
+        "24x24": "https://avatar.example.com/24",
+        "16x16": "https://avatar.example.com/16",
+        "32x32": "https://avatar.example.com/32"
+      }
+    },
+    "comment": {
+      "self": "https://example.atlassian.net/rest/api/3/issue/1000001/comments",
+      "maxResults": 0,
+      "total": 0,
+      "startAt": 0,
+      "comments": []
+    }
+  }
+}
