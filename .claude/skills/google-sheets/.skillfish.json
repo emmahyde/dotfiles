@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "name": "google-sheets",
+  "owner": "vm0-ai",
+  "repo": "vm0-skills",
+  "path": "google-sheets",
+  "branch": "main",
+  "sha": "dcf895ed61854fb8ee09771f74d0e06769a7d94f",
+  "source": "manual"
+}

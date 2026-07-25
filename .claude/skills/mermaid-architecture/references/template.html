@@ -211,7 +211,7 @@ classDiagram
     el.dataset.tokenized = '1'
   }
 
-  const FILE_EXT_RE = /\.(md|jsonl|py|json|sqlite|db|toml|yml|yaml|tsx?|jsx?|html|css|cs|csproj|sln)\b/i
+  const FILE_EXT_RE = /\.(md|jsonl|py|json|sqlite|db|toml|yml|yaml|tsx?|jsx?|mjs|cjs|html|css|cs|csproj|sln)\b/i
   const ENV_RE = /^[A-Z][A-Z0-9]+(?:_[A-Z0-9]+){1,}$/
   const PASCAL_RE = /^[A-Z][a-z0-9]+(?:[A-Z][a-z0-9]+)+$/
   const FUNC_RE = /\([^)]*\)\s*$/
@@ -248,6 +248,7 @@ classDiagram
       container.querySelectorAll('svg g.node').forEach(g => {
         if (g.dataset.cat) return
         if (g.classList.contains('cluster')) return
+        if ([...g.classList].some(c => c.startsWith('cat-'))) return
         const isDiamond = !!g.querySelector('polygon')
         const label = g.querySelector('.nodeLabel, foreignObject span, foreignObject p, text')
         if (!label) return

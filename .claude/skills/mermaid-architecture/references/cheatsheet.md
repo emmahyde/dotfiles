@@ -74,3 +74,23 @@ mermaid.initialize({
   mermaid.registerLayoutLoaders(elkLayouts)
 </script>
 ```
+
+## Obsidian canvas host (mermaid inside a `.canvas` text node)
+
+ELK needs the mermaid-elk plugin + a header on every block; the HTML colorizer does NOT run, so color with `classDef`. Full rules + skeleton: `obsidian-canvas.md`.
+
+````
+```mermaid
+---
+config:
+  layout: elk
+---
+flowchart LR
+  A[start] --> B([decision])
+  classDef ev fill:#2e2710,stroke:#ffd166,color:#ffd166
+  class B ev
+```
+````
+
+- Labels must avoid `"` (the block is a JSON string) — stadium `([text])` / rect `[text]` take unquoted multi-word text; push `file:line` into a prose card.
+- Backlink via a `[[Note Name]]` text node, not a `type:file` node.

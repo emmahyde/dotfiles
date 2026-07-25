@@ -26,8 +26,9 @@ The polling script only emits when something changes. Event prefixes:
 - **"CHECKS:"** → Progress update (state changed since last poll). Acknowledge briefly only if the user seems idle.
 - **"MERGE CONFLICT"** → Branch conflicts with base. Alert the user immediately.
 - **"MERGED"** or **"CLOSED"** → PR resolved. Monitor will exit on its own.
-- **"COMMENT"** → New review comment from someone other than the PR author. Address it per the comment-reply rules below.
+- **"COMMENT"** → New review comment from someone other than the PR author — covers inline review-thread comments, top-level PR comments, AND review-summary bodies (the text attached to the review itself, e.g. a bot's "LGTM" or overall verdict, which lives on the Review object rather than any thread and is otherwise easy to miss). Address it per the comment-reply rules below.
 - **"UNRESOLVED"** → There are review comments with no reply from the PR author. Address them.
+- **"COMMENTS:"** → Overall resolved/unresolved thread count, independent of authorship — includes threads a reviewer resolved themselves. Informational; no action required unless the unresolved count is unexpectedly high.
 - **"ERROR"** → Transient issue; mention only if it repeats.
 
 ## Comment-reply rules (MANDATORY)

@@ -1,5 +1,4 @@
 ---
-name: search-web
 description: >-
   Structured, budget-disciplined web research that builds a source corpus and
   forms an evidence-backed opinion via a scientific process. Use when a task
@@ -15,7 +14,7 @@ hooks:
     - matcher: "WebFetch"
       hooks:
         - type: command
-          command: "bash /Users/emmahyde/.claude/skills/search-web/scripts/block-webfetch.sh"
+          command: "bash $HOME/.claude/skills/search-web/scripts/block-webfetch.sh"
 ---
 
 # Web Research Corpus

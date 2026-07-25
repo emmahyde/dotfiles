@@ -1,0 +1,72 @@
+{
+  "skill": "search-web",
+  "version": "1.0.0",
+  "evals": [
+    {
+      "id": "shallow-single-fact",
+      "description": "A single-fact question is classified Shallow and spends at most one search.",
+      "input": {
+        "prompt": "[search-web-subagent] What is the current stable version of the Zig compiler?",
+        "expected_depth": "Shallow",
+        "expected_search_budget": 1
+      },
+      "assertions": [
+        "Phase 0 restates the question in one sentence and classifies it Shallow",
+        "Exactly one web_search call is made (Phase 1 only); no searches in Phase 2 or 3",
+        "2-4 URLs are indexed to urls.txt, each with a one-line note",
+        "The corpus is batch-fetched in a single call (batch_fetch.py via --topic-file, or ctx_fetch_and_index)",
+        "A corpus-summary.md is written and its absolute path is the only line of final output",
+        "The appended Research Brief states an opinion with a calibrated confidence level and cites a specific pages/NN-*.md file or page URL"
+      ],
+      "unexpected_behaviors": [
+        "More than one web_search call",
+        "Answering from search snippets without fetching the corpus",
+        "Returning prose instead of the corpus-summary.md path",
+        "Running Phases 0-3 in the main conversation instead of the dispatched subagent"
+      ]
+    },
+    {
+      "id": "standard-comparison",
+      "description": "A one-comparison question is classified Standard and stays within a 1-2 search budget.",
+      "input": {
+        "prompt": "[search-web-subagent] How does HTTP/3 (QUIC) differ from HTTP/2 for connection setup latency?",
+        "expected_depth": "Standard",
+        "expected_search_budget": 2
+      },
+      "assertions": [
+        "Phase 0 classifies the question Standard with a 1-2 search budget",
+        "At most two web_search calls, each covering a distinct facet (not paraphrases)",
+        "5-8 URLs indexed, favoring primary sources and official specs",
+        "Every claim in the Research Brief is cited to a specific fetched page, never to a search snippet",
+        "corpus-summary.md is produced and returned as the sole output line"
+      ],
+      "unexpected_behaviors": [
+        "Two searches that are paraphrases of each other",
+        "Exceeding the two-search budget to 'check one more thing'",
+        "Uncited claims in the brief"
+      ]
+    },
+    {
+      "id": "deep-contested-thin-corpus",
+      "description": "A contested question gets the Deep budget; a thin corpus is reported as a finding rather than triggering extra searches.",
+      "input": {
+        "prompt": "[search-web-subagent] Is RAG or long-context prompting the better architecture for enterprise document QA in 2026?",
+        "expected_depth": "Deep",
+        "expected_search_budget": 3
+      },
+      "assertions": [
+        "Phase 0 classifies the question Deep (2-3 searches, 8-15 page target)",
+        "Searches cover disagreeing viewpoints since the question is contested",
+        "The budget is never exceeded; if results are thin the brief records that as a finding",
+        "Phase 3 weighs source quality, resolves conflicts explicitly, and names what would change the opinion",
+        "Fetch failures (method: failed rows) are reported honestly, not silently dropped",
+        "Final output is exactly the absolute path to corpus-summary.md"
+      ],
+      "unexpected_behaviors": [
+        "Searching beyond three times to compensate for a thin corpus",
+        "Presenting a one-sided view of a contested question",
+        "Hiding failed fetches from the corpus summary"
+      ]
+    }
+  ]
+}

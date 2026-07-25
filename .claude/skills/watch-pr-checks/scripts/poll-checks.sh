@@ -42,6 +42,13 @@ QUERY='query($owner:String!,$repo:String!,$pr:Int!){
         body
         createdAt
       }}
+      reviews(last:50){nodes{
+        databaseId
+        author{login}
+        body
+        state
+        submittedAt
+      }}
       commits(last:1){nodes{commit{statusCheckRollup{
         contexts(first:100){nodes{
           __typename
@@ -69,6 +76,7 @@ prev_check_summary=""
 prev_mergeable=""
 prev_pr_state=""
 prev_unresolved_ids=""
+prev_comment_summary=""
 # Initial high-water mark — only emit comments created after monitor start.
 last_comment_iso="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
@@ -97,12 +105,15 @@ emit_from_json() {
   local author
   author="$(echo "$json" | jq -r '.data.repository.pullRequest.author.login // empty')"
 
-  # New comments since last_comment_iso. Covers review-thread comments AND
-  # top-level PR (issue) comments. Non-author comments always pass. Self
-  # (PR author) comments pass only when open-ended / requesting changes —
-  # heuristic: ends with "?", or contains TODO/FIXME/WIP/`[ ]`, or imperative
-  # verbs (please|need to|should|let's|can we|could we|fix|update|change|
-  # remove|rework|follow up). Pure status replies are filtered out.
+  # New comments since last_comment_iso. Covers review-thread (line) comments,
+  # top-level PR (issue) comments, AND review-summary bodies (the text a
+  # reviewer/bot attaches to the review itself, e.g. "LGTM, one nit below" —
+  # easy to miss since it lives on the Review object, not on any thread).
+  # Non-author comments always pass. Self (PR author) comments pass only
+  # when open-ended / requesting changes — heuristic: ends with "?", or
+  # contains TODO/FIXME/WIP/`[ ]`, or imperative verbs (please|need to|
+  # should|let's|can we|could we|fix|update|change|remove|rework|follow up).
+  # Pure status replies are filtered out.
   local self_keep_regex='\?\s*$|\b(TODO|FIXME|WIP)\b|\[ \]|\b(please|need to|should|let'\''?s|can we|could we|fix|update|change|remove|rework|follow ?up)\b'
   local new_comments_block
   new_comments_block="$(echo "$json" | jq -r --arg author "$author" --arg since "$last_comment_iso" --arg self_re "$self_keep_regex" '
@@ -112,8 +123,12 @@ emit_from_json() {
       +
       [.data.repository.pullRequest.comments.nodes[]?
         | {kind:"issue", id:.databaseId, login:.author.login, body:.body, path:"PR conversation", line:"-", createdAt:.createdAt}]
+      +
+      [.data.repository.pullRequest.reviews.nodes[]?
+        | select((.body // "") | length > 0)
+        | {kind:"review-summary", id:.databaseId, login:.author.login, body:"[\(.state)] \(.body)", path:"PR review", line:"-", createdAt:.submittedAt}]
     )
-    | map(select(.createdAt > $since))
+    | map(select(.createdAt != null and .createdAt > $since))
     | map(select((.login != $author) or ((.body // "") | test($self_re; "i"))))
     | sort_by(.createdAt)
     | .[] |
@@ -121,13 +136,14 @@ emit_from_json() {
   ')"
   if [ -n "$new_comments_block" ]; then
     echo "$new_comments_block" | sed '/^---END---$/d'
-    # Advance high-water across BOTH streams regardless of filtering, so the
+    # Advance high-water across ALL streams regardless of filtering, so the
     # next cycle doesn't re-emit filtered-out comments.
     local newest
     newest="$(echo "$json" | jq -r --arg since "$last_comment_iso" '
       ([.data.repository.pullRequest.reviewThreads.nodes[]?.comments.nodes[]?.createdAt]
-       + [.data.repository.pullRequest.comments.nodes[]?.createdAt])
-      | map(select(. > $since)) | max // empty
+       + [.data.repository.pullRequest.comments.nodes[]?.createdAt]
+       + [.data.repository.pullRequest.reviews.nodes[]?.submittedAt])
+      | map(select(. != null and . > $since)) | max // empty
     ')"
     [ -n "$newest" ] && last_comment_iso="$newest"
   fi
@@ -156,6 +172,23 @@ emit_from_json() {
         | .comments.nodes[0] as $root
         | "  - [id:\($root.databaseId)] \($root.author.login) on \($root.path):\($root.line // $root.originalLine // "file")\n    \($root.body | gsub("\n";"\n    "))"
       '
+    fi
+  fi
+
+  # Overall thread-resolution picture, independent of authorship — covers
+  # threads a reviewer resolved themselves (no reply needed) so the full
+  # resolved/unresolved count is always visible, not just the actionable subset.
+  local comment_summary
+  comment_summary="$(echo "$json" | jq -r '
+    .data.repository.pullRequest.reviewThreads.nodes as $t
+    | "\($t | length) \($t | map(select(.isResolved)) | length) \($t | map(select(.isResolved | not)) | length)"
+  ')"
+  if [ -n "$comment_summary" ] && [ "$comment_summary" != "$prev_comment_summary" ]; then
+    prev_comment_summary="$comment_summary"
+    local c_total c_resolved c_unresolved
+    read -r c_total c_resolved c_unresolved <<<"$comment_summary"
+    if [ "${c_total:-0}" -gt 0 ]; then
+      echo "COMMENTS: ${c_resolved} resolved, ${c_unresolved} unresolved [${c_total} threads total]"
     fi
   fi
 

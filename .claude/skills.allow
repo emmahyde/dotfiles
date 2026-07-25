@@ -1,0 +1,52 @@
+# Skills published from ~/.claude/skills into this repo.
+# One name per line; blank lines and # comments ignored.
+# Anything not listed here stays local — see EXCLUDED at the bottom for why.
+
+audit
+claude-archive-search
+debug
+diagnose
+diagram-workshop
+doc-driven-dev
+dockeeper
+duet
+gh-similar-repos
+google-sheets
+grill-with-docs
+human-in-the-loop-testing
+improve-codebase-architecture
+knowledge-graph
+mermaid-architecture
+multi-agent-coordination
+narrative-diagram
+passoff
+pr-review-sweep
+progress
+prototype
+save-skill
+scope-review
+scriptify
+search-web
+skillopt
+slack-prs
+spawn-agent
+thoughtful-terse
+to-issues
+to-prd
+unwrap-markdown
+uv-python-scripts
+verify
+voice-prompt-generator
+watch-pr-checks
+wiki-docs
+wiki-lint
+writing-beats
+writing-fragments
+writing-shape
+zoom-out
+
+# EXCLUDED — do not add without re-checking, this repo is public:
+#   minions-evals       internal: guideline-app/ai-tools paths, minions Jira->PR pipeline
+#   scriptify-workspace eval run artifacts, not a skill
+#   humanizer           empty directory
+# Symlinks into ~/.agents/skills are skipped automatically (vendored, not ours).

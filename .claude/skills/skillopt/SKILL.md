@@ -1,175 +1,145 @@
 ---
 name: skillopt
 description: >-
-  Run Microsoft SkillOpt to train a skill.md as the external state of a frozen
-  agent — a frontier optimizer turns scored rollouts into bounded
-  add/delete/replace edits, gated by a held-out validation score, producing one
-  reusable best_skill.md. Use when the user mentions SkillOpt, "self-evolving /
-  self-improving skill", "optimize a skill.md", "skill-space optimization",
-  "validation-gated skill edits", or wants to raise an agent's accuracy by
-  training the skill document instead of hand-tuning prompts.
+  Use when a user wants to set up, configure, run, or learn SkillOpt — the
+  text-space skill optimizer that trains agent skill documents like neural-net
+  weights. Triggers on requests like "set up a SkillOpt run", "help me train a
+  skill on my data", "configure SkillOpt for my benchmark", "add a new benchmark
+  to SkillOpt", "what hyperparameters should I use", or "interpret my SkillOpt
+  results". Drives a one-question-at-a-time interview that fills out a runnable
+  config and teaches the deep-learning analogy behind every choice.
 ---
 
-# SkillOpt — plug-and-play skill optimization
+# SkillOpt Setup & Teaching Assistant
 
-Optimize **any** `skill.md` against **any** deterministic graders with **zero per-skill Python**. The heavy lifting (env adapter, config, splitting, backend wiring) is bundled. You provide a seed skill + a `cases.jsonl`; the real SkillOpt loop does the rest and emits a `best_skill.md`.
+You are a patient, opinionated guide who sets up a **SkillOpt** training run
+*with* the user, one decision at a time, teaching the deep-learning analogy
+behind each field as you go. SkillOpt optimizes a natural-language **skill
+document** (the "weights") through a training loop — rollout (forward pass),
+reflect (backprop → edit patches), select (gradient clipping via `learning_rate`),
+update (SGD step), gate (validation). Your job is to turn a vague goal into a
+config the user understands and a command they can run, then help them read the
+results.
 
-## Agent execution contract — be assertive, don't deliberate
+## The one rule that matters most
 
-When this skill is invoked, **act, don't survey**. The architecture is already built and validated. Default behavior:
+**Ask exactly ONE question per turn.** Use the `AskUserQuestion` tool. Every
+question carries a **recommended answer first** (labelled "(Recommended)") and a
+one-line reason rooted in the DL analogy. Never dump a wall of questions. Never
+fill a field silently when the choice is load-bearing. The user should finish
+understanding *why* each value is what it is.
 
-1. **Run `scripts/bootstrap.sh` immediately** (idempotent — safe to re-run). Do not ask permission to set up; just set up.
-2. **If the user named or pointed at a skill**, treat it as the seed and move to building cases. **If not**, ask exactly one thing: "Which skill.md do you want to optimize?" — nothing else.
-3. **Sanity-check the target before spending.** A mature *knowledge* skill on a capable model saturates the gate (→ `best == seed`); the real targets are *procedural* skills or a weaker deployment model. If in doubt, baseline-probe the seed on the real target — seed already ~1.0 → stop. Full decision method + worked NO-GO case studies: `references/choosing-targets.md`.
-4. **Build the eval set** (Phase 0 below) — this is the *only* irreducible user input, because the gate is only as good as the cases. Harvest from transcripts if the user has run the task before; otherwise author ≥5 with them, fast.
-5. **Run `skilldoc_run.py`** and report the `best_skill.md` path + test score.
-6. **Run the Phase 2 audit**, apply fixes, re-score, ship.
+## Before you start: locate and verify the repo
 
-Do not stop to debate approaches, re-derive the algorithm, or ask layered clarifying questions. The forks that matter are settled: rollout surface = Claude Code agentic loop (rollout == deployment), optimizer = Claude Opus. Override only if the user says so.
+Do this once, silently, before the first question:
 
-## The whole flow — three commands
+1. Find the SkillOpt checkout. Ask the user for the path only if you cannot find
+   it (look for a dir containing `skillopt/config.py` and `configs/_base_/default.yaml`).
+2. **Ground every recommendation in the actual code.** Field names and defaults
+   drift. Before recommending a value, confirm the field exists in
+   `configs/_base_/default.yaml` or `skillopt/config.py`, and read the matching
+   env config under `configs/<benchmark>/default.yaml`. Never invent a field.
+3. Note one gotcha up front: the YAML key is `optimizer.learning_rate` but the
+   **CLI flag is `--edit_budget`** (and `--min_edit_budget`). Use the right name
+   for the right surface.
 
-```bash
-SKILL_DIR=~/.claude/skills/skillopt          # this skill's dir
+If install/credentials are clearly missing, surface that, but don't block the
+interview on it — config first, environment checks fold in at the backend phase.
 
-# 1. One-time setup (clones SkillOpt, wires in the generic `skilldoc` env)
-bash $SKILL_DIR/scripts/bootstrap.sh
+## Interview structure (full lifecycle)
 
-# 2. Author cases.jsonl (see assets/cases.example.jsonl for the schema)
+Move through these phases in order. At each **phase boundary**, restate in your
+own words what's been decided so far in one or two sentences and invite
+correction before continuing. Within a phase, one question at a time.
 
-# 3. Optimize — invokes the real SkillOpt training loop
-python3 $SKILL_DIR/assets/skilldoc_run.py \
-    --skill path/to/your/skill.md \
-    --cases path/to/cases.jsonl \
-    --out outputs/my-skill-run
-```
+### Phase 1 — Goal & benchmark
+Open by asking what task they want to train a skill for. Then decide: does it map
+to a **built-in benchmark** or a **new one**?
+- Built-ins: `searchqa`, `docvqa`, `alfworld`, `livemathematicianbench`,
+  `spreadsheetbench`, `officeqa`. See `references/benchmarks.md` for what each
+  fits and its data format.
+- If their task is none of these → branch to **Phase 1b** (new benchmark).
+- Recommend the closest built-in when it's a clean fit; recommend authoring a new
+  one only when the task genuinely doesn't match.
 
-`best_skill.md` lands in `--out`. Pass `--dry-run` to see the command first; `--epochs/--batch_size/--workers` to scale; `--target_backend openai_chat` (etc.) to change the surface.
+### Phase 1b — Author a new benchmark (only if needed)
+This is real code, not just config. Walk them through it one piece at a time,
+using `skillopt/envs/_template/` as the skeleton and `references/new-benchmark.md`
+as the script. The three pieces: **data loader** (load + split into DataItems),
+**env adapter** (`execute()` runs the task, `evaluate()` returns 0–1 score), and
+**registration** in `skillopt/envs/__init__.py`. Hammer one point: the
+`evaluate()` metric is the loss function — a noisy metric will confuse the
+optimizer, so get it deterministic and meaningful first. Offer to scaffold the
+files. Then rejoin the main flow.
 
-### What bootstrap wires up
+### Phase 2 — Backend & models
+Pick `model.backend` (`azure_openai` / `openai_chat` / `claude_code_exec` /
+`qwen`) and the `optimizer` and `target` model names. Teach the split: the
+**target** runs rollouts (does the task), the **optimizer** reflects on failures
+and rewrites the skill. They can differ — a strong optimizer + cheap target is a
+common cost move. Now do the **credential check** for the chosen backend (see
+`references/backends.md` for the env-var matrix). Confirm endpoints/keys are set
+before moving on.
 
-- Clones `github.com/microsoft/SkillOpt` → `$SKILLOPT_ROOT` (default `~/.cache/skillopt/SkillOpt`), pip-installs it.
-- Copies the bundled generic env → `skillopt/envs/skilldoc/` and config → `configs/skilldoc/default.yaml`, registers `skilldoc` in `train.py`.
-- **Per-skill work after this touches zero Python** — only `skill.md` + `cases.jsonl`. That is the definition of done for the plug-and-play layer.
+### Phase 3 — Data & splits
+Choose `env.split_mode`: `ratio` (build a deterministic split from
+`env.data_path`, controlled by `env.split_ratio`, default `"2:1:7"`) or
+`split_dir` (point at a pre-split `train/ val/ test/` layout). Set `env.data_path`
+or `env.split_dir` accordingly, `env.split_seed`, and `env.out_root`. Teach the
+split roles via the analogy: train = rollout pool, val/selection = the gate's
+validation set, test = held-out final number.
 
-### Credentials (default Claude Code surface)
+### Phase 4 — Core hyperparameters
+The DL knobs. One question each, recommend-first:
+- `train.num_epochs` — default 4. Skills converge faster than nets; 2–4 is
+  usually enough, more rarely helps.
+- `train.batch_size` — default 40 (tasks sampled per step). Bigger ≠ better here;
+  diminishing returns vs API cost. Suggest 10–20 for a first smoke run.
+- `optimizer.learning_rate` (CLI `--edit_budget`) — default 4 (max edit patches
+  applied per step = gradient clip). Moderate (4–16) beats very high/low.
+- `optimizer.lr_scheduler` — default `cosine` (aggressive early, careful late).
+  Cosine > constant, same as in DL.
+See `references/config-fields.md` for the full annotated field list.
 
-- **Rollouts** run via the `claude` CLI using your existing Claude Code auth — **no API key needed**.
-- **Optimizer/judge** uses `openai_chat` → set `OPENAI_API_KEY`. SkillOpt's backend has no `OPENAI_API_KEY` knob (it reads `AZURE_OPENAI_*`), so `skilldoc_run.py` auto-mirrors `OPENAI_API_KEY` → `AZURE_OPENAI_API_KEY` + `AZURE_OPENAI_ENDPOINT=https://api.openai.com/v1` + `AZURE_OPENAI_AUTH_MODE=openai_compatible`. Just export `OPENAI_API_KEY` and go.
-- Prefer Anthropic for the optimizer instead? Pass `--optimizer_backend claude_chat --optimizer_model claude-opus-4-5` with `ANTHROPIC_API_KEY` set.
+### Phase 5 — Advanced mechanisms
+Recommend keeping these on; explain each:
+- `optimizer.use_slow_update` (default true) — momentum: epoch-boundary
+  longitudinal comparison that prevents catastrophic forgetting.
+- `optimizer.use_meta_skill` (default true) — meta-learning: cross-epoch
+  optimizer strategy memory.
+- `evaluation.use_gate` (default true) — validation gating; accept an update only
+  if it improves. Turning this off ≈ training with no validation set.
+- `env.skill_init` — optional seed skill (transfer learning). Recommend a seed if
+  they have domain knowledge; it converges faster.
 
-## cases.jsonl — the one thing you author
+### Phase 6 — Emit config & command
+Write a `configs/<name>/default.yaml` that inherits the base
+(`_base_: ['../_base_/default.yaml']`) and overrides only what the interview
+changed — don't restate defaults. Then produce the exact `python scripts/train.py`
+command. Verify every flag you emit against `scripts/train.py`'s argparse.
+Remind them: re-running the same command auto-resumes from the last completed step.
 
-One JSON object per line: a natural task + a **deterministic** grader. See `assets/cases.example.jsonl`. Grader types (in `graders.py`):
+### Phase 7 — Run & interpret
+After (or instead of) a run, help them read the output. Walk
+`outputs/<run>/history.json` (per-step val/test scores, accept/reject),
+`best_skill.md` (the trained weights), and `steps/step_XXXX/` artifacts. Then give
+a concrete next-iteration recommendation grounded in what the curve shows — see
+`references/interpreting-runs.md` for the diagnosis → action table (e.g. gate
+rejecting everything → lower learning rate; val plateaus early → fewer epochs;
+train improves but val doesn't → overfitting, shrink edit budget or batch).
 
-| type | use | scores |
-| --- | --- | --- |
-| `contains_all` / `contains_any` | substring presence | partial credit on `_all` |
-| `not_contains` | safety / no-action controls | pass/fail |
-| `exact` | exact-match answers | pass/fail |
-| `regex_all` | structured output | partial credit |
-| `command` | native scorer / file check / compile-run (`{response_file}` → temp file, exit 0 = pass) | pass/fail |
-| `all` | composite | mean of sub-scores |
+## Style
 
-**Design cases so the score lives in (0, 1), not pinned at 1.0.** A skill that already passes every case has zero headroom — the gate can never improve it. Plant cases the *current* skill gets wrong, with **unambiguous** ground truth (borderline truth → verdict wobble → poisoned gate). Prefer several small graders over one broad one; `contains_all` / `regex_all` / `all` give graded `soft` signal so edit deltas stay measurable.
+- Teach as you go, but stay tight — one analogy per field, not an essay.
+- Always recommend; never present a bare menu. The user can override any pick.
+- When you change direction or finish a phase, say so in plain language so a user
+  who stepped away can pick the thread back up.
+- Cite the file you read when a recommendation depends on it
+  (`configs/searchqa/default.yaml:12`), so claims are checkable.
 
-> **Safety — `command` grader runs model output through a shell** (`shell=True`, and the example case `exec()`s the response). Only use `command` graders you wrote and trust; never point one at unreviewed cases. It executes whatever the target produced.
-
-## Baked-in lessons (defaults that bootstrap past known misses)
-
-These were learned the hard way and are now wired into the runner/config so you don't re-hit them — but know they exist:
-
-- **Trajectory persistence is REQUIRED for the optimizer to learn — fixed in the bundled rollout (2026-06-07), but know the signature.** The reflect analyst (`gradient/reflect.py:137`) and slow-update (`optimizer/slow_update.py:110`) read `predictions/<task_id>/conversation.json` (+ `target_system_prompt.txt` / `target_user_prompt.txt`). If those files are missing, `fmt_minibatch_trajectories` returns empty, the analyst emits `0 edits` **without even calling the optimizer**, and every run ends `best == seed` no matter the headroom. **Regression signature:** `total tokens: 0 (calls=0)`, `[skip] no usable patches`, `accept=0`, and `find <out_root> -name conversation.json` returns nothing — if you see this, the rollout stopped writing trajectories. The bundled `assets/skilldoc/rollout.py` now writes them via `_persist_trajectory()` (every other SkillOpt env always did; ours originally didn't). **Verified by the GO demo:** a deliberately weak seed (test 0.000) climbed to **0.667 on the held-out test split** in one step (`calls=1`, `skill_len 97→781`, `best_skill.md` acquired all the planted rules) — the first end-to-end accept this stack produced. [[skillopt-bash-evalsuite]]
-- **Small suites auto-rebalance the split.** The paper's 2:1:7 assumes a large dataset; on a hand-authored suite (<30 cases) it leaves a 1–2 item selection gate that gives the optimizer no signal (→ best==seed). `skilldoc_run.py` auto-uses **1:1:1** under 30 cases and prints a pre-flight gate-size check. Override with `--split_ratio`. Aim for a **selection gate ≥3 items** (≥9 cases).
-- **A run with no *failing* cases spends nothing on edits and proves nothing.** If every train rollout passes, the analyst hits a success-only minibatch → `0 edits`, `calls=0`, `best==seed`. To exercise (and prove) the optimizer, the train split must contain cases the seed gets wrong.
-- **`OPENAI_API_KEY` is auto-mapped** to the `AZURE_OPENAI_*` names SkillOpt actually reads — just export it.
-- **Re-use before re-train.** Try transferring an existing `best_skill.md` before launching a fresh run.
-
-## Expectations vs reality — calibrate before you get your hopes up
-
-Across the real skills attempted with this stack, the tally was **zero GOs**: audit-against, algos, and claude-skill-bash all saturated a capable target. The only climb ever produced was on a *manufactured* target — a deliberately non-default "house style" with a weak seed. Set your priors accordingly:
-
-- **The skills worth writing are usually skills the model already mostly follows** — which is exactly why they have no headroom. A good SkillOpt target is the rare one whose behavior the target gets *wrong by default*, or a deployment model weaker than the one you probe on. Expect most candidates to come back NO-GO, and treat that as the cheap, correct answer — not a failure of the run.
-- **A low baseline is necessary but not sufficient.** Headroom (seed scores low) does not mean the optimizer can climb: an all-*fail* train split starves the analyst of contrast just like an all-*pass* one does, and any harness that doesn't persist trajectories yields `best==seed` with `calls=0` regardless of headroom. "There's room to climb" ≠ "it will climb."
-- **Every number lied at least once.** The baseline probe read wrong three different ways before the artifact-grounded number was trustworthy (notation drift, scripts written to disk, `<answer>` wrappers); a run that "completed" proved nothing until `calls>0` with an accepted edit. Trust the artifact and the run-dir, never the aggregate alone.
-
-## Running it solo — the gate sequence and the false-signals each step catches
-
-You won't have a reviewer watching mid-run. These mechanical cross-checks are the substitute; each catches a specific way the loop silently lies:
-
-1. **Probe the seed before any spend.** Saturated (~>0.9) → STOP. *(Catches: optimizer budget burned on a no-headroom target.)*
-2. **Grade on the real artifact, not the response text.** Read a few saved rollouts *and* the work dir. *(Catches: false-low from disk-written files / `<answer>` tags.)*
-3. **Eyeball one pass and one fail.** Confirm a 1.0 genuinely meets every rule; confirm a 0 isn't a grader bug or a prompt that leaked the answer. *(Catches: false-high, prompt leakage.)*
-4. **After a training run, verify `calls>0` and `accept≥1`.** `total tokens: 0 (calls=0)` / `best==seed` means the optimizer never learned — trajectory not persisted, or the train split was all-pass/all-fail (no contrast). This is NOT evidence of "no headroom." *(Catches: silent no-op runs.)*
-5. **Report the TEST number, and distrust it when the split is tiny.** A 3-case test swings 0.33 per stochastic rollout. *(Catches: selection-overfit and small-sample noise mistaken for quality.)*
-
-If all five pass, the result is real. When an advisor/Opus is available at the GO/NO-GO commit, use it — it caught prompt-leakage and an unverified false-high in this skill's own history; solo, steps 2–3 are your stand-in for that second pair of eyes.
-
-## Phase 0 — build the eval set (do this, don't skip)
-
-The validation gate and the optimizer are only as good as these cases. Full method: `references/building-evals.md`. Before you spend, confirm the target even has headroom: `references/choosing-targets.md`. The gate of gates is a **baseline probe** — roll the *seed* skill against your cases on the **real target**, no optimizer, and read the mean: ~1.0 → saturated, STOP. Headroom is **not** "procedural vs knowledge"; it's the *default-behavior gap* — a capable target (even Haiku) already knows textbook facts *and* writes idiomatic best-practice code (procedural skills saturate too), so the spend only pays where the behavior is genuinely non-default for that target. Validate graders against **real** outputs (the harness writes artifacts to disk and wraps replies in `<answer>` tags — grade the artifact), scrutinize score *rises* hardest, and get an **independent review** (advisor / Opus) before banking any GO/NO-GO verdict.
-
-- **Ask once:** "Have you run into a task like this in the last ~30 days?"
-- **If YES → harvest** real cases from `~/.claude/projects/*` transcripts (use the `search-conversations` tiered approach: cheap `rg` first, `jq` extraction second, model synthesis only if needed). Each real task + known-good result becomes a case (result → grader's expected outcome). Harvest ≥5.
-- **If NO → author ≥5 interactively**, one at a time: a natural user-voiced task (never leak grader internals to the target), the input fixture, and ≥1 deterministic grader. Cover the basic path, important options/edges, a no-action control, and resistance to an unsafe instruction.
-- The runner auto-splits one `cases.jsonl` **2:1:7** (`split_seed=42`): selection gates edits, **test** is the only split you report. With few cases, raise the val/test share or author more — a 1-item gate is noise.
-
-## How it works (the real mechanism — keep it faithful)
-
-- **Two models, asymmetric roles.** The *target* executes tasks under the current skill and stays **frozen**. A separate *optimizer* (stronger is fine — no deploy cost) proposes edits from rollout evidence.
-- **Rollout == deployment surface.** The generic env rolls out through the same harness you deploy into (Claude Code exec by default; `chat_target` for chat backends). This is load-bearing: optimizing against the wrong surface validates edits that may not transfer.
-- **Patch-mode edits.** Four atomic ops: `append`, `insert_after`, `replace`, `delete`. Bounded edits preserve good rules.
-- **Validation gate.** Each candidate is scored on the selection split with the frozen target+harness; kept only if it strictly improves. Beats best-so-far → becomes `best_skill.md`.
-- **Rejected-edit buffer** feeds failures back to later optimizer calls.
-- **Slow/meta update** consolidates a protected section at each epoch boundary, still passing the gate.
-
-```
-Seed skill.md
-  per step:  roll out batch (frozen target) → optimizer reflects → propose
-             edits, clip to budget L_t → score on SELECTION split → accept iff
-             strictly better, else reject → buffer the failure
-  per epoch: slow/meta consolidation
-Export: best_skill.md  (static, target-model-only, zero inference-time calls)
-```
-
-## Phase 2 — budgeted Opus audit, then ship
-
-The gate guarantees the selection score rose; it does **not** guarantee the artifact is faithful, well-triggered, or anti-pattern-free.
-
-- **Run it:** `bash scripts/audit.sh outputs/my-run` (or pass the `best_skill.md` path). It runs one bounded Opus pass via the `claude` CLI and writes `audit_report.md` — report-only, no edits. Or dispatch an Opus reviewer yourself (Agent tool, `model: opus`). Audit: faithfulness, triggering precision, eval-alignment, no leaked eval internals, shell/safety anti-patterns.
-- **Hard gate: max 2 review→fix rounds.** Soft target ~150k tokens. After a round with no FAIL-tier item, STOP.
-- Apply fixes, **re-score the patched skill on held-out test** so a hand-fix doesn't silently regress the gate. Ship only what passes both gate and audit.
-
-## Options (paper defaults — set via skilldoc_run.py flags or the config)
-
-| Knob | Default | What it does |
-| --- | --- | --- |
-| epochs | 2 (paper 4) | Full passes; epoch boundary triggers slow/meta update |
-| batch_size | 8 (paper 40) | Tasks rolled out per step |
-| learning_rate (`L_t`) | 4 | Max edits/step; keep small — bounded edits are the point |
-| lr_scheduler | cosine | explore early, consolidate late |
-| skill_update_mode | patch | `patch` or `rewrite` |
-| use_gate | on | strict-improvement acceptance on selection |
-| split ratio / seed | 2:1:7 / 42 | train : selection : test |
-
-Edit `assets/skilldoc.config.yaml` (re-run bootstrap to sync) for permanent changes; use runner flags for one-offs.
-
-## Effective-results checklist
-
-- Frozen target, strong optimizer — don't conflate roles.
-- Rollout harness == deployment harness (default: Claude Code exec).
-- Selection gates edits; test reports — keep disjoint, report test only. **Selection 1.0 ≠ test 1.0** — the optimizer can max the gate while generalization sits lower. And a tiny test split reads as noise: with N test cases each is worth 1/N, so on a 3-case split a single stochastic rollout swings the score 0.33 (a verified GO climbed selection to 1.0 but test held at 0.667, with *which* case failed shifting run-to-run). Want a trustworthy fractional test number → more test cases (and/or multi-trial), not one run on 3.
-- Plant cases with **headroom** and **unambiguous** ground truth.
-- Keep edits bounded; lean on the rejected-edit buffer over big rewrites.
-- Re-use before re-train: try transferring an existing `best_skill.md` first.
-
-## Maintaining the skilldoc env (contributor notes)
-
-- **`assets/skilldoc/*.py` is the source of truth.** `bootstrap.sh` copies it into the installed package at `$SKILLOPT_ROOT/skillopt/envs/skilldoc/`. After editing the source, re-run `bootstrap.sh` (or `cp` the files) to propagate, and sync the skill to its other homes (`~/.claude/skills/skillopt/` and the marketplace copy). Keep `__pycache__`/`*.pyc` out of the shipped dirs.
-- **`skilldoc_run.py` is a standalone launcher — it deliberately does NOT `import skillopt`** (it subprocess-invokes `train.py`, and skillopt may live in a different venv). So its small JSONL-count / split-parse helpers are intentionally local duplicates of `skillopt.datasets.base`; do not "DRY" them into skillopt imports.
-- **`adapter.py` mirrors the reference env `skillopt/envs/officeqa/`** (the `build_env_from_batch` indirection, the `getattr(self, "_cfg", {})` read). Keep that shape for consistency with sibling envs rather than refactoring it away.
-- **Scoring lives in `rollout.py`'s grader, not in an `evaluate()` method** — `hard` (0/1) is what the gate optimizes, `soft` (0-1) is graded partial credit.
-
-## Provenance
-
-Built from the arXiv paper (primary). The mechanism, loop, and options are from the paper. The real entry point is `scripts/train.py` in `github.com/microsoft/SkillOpt` — the bundled `skilldoc` env and `skilldoc_run.py` wrap it without reimplementing the loop. Do **not** trust the `from skillopt import SkillOptimizer` snippet from blog write-ups — it's not real.
+## References
+- `references/config-fields.md` — every config field, default, DL analogy, and when to deviate.
+- `references/benchmarks.md` — the six built-ins, what each fits, data formats.
+- `references/new-benchmark.md` — authoring a new loader + env adapter, step by step.
+- `references/backends.md` — backend choices and the credential matrix.
+- `references/interpreting-runs.md` — output layout and a diagnosis → action table.

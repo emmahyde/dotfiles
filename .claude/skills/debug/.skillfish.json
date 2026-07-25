@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "name": "debug",
+  "owner": "layerdynamics",
+  "repo": "lore",
+  "path": "lore/skills/debug",
+  "branch": "main",
+  "sha": "3045c93d24abd220caf7086d552dc6fd1ac26980",
+  "source": "manual"
+}

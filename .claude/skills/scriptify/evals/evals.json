@@ -1,0 +1,45 @@
+{
+  "skill_name": "scriptify",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "I'm scoping a project broken into epics. Rough sizing in ideal eng-days, with dependencies:\n- A: 4 days, no deps\n- B: 6 days, depends on A\n- C: 5 days, depends on A\n- D: 3 days, depends on B and C\n- E: 8 days, depends on B\n- F: 2 days, depends on D and E\n\nAn engineer works one epic at a time; epics whose deps are all done can run in parallel across engineers. What's the total calendar time with 1, 2, and 3 engineers? Then redo it with epic E removed entirely, and once more with every epic's size multiplied by 1.25. Show me the three scenarios side by side.",
+      "expected_output": "A critical-path / list-scheduling computation. Base case: 1 engineer = 28 days (sum of all work), 3 engineers = 20 days (critical path A->B->E->F). With-skill should externalize a reusable scheduler script that takes the epic graph + engineer count as inputs, verify it, and run it for all three scenarios.",
+      "files": [],
+      "expectations": [
+        "Produced a standalone, reusable script (e.g. a .py file) rather than only computing the answer inline",
+        "The script takes the epic graph and engineer count as inputs (argv, stdin, or a config), not hardcoded one-off constants",
+        "The script was actually executed and its output verified (a test, smoke run, or shown run output)",
+        "Base scenario is numerically correct: 1 engineer = 28 days and 3 engineers = 20 days",
+        "The two variant scenarios (drop epic E; x1.25 sizing) were produced by re-invoking the script with changed inputs, not by re-deriving the computation by hand",
+        "The reusable script was saved to a persistent location, not left as /tmp throwaway"
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "Every month I export active subscriptions from billing as a CSV and compute total monthly recurring revenue, prorating any sub that started mid-month. This month's data:\n\ncustomer,plan_monthly_usd,start_day,days_in_month\nacme,100,1,30\nbeta,250,16,30\ngamma,90,1,30\ndelta,400,21,30\n\nProration = plan_monthly_usd * (days_in_month - start_day + 1) / days_in_month. Give me total MRR and a per-customer breakdown. I do this every month, same format.",
+      "expected_output": "A deterministic, recurring CSV transform. With-skill should externalize a reusable script reading the CSV path and computing prorated MRR, verify it, and report total. Correct total MRR = 448.33 (acme 100, beta 125, gamma 90, delta 133.33).",
+      "files": [],
+      "expectations": [
+        "Produced a standalone, reusable script (not inline-only computation)",
+        "The script reads the subscription data from a CSV/file/stdin input, not hardcoded rows",
+        "The script was executed and verified (a test or shown run output)",
+        "Total MRR is correct: 448.33 (acme 100.00, beta 125.00, gamma 90.00, delta 133.33)",
+        "The reusable script was saved to a persistent location, not left as /tmp throwaway"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "After every CI run I want to total test durations by suite and flag suites over 5 minutes. Sample log lines:\n\n[suite=auth] test_login 12.3s\n[suite=auth] test_logout 4.1s\n[suite=billing] test_invoice 120.5s\n[suite=billing] test_proration 200.2s\n[suite=api] test_get 30.0s\n[suite=billing] test_refund 95.0s\n[suite=api] test_post 45.5s\n\nSum seconds per suite, sort descending, and flag any suite whose total exceeds 300s. I run this after every CI run.",
+      "expected_output": "A deterministic, recurring log parse + rollup. With-skill should externalize a reusable script reading the log from a path/stdin, verify it. Correct: billing 415.7s (flagged >300), api 75.5s, auth 16.4s, sorted descending.",
+      "files": [],
+      "expectations": [
+        "Produced a standalone, reusable script (not inline-only computation)",
+        "The script reads the log from a file/stdin input, not hardcoded lines",
+        "The script was executed and verified",
+        "Per-suite totals correct and sorted descending: billing 415.7s (flagged >300s), api 75.5s, auth 16.4s",
+        "The reusable script was saved to a persistent location, not left as /tmp throwaway"
+      ]
+    }
+  ]
+}

@@ -5,7 +5,7 @@ description: Use when producing HTML architecture diagrams (ERDs, flowcharts, sw
 
 # Mermaid architecture diagrams — house style
 
-Use this skill any time the user asks for an architecture/ERD/flowchart HTML doc. The output is a single self-contained HTML file (mermaid loaded from CDN), with the rules below baked in.
+Use this skill any time the user asks for an architecture/ERD/flowchart diagram. The default output is a single self-contained HTML file (mermaid loaded from CDN), with the rules below baked in. When the host is Obsidian — the user invokes `/canvas` / `/json-canvas`, asks for a `.canvas`, or you're working inside a vault — emit a JSON Canvas instead (or both, if asked); see **Obsidian canvas output** below. The diagram doctrine (rules 1–5) is identical across both hosts; rules 6–10 are the HTML-only render/colorize machinery.
 
 ## Rules (non-negotiable)
 
@@ -47,7 +47,7 @@ Background: `#1a1a1a` body / `#232323` panel / `#111` mermaid container. Accent:
 ```
 ENV     /^[A-Z][A-Z0-9]+(?:_[A-Z0-9]+){1,}$/
 RUNTIME /^(hooks?|skills?|scripts?|tools?|tests?|core|apps?|packages?)\//i
-FILE    has /[\/~]/ AND ext .(md|jsonl|py|json|sqlite|db|toml|yml|tsx?|jsx?|html|css|cs|csproj|sln)
+FILE    has /[\/~]/ AND ext .(md|jsonl|py|json|sqlite|db|toml|yml|tsx?|jsx?|mjs|cjs|html|css|cs|csproj|sln)
 MODULE  bare lowercase identifier OR `name.py` without path
 DB      \b(sqlite|sqlite-vec|database|\.db\b|table|cursors)\b
 EXT     \b(Anthropic|OpenAI|LiteLLM|Bedrock|GitHub|API|providers?)\b
@@ -56,13 +56,14 @@ FUNC    /\([^)]*\)\s*$/  OR  ^[a-z][\w]*(?:\.\w+)+$
 CLASS   /^[A-Z][a-z0-9]+(?:[A-Z][a-z0-9]+)+$/  (PascalCase)
 ```
 
-First match wins. `cat-decision` is set explicitly via mermaid `:::cat-decision` syntax, not by regex.
+First match wins. `cat-decision` is set explicitly via mermaid `:::cat-decision` syntax, not by regex. **A node already carrying an explicit `:::cat-*` class must be skipped by the regex pass** — otherwise it gets a second `cat-` class and the two fight in CSS. The categorizer guards this with `if ([...g.classList].some(c => c.startsWith('cat-'))) return`.
 
 ## Skip categorization for
 
 - `g.cluster` (subgraph headers)
 - Any `.mermaid` whose `data-kind !== 'flowchart'` (class/er/sequence)
 - Nodes already tagged (`g.dataset.cat`)
+- Nodes already carrying any `cat-*` class (explicit `:::cat-decision` etc.)
 
 ## Mandatory mermaid init
 
@@ -116,6 +117,7 @@ const renderAll = async () => {
 
 - `references/template.html` — full self-contained starter with init, CSS, classifier JS, legend, tab switcher
 - `references/cheatsheet.md` — quick lookup for shape syntax + category color hex
+- `references/obsidian-canvas.md` — JSON Canvas skeleton + mermaid-in-node rules for the Obsidian host
 
 ## Common pitfalls (don't repeat)
 
@@ -126,9 +128,33 @@ const renderAll = async () => {
 - **MutationObserver-only colorize** — fires before async ELK completes. Always pair with `setTimeout(colorize, 400)` + `setTimeout(colorize, 1200)`.
 - **Categorizing class-diagram entities** — class-box titles like `ISSUE_CARD` match the env-var regex. Skip via `data-kind === 'class'`.
 - **Per-token color via `<text>`** — mermaid v11 with `htmlLabels: true` puts attrs in `<foreignObject>` HTML spans, not SVG `<text>`. Tokenizer must walk both; set `color:` for HTML and `fill:` for SVG.
+- **HTML entities & `<br/>` inside `.mermaid` divs** — the browser decodes `&rarr;` / `&mdash;` before mermaid reads `textContent`, so entities are safe in labels. But a literal `<br/>` becomes a real DOM `<br>` and vanishes from the source string — only use `<br/>` inside a *quoted* label (mermaid re-emits it), never as bare text between nodes.
+- **Explicit `:::cat-*` double-classified** — the regex pass must skip nodes already carrying a `cat-` class, or fills conflict. The template's `categorizeNodes` guards this; keep the guard if you re-derive the script.
+
+## Obsidian canvas output (JSON Canvas)
+
+Same diagram doctrine (rules 1–5), different host. A `.canvas` file is `{ "nodes": [...], "edges": [...] }` (JSON Canvas 1.0). Diagrams live in **text nodes** whose `text` is a fenced ` ```mermaid ` block; prose, decisions, and warnings live in sibling text nodes as Obsidian callouts (`> [!warning]`, `> [!check]`, …).
+
+- **ELK in Obsidian needs the mermaid-elk plugin + a config header on EVERY block** (the JS `mermaid.initialize` does not apply here):
+  ```
+  ---
+  config:
+    layout: elk
+  ---
+  flowchart LR
+    ...
+  ```
+- **No JS colorizer runs in Obsidian.** Get house colors with mermaid-native `classDef` + `class` inside each block — minimum a decision pill and a "new/added" node: `classDef ev fill:#2e2710,stroke:#ffd166,color:#ffd166` then `class PTU,COND ev`.
+- **Quote discipline (the canvas killer).** The whole diagram is a JSON string, so every `"` must be `\"`-escaped — error-prone. Design labels to need **zero** double-quotes: stadium `([multi word])`, rect `[multi word]`, cylinder `[(multi word)]` all accept unquoted multi-word text. Avoid `:` `()` `/` `+` and cardinalities (`"1"`,`"*"`) in labels — push `file:line` citations into the prose card beneath the diagram. Then JSON-encoding the block is just `\n` for newlines, nothing else.
+- **Backlink with a basename wikilink in a text node** (`[[Note Name]]`), NOT a `type:file` node — wikilinks resolve by basename regardless of which (possibly nested) vault root is open; file-node paths break.
+- **Layout.** Stacked color-coded `type:group` zones, one per subsystem/phase; two columns inside (`x:20` / `x:1000`, width ~940). Encode relationships as cross-zone `edges` (e.g. a context-mode pattern → the codemode-mcp phase that adopts it). Place the file in the vault's `canvases/` folder.
+- **Validate before finishing** (parse the JSON): all `id`s unique, every edge `fromNode`/`toNode` resolves, every non-group node sits inside some group's bounds.
+
+Skeleton + validator: `references/obsidian-canvas.md`.
 
 ## Output policy
 
+- **Pick the host first.** Standalone / browser → single HTML file (below). Obsidian vault → `.canvas` (Obsidian canvas output, above). Both when asked.
 - Single HTML file, no external assets except mermaid+elk CDN.
 - Three tabs minimum if comparing systems: `<system A>`, `<system B>`, `integration`.
 - Per tab: legend strip → overarching flow → ERD (classDiagram) → phase flowcharts (grid2 layout) → swimlane → narrative notes.

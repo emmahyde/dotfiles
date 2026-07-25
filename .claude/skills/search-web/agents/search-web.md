@@ -1,5 +1,4 @@
 ---
-name: search-web
 description: >-
   Dispatched web-research agent. Builds a source corpus and forms an
   evidence-backed opinion via a budget-disciplined scientific process, in
