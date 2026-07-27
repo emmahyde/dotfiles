@@ -12,4 +12,4 @@ s{RETIRE-\d+}{TICKET-1234}g;
 s{\bgroot\b}{your-app}gi;
 s{\bminions\b}{agent-runs}gi;
 s{\bminion\b}{agent-run}gi;
-s{/Users/[A-Za-z][A-Za-z.]*/}{\$HOME/}g;
+s{/Users/[^/\s]+/}{~/}g;

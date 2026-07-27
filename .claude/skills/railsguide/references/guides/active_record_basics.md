@@ -146,7 +146,7 @@ $bin/rails generate model Book::Order
       create    db/migrate/20240305140356_create_book_orders.rb
       create    app/models/book/order.rb
     conflict    app/models/book.rb
-  Overwrite /Users/bhumi/Code/rails_guides/app/models/book.rb? (enter "h" for help) [Ynaqdhm]
+  Overwrite ~/Code/rails_guides/app/models/book.rb? (enter "h" for help) [Ynaqdhm]
 
 ```
 Copy

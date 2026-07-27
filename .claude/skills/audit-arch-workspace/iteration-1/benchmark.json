@@ -1,0 +1,276 @@
+{
+  "metadata": {
+    "skill_name": "audit-arch",
+    "skill_path": "<path/to/skill>",
+    "executor_model": "<model-name>",
+    "analyzer_model": "<model-name>",
+    "timestamp": "2026-07-21T01:40:42Z",
+    "evals_run": [
+      0,
+      1
+    ],
+    "runs_per_configuration": 3
+  },
+  "runs": [
+    {
+      "eval_id": 0,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 8,
+        "failed": 0,
+        "total": 8,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "finds-settings-poll-conflict: A headline finding identifies that hud.ts/audio.ts re-read settings from disk every tick and proposes an event/push/in-memory alternative",
+          "passed": true,
+          "evidence": "Finding 1: 'Settings polled from disk every tick instead of pushed on change' \u2014 cites hud.ts:6-13, audio.ts:4-8, proposes 'menu.ts becomes the single writer and push source for an in-memory settings value; hud and audio subscribe once'"
+        },
+        {
+          "text": "finds-duplicated-gold-truth: A headline finding identifies the gold total existing in both Inventory.gold and save.ts recompute as a duplicated source of truth",
+          "passed": true,
+          "evidence": "Finding 2: 'Gold has two sources of truth that are known to drift' \u2014 proposes computed getter, deletion test removes runningGold from save format"
+        },
+        {
+          "text": "netsync-not-headlined: netsync.ts's poor code is NOT one of the top numbered findings (a footnote or 'explicitly not flagged' mention is acceptable)",
+          "passed": true,
+          "evidence": "Finding 3 IS about netsync, but as dead code contradicting the charter ('the finding is deletion, not fixing a spin-wait no one executes'), and the Explicitly-not-flagged section expressly declines to flag its busy-wait quality. The poor code itself is not judged. See eval_feedback: this assertion is ambiguous."
+        },
+        {
+          "text": "no-unsignaled-dimensions: No finding is justified by scalability, concurrency, multi-user, or online-readiness",
+          "passed": true,
+          "evidence": "Finding 3 explicitly disclaims it: 'This isn't a case of inventing an unsignaled quality bar (multiplayer scalability is explicitly out of scope per Prohibition 1)'. No other finding invokes scale/concurrency."
+        },
+        {
+          "text": "states-fitness-bar: The report states the fitness bar / ethos used for judging",
+          "passed": true,
+          "evidence": "Opening scope line: 'Auditing as: Resident senior engineer... Fitness bar: idiomatic shape for a single-process, offline terminal roguelike. Ethos: deep, reactive dungeon simulation...' plus closing 'Fitness bar used' section."
+        },
+        {
+          "text": "has-explicitly-not-flagged: The report contains an 'Explicitly not flagged' section naming at least one thing excused by the fitness bar",
+          "passed": true,
+          "evidence": "Closing section lists three items: the (s as any) cast, sync fs calls at startup/save, and netsync's spin algorithm (dead code)."
+        },
+        {
+          "text": "max-five-findings: The report contains at most 5 numbered findings",
+          "passed": true,
+          "evidence": "Exactly 3 numbered findings."
+        },
+        {
+          "text": "findings-cite-files: Each headline finding cites specific files",
+          "passed": true,
+          "evidence": "All findings cite file:line (e.g. src/hud.ts:6-13, src/inventory.ts:5,9,14, src/netsync.ts + README.md:10)."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 1,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "netsync-headlined: netsync.ts's architecture IS one of the top numbered findings, because co-op ambition was declared",
+          "passed": true,
+          "evidence": "Finding 1: 'netsync.ts implements co-op sync with a mechanism that cannot hold more than a couple of peers' \u2014 busy-wait, O(n) synchronous fan-out, full-state-per-tick all cited."
+        },
+        {
+          "text": "ambition-acknowledged: The report explicitly states the declared co-op/concurrency ambition as part of its audit scope or archetype",
+          "passed": true,
+          "evidence": "Scope line: 'Auditing as: Scale-invested architect (task explicitly declares a pivot...)' and 'Ethos (post-pivot)' section explaining the README ethos is superseded by declared intent."
+        },
+        {
+          "text": "core-conflicts-still-present: The settings polling conflict and/or duplicated gold source-of-truth still appear as findings",
+          "passed": true,
+          "evidence": "Finding 2 is the settings poll conflict, reframed for the new bar. (Gold duplication was consciously demoted to 'Explicitly not flagged' as off-bar \u2014 legal under the and/or assertion.)"
+        },
+        {
+          "text": "max-five-findings: The report contains at most 5 numbered findings",
+          "passed": true,
+          "evidence": "Exactly 3 numbered findings."
+        },
+        {
+          "text": "proposes-simpler-shape: The netsync finding proposes a concretely simpler/idiomatic alternative",
+          "passed": true,
+          "evidence": "'replace the spin-wait + full-blob broadcast with an async, event-driven push: peers subscribe once, the server emits state deltas... via non-blocking I/O', plus a reconciliation-risk cost note."
+        },
+        {
+          "text": "findings-cite-files: Each headline finding cites specific files",
+          "passed": true,
+          "evidence": "All findings cite file:line (src/netsync.ts:5-11, src/hud.ts:6-9, src/game.ts:5, etc.)."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 0,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.75,
+        "passed": 6,
+        "failed": 2,
+        "total": 8,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "finds-settings-poll-conflict: A headline finding identifies that hud.ts/audio.ts re-read settings from disk every tick and proposes an event/push/in-memory alternative",
+          "passed": true,
+          "evidence": "Finding 2: 'Settings access is poll-per-tick disk I/O with no shared runtime state' \u2014 proposes 'a shared settings/state object that's loaded once and updated in place'."
+        },
+        {
+          "text": "finds-duplicated-gold-truth: A headline finding identifies the gold total existing in both Inventory.gold and save.ts recompute as a duplicated source of truth",
+          "passed": true,
+          "evidence": "Finding 3: 'Two sources of truth for inventory gold, reconciled silently at serialization time'."
+        },
+        {
+          "text": "netsync-not-headlined: netsync.ts's poor code is NOT one of the top numbered findings (a footnote or 'explicitly not flagged' mention is acceptable)",
+          "passed": false,
+          "evidence": "netsync is Finding #1 \u2014 the lead finding \u2014 and its design quality is part of the argument: 'a busy-wait/full-broadcast design that would be a performance and correctness liability if ever wired in'. The peripheral module took the headline slot over the core-loop conflicts."
+        },
+        {
+          "text": "no-unsignaled-dimensions: No finding is justified by scalability, concurrency, multi-user, or online-readiness",
+          "passed": true,
+          "evidence": "No finding invokes scale or online-readiness as its justification; Finding 4's growth argument is grounded in the README's stated sim-deepening goal."
+        },
+        {
+          "text": "states-fitness-bar: The report states the fitness bar / ethos used for judging",
+          "passed": true,
+          "evidence": "No upfront scope declaration, but the summary grounds recommendations in 'the README's explicit philosophy (simplicity of the sim core is sacred, no online features are planned)'. Marginal pass \u2014 the ethos is used, not declared."
+        },
+        {
+          "text": "has-explicitly-not-flagged: The report contains an 'Explicitly not flagged' section naming at least one thing excused by the fitness bar",
+          "passed": false,
+          "evidence": "No such section exists anywhere in the report."
+        },
+        {
+          "text": "max-five-findings: The report contains at most 5 numbered findings",
+          "passed": true,
+          "evidence": "4 numbered findings."
+        },
+        {
+          "text": "findings-cite-files: Each headline finding cites specific files",
+          "passed": true,
+          "evidence": "All findings cite files (settings.ts, hud.ts, audio.ts, save.ts, netsync.ts); no line numbers, which the assertion permits."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 1,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 0.0,
+        "tokens": 0,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "netsync-headlined: netsync.ts's architecture IS one of the top numbered findings, because co-op ambition was declared",
+          "passed": true,
+          "evidence": "Finding 3: 'The existing network code is a worked example of what won't scale' \u2014 full-state broadcast and busy-wait both dissected."
+        },
+        {
+          "text": "ambition-acknowledged: The report explicitly states the declared co-op/concurrency ambition as part of its audit scope or archetype",
+          "passed": true,
+          "evidence": "Header framing: 'Evaluated against the stated new goal \u2014 online co-op supporting many concurrent players \u2014 not against the project's original single-player design intent.'"
+        },
+        {
+          "text": "core-conflicts-still-present: The settings polling conflict and/or duplicated gold source-of-truth still appear as findings",
+          "passed": true,
+          "evidence": "Finding 2 (poll-a-shared-file-every-frame) and Finding 5 (gold drift as future desync vector)."
+        },
+        {
+          "text": "max-five-findings: The report contains at most 5 numbered findings",
+          "passed": true,
+          "evidence": "Exactly 5 numbered findings."
+        },
+        {
+          "text": "proposes-simpler-shape: The netsync finding proposes a concretely simpler/idiomatic alternative",
+          "passed": true,
+          "evidence": "'authoritative server + delta/interest-managed replication + non-blocking network I/O decoupled from the sim tick'."
+        },
+        {
+          "text": "findings-cite-files: Each headline finding cites specific files",
+          "passed": true,
+          "evidence": "All findings cite files (game.ts, hud.ts, audio.ts, settings.ts, netsync.ts, save.ts)."
+        }
+      ],
+      "notes": []
+    }
+  ],
+  "run_summary": {
+    "with_skill": {
+      "pass_rate": {
+        "mean": 1.0,
+        "stddev": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 0.0,
+        "stddev": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "tokens": {
+        "mean": 0.0,
+        "stddev": 0.0,
+        "min": 0,
+        "max": 0
+      }
+    },
+    "without_skill": {
+      "pass_rate": {
+        "mean": 0.875,
+        "stddev": 0.1768,
+        "min": 0.75,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 0.0,
+        "stddev": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "tokens": {
+        "mean": 0.0,
+        "stddev": 0.0,
+        "min": 0,
+        "max": 0
+      }
+    },
+    "delta": {
+      "pass_rate": "+0.12",
+      "time_seconds": "+0.0",
+      "tokens": "+0"
+    }
+  },
+  "notes": []
+}

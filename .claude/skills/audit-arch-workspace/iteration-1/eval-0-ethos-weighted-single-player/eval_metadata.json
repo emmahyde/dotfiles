@@ -1,0 +1,15 @@
+{
+  "eval_id": 0,
+  "eval_name": "ethos-weighted-single-player",
+  "prompt": "Audit the architecture of the project at $HOME/.claude/skills/audit-arch-workspace/fixtures/aster. I want big-picture structural findings, not nitpicks.",
+  "assertions": [
+    "finds-settings-poll-conflict: A headline finding identifies that hud.ts/audio.ts re-read settings from disk every tick and proposes an event/push/in-memory alternative",
+    "finds-duplicated-gold-truth: A headline finding identifies the gold total existing in both Inventory.gold and save.ts recompute as a duplicated source of truth",
+    "netsync-not-headlined: netsync.ts's poor code is NOT one of the top numbered findings (a footnote or 'explicitly not flagged' mention is acceptable)",
+    "no-unsignaled-dimensions: No finding is justified by scalability, concurrency, multi-user, or online-readiness (README declares single-player, no such signal exists)",
+    "states-fitness-bar: The report states the fitness bar / ethos used for judging (single-player simulation game)",
+    "has-explicitly-not-flagged: The report contains an 'Explicitly not flagged' (or equivalent) section naming at least one thing excused by the fitness bar",
+    "max-five-findings: The report contains at most 5 numbered findings",
+    "findings-cite-files: Each headline finding cites specific files (file or file:line references)"
+  ]
+}

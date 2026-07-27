@@ -361,8 +361,8 @@ This is the final step required to get the new comment form working. Displaying 
 ```
 Missing partial blorgh/comments/_comment with {:handlers=>[:erb, :builder],
 :formats=>[:html], :locale=>[:en, :en]}. Searched in:   *
-"/Users/ryan/Sites/side_projects/blorgh/test/dummy/app/views"   *
-"/Users/ryan/Sites/side_projects/blorgh/app/views"
+"~/Sites/side_projects/blorgh/test/dummy/app/views"   *
+"~/Sites/side_projects/blorgh/app/views"
 
 ```
 Copy

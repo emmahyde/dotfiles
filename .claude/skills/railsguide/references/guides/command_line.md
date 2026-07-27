@@ -691,13 +691,13 @@ Prefix            | about
 Verb              | GET
 URI               | /about(.:format)
 Controller#Action | posts#about
-Source Location   | /Users/bhumi/Code/try_markdown/config/routes.rb:2
+Source Location   | ~/Code/try_markdown/config/routes.rb:2
 --[ Route 3 ]--------------------------------------------------------------------------------
 Prefix            | posts
 Verb              | GET
 URI               | /posts(.:format)
 Controller#Action | posts#index
-Source Location   | /Users/bhumi/Code/try_markdown/config/routes.rb:4
+Source Location   | ~/Code/try_markdown/config/routes.rb:4
 
 ```
 Copy

@@ -1,0 +1,17 @@
+{
+  "expectations": [
+    {"text": "finds-settings-poll-conflict: A headline finding identifies that hud.ts/audio.ts re-read settings from disk every tick and proposes an event/push/in-memory alternative", "passed": true, "evidence": "Finding 2: 'Settings access is poll-per-tick disk I/O with no shared runtime state' — proposes 'a shared settings/state object that's loaded once and updated in place'."},
+    {"text": "finds-duplicated-gold-truth: A headline finding identifies the gold total existing in both Inventory.gold and save.ts recompute as a duplicated source of truth", "passed": true, "evidence": "Finding 3: 'Two sources of truth for inventory gold, reconciled silently at serialization time'."},
+    {"text": "netsync-not-headlined: netsync.ts's poor code is NOT one of the top numbered findings (a footnote or 'explicitly not flagged' mention is acceptable)", "passed": false, "evidence": "netsync is Finding #1 — the lead finding — and its design quality is part of the argument: 'a busy-wait/full-broadcast design that would be a performance and correctness liability if ever wired in'. The peripheral module took the headline slot over the core-loop conflicts."},
+    {"text": "no-unsignaled-dimensions: No finding is justified by scalability, concurrency, multi-user, or online-readiness", "passed": true, "evidence": "No finding invokes scale or online-readiness as its justification; Finding 4's growth argument is grounded in the README's stated sim-deepening goal."},
+    {"text": "states-fitness-bar: The report states the fitness bar / ethos used for judging", "passed": true, "evidence": "No upfront scope declaration, but the summary grounds recommendations in 'the README's explicit philosophy (simplicity of the sim core is sacred, no online features are planned)'. Marginal pass — the ethos is used, not declared."},
+    {"text": "has-explicitly-not-flagged: The report contains an 'Explicitly not flagged' section naming at least one thing excused by the fitness bar", "passed": false, "evidence": "No such section exists anywhere in the report."},
+    {"text": "max-five-findings: The report contains at most 5 numbered findings", "passed": true, "evidence": "4 numbered findings."},
+    {"text": "findings-cite-files: Each headline finding cites specific files", "passed": true, "evidence": "All findings cite files (settings.ts, hud.ts, audio.ts, save.ts, netsync.ts); no line numbers, which the assertion permits."}
+  ],
+  "summary": {"passed": 6, "failed": 2, "total": 8, "pass_rate": 0.75},
+  "eval_feedback": {
+    "suggestions": [],
+    "overall": "The two failures are exactly the skill's differentiators: ethos-weighted ranking (netsync led the baseline report) and the mandatory explicitly-not-flagged proof-of-bar section."
+  }
+}

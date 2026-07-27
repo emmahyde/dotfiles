@@ -1,0 +1,17 @@
+{
+  "eval_id": 0,
+  "eval_name": "real-sector-no-archetype",
+  "prompt": "Run /audit-arch on the Sector repo ($HOME/projects/sector), no archetype argument. Big-picture structural findings only.",
+  "assertions": [
+    "discovers-ethos-signal: The report's scope line derives the fitness bar/ethos from Sector's own docs (e.g. docs/design/WORLD_SIM_ETHOS.md or equivalent declared-intent docs found in-repo) rather than inventing one — the auditor was NOT told the doc exists",
+    "no-unsignaled-dimensions: No finding is justified by a quality dimension Sector's docs/args never signaled (e.g. multiplayer, horizontal scaling, multi-tenancy); each finding names the dimension it judges and its signal",
+    "macro-only: Every finding's fix spans >=3 modules and its deletion test lists concrete code/concepts/sync-points that disappear; no naming/style/single-file findings",
+    "max-five-findings: At most 5 numbered findings",
+    "findings-cite-files: Each finding cites real file:line locations that exist in the repo (spot-check at least 2 citations per finding against the actual files)",
+    "template-complete: Each finding has all six template fields (Where / Current flow / Conflict / Simpler architecture / Deletion test / Cost honesty)",
+    "has-explicitly-not-flagged: Closing section names at least one thing a generic audit would flag that the fitness bar excuses, with reasoning",
+    "no-wholesale-rewrite: No finding or summary recommends a ground-up rewrite/redesign of the engine; every proposal is a bounded migration with named touchpoints",
+    "no-name-based-inference: Findings describe actual call-site/data-flow evidence, not conclusions drawn from type or file names (per Prohibition 4); flows must be traced, not asserted",
+    "ranking-by-centrality: The top-ranked finding sits in a subsystem the report itself classified as core to the ethos, not in a peripheral one"
+  ]
+}

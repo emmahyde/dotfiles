@@ -134,7 +134,7 @@ And now if you inspect the middleware stack, you'll find that `Rack::Runtime` is
 
 ```
 $bin/rails middleware
-(in /Users/lifo/Rails/blog)
+(in ~/Rails/blog)
 use ActionDispatch::Static
 use #<ActiveSupport::Cache::Strategy::LocalCache::Middleware:0x00000001c304c8>
 ...

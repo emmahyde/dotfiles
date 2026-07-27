@@ -7,7 +7,7 @@ description: Reference for the ccmanager (Observer) project — a local-first de
 
 ## What ccmanager is
 
-ccmanager (codename **Observer**, repo at `/Users/emmahyde/projects/ccmanager/`) is a local-first developer dashboard that gives a unified view across **three independent tools** that already run on the developer's machine and each compress LLM token spend in a different position of the pipeline:
+ccmanager (codename **Observer**, repo at `$HOME/projects/ccmanager/`) is a local-first developer dashboard that gives a unified view across **three independent tools** that already run on the developer's machine and each compress LLM token spend in a different position of the pipeline:
 
 ```
    user's shell         agent prompt          LLM input            LLM output
@@ -38,7 +38,7 @@ Each of the three tools is independently coherent but documented separately. Whe
 
 This skill loads the architectural model on demand. Trigger it whenever:
 
-- the user is working in `/Users/emmahyde/projects/ccmanager/` or any of the sibling repos
+- the user is working in `$HOME/projects/ccmanager/` or any of the sibling repos
 - the user mentions "the proxy", "the dashboard", "Observer", "ccmanager"
 - the user names any artefact: `proxy_savings.json`, `~/.headroom/`, `rtk gain`, `history.db`, `~/.claude/memory/index.db`, `consolidation_log`, `interceptor pipeline`
 - the user wants to forward, mirror, or steal patterns from any of the three

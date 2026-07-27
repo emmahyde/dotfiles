@@ -1,0 +1,19 @@
+{
+  "skill_name": "audit-arch",
+  "evals": [
+    {
+      "id": 0,
+      "eval_name": "ethos-weighted-single-player",
+      "prompt": "Audit the architecture of the project at $HOME/.claude/skills/audit-arch-workspace/fixtures/aster. I want big-picture structural findings, not nitpicks. Write your full audit report to report.md in your output directory.",
+      "expected_output": "Report headlines the settings polling conflict and duplicated gold source-of-truth; netsync is at most a footnote; no scalability/multiplayer findings; includes fitness bar and explicitly-not-flagged sections.",
+      "files": ["fixtures/aster"]
+    },
+    {
+      "id": 1,
+      "eval_name": "ambition-flip-coop-declared",
+      "prompt": "Audit the architecture of the project at $HOME/.claude/skills/audit-arch-workspace/fixtures/aster. Context: we're now planning to add online co-op and want it to hold up with many concurrent players. I want big-picture structural findings, not nitpicks. Write your full audit report to report.md in your output directory.",
+      "expected_output": "Report now headlines netsync.ts's architecture (busy-wait, full-state-per-tick broadcast) because the co-op ambition was declared, while still reporting the core sim conflicts; states the archetype/ambition in its scope line.",
+      "files": ["fixtures/aster"]
+    }
+  ]
+}

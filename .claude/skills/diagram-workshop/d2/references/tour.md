@@ -28,7 +28,7 @@ There's some exceptions like snippets that use imports.
 
 ---
 
-## 
+##
 
 **URL:** https://d2lang.com/tour/scenarios/
 
@@ -43,7 +43,7 @@ Notice that in the below Scenario, we simply turn some objects opacity lower, an
 
 ---
 
-## 
+##
 
 **URL:** https://d2lang.com/tour/hello-world/
 
@@ -79,7 +79,7 @@ If you null a shape with descendents, those descendants are also nulled.
 
 ---
 
-## 
+##
 
 **URL:** https://d2lang.com/tour/obsidian/
 
@@ -135,9 +135,9 @@ Since . is used for targeting, if you want to import from a file with . in its n
 
 Relative imports are relative to the file, not the executing path.
 
-Consider that your working directory is /Users/You/dev. Your D2 files:
+Consider that your working directory is ~/dev. Your D2 files:
 
-The above import will search directory /Users/you/dev/ for y.d2, not /Users/You.
+The above import will search directory ~/dev/ for y.d2, not /Users/You.
 
 Unnecessary relative imports are removed by autoformat.@./x will be autoformatted to @x.
 
@@ -266,7 +266,7 @@ In sketch mode, if you supply a font, it will replace the default hand-drawn fon
 
 ---
 
-## 
+##
 
 **URL:** https://d2lang.com/tour/experience/
 
@@ -767,7 +767,7 @@ Not all color codes are currently used right now, but that may change in the fut
 
 ---
 
-## 
+##
 
 **URL:** https://d2lang.com/tour/man/
 
@@ -778,7 +778,7 @@ The following is a copy of the man (manual) for the CLI. It is identical to the 
 
 ---
 
-## 
+##
 
 **URL:** https://d2lang.com/tour/composition-formats/
 
@@ -829,7 +829,7 @@ You can reference a connection by specifying the original ID followed by its ind
 
 ---
 
-## 
+##
 
 **URL:** https://d2lang.com/tour/vim/
 
@@ -846,7 +846,7 @@ Github: https://github.com/terrastruct/d2-vim
 
 ---
 
-## 
+##
 
 **URL:** https://d2lang.com/tour/composition/
 
@@ -943,7 +943,7 @@ The character ： is not the same as the ASCII :, and so it won't register as a 
 
 ---
 
-## 
+##
 
 **URL:** https://d2lang.com/tour/sketch/
 
@@ -996,7 +996,7 @@ Block comments begin and end with three double quotes:
 
 ---
 
-## 
+##
 
 **URL:** https://d2lang.com/tour/layers/
 
@@ -1041,7 +1041,7 @@ You can use tabs to indent block strings after indenting to the base block strin
 
 ---
 
-## 
+##
 
 **URL:** https://d2lang.com/tour/steps/
 
@@ -1089,7 +1089,7 @@ You may rename "legend" by simply giving it a label. This is particularly useful
 
 ---
 
-## 
+##
 
 **URL:** https://d2lang.com/tour/discord/
 
@@ -1105,7 +1105,7 @@ Your browser does not support the video tag.
 
 ---
 
-## 
+##
 
 **URL:** https://d2lang.com/tour/vscode/
 
@@ -1453,7 +1453,7 @@ Some more creative, practical examples of using imports that mix and match the a
 
 ---
 
-## 
+##
 
 **URL:** https://d2lang.com/tour/dimensions/
 

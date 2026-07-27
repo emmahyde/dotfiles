@@ -1,0 +1,19 @@
+{
+  "expectations": [
+    {"text": "finds-settings-poll-conflict: A headline finding identifies that hud.ts/audio.ts re-read settings from disk every tick and proposes an event/push/in-memory alternative", "passed": true, "evidence": "Finding 1: 'Settings polled from disk every tick instead of pushed on change' — cites hud.ts:6-13, audio.ts:4-8, proposes 'menu.ts becomes the single writer and push source for an in-memory settings value; hud and audio subscribe once'"},
+    {"text": "finds-duplicated-gold-truth: A headline finding identifies the gold total existing in both Inventory.gold and save.ts recompute as a duplicated source of truth", "passed": true, "evidence": "Finding 2: 'Gold has two sources of truth that are known to drift' — proposes computed getter, deletion test removes runningGold from save format"},
+    {"text": "netsync-not-headlined: netsync.ts's poor code is NOT one of the top numbered findings (a footnote or 'explicitly not flagged' mention is acceptable)", "passed": true, "evidence": "Finding 3 IS about netsync, but as dead code contradicting the charter ('the finding is deletion, not fixing a spin-wait no one executes'), and the Explicitly-not-flagged section expressly declines to flag its busy-wait quality. The poor code itself is not judged. See eval_feedback: this assertion is ambiguous."},
+    {"text": "no-unsignaled-dimensions: No finding is justified by scalability, concurrency, multi-user, or online-readiness", "passed": true, "evidence": "Finding 3 explicitly disclaims it: 'This isn't a case of inventing an unsignaled quality bar (multiplayer scalability is explicitly out of scope per Prohibition 1)'. No other finding invokes scale/concurrency."},
+    {"text": "states-fitness-bar: The report states the fitness bar / ethos used for judging", "passed": true, "evidence": "Opening scope line: 'Auditing as: Resident senior engineer... Fitness bar: idiomatic shape for a single-process, offline terminal roguelike. Ethos: deep, reactive dungeon simulation...' plus closing 'Fitness bar used' section."},
+    {"text": "has-explicitly-not-flagged: The report contains an 'Explicitly not flagged' section naming at least one thing excused by the fitness bar", "passed": true, "evidence": "Closing section lists three items: the (s as any) cast, sync fs calls at startup/save, and netsync's spin algorithm (dead code)."},
+    {"text": "max-five-findings: The report contains at most 5 numbered findings", "passed": true, "evidence": "Exactly 3 numbered findings."},
+    {"text": "findings-cite-files: Each headline finding cites specific files", "passed": true, "evidence": "All findings cite file:line (e.g. src/hud.ts:6-13, src/inventory.ts:5,9,14, src/netsync.ts + README.md:10)."}
+  ],
+  "summary": {"passed": 8, "failed": 0, "total": 8, "pass_rate": 1.0},
+  "eval_feedback": {
+    "suggestions": [
+      {"assertion": "netsync-not-headlined", "reason": "Ambiguous: the with-skill report made netsync a numbered finding (as dead-code-contradicts-charter, proposing deletion) while explicitly refusing to judge its code quality. That is arguably ideal ethos-driven behavior but technically makes netsync 'a top numbered finding'. Reword to 'netsync must not be flagged for its multiplayer/sync design quality' to remove the ambiguity."}
+    ],
+    "overall": "Assertions discriminated well; one wording ambiguity noted."
+  }
+}

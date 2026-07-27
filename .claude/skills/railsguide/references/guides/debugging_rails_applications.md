@@ -391,7 +391,7 @@ When used without any options, `backtrace` lists all the frames on the stack:
   #4    block in process_action at ~/.rbenv/versions/3.0.1/lib/ruby/gems/3.0.0/gems/actionpack-8.1.0.alpha/lib/abstract_controller/callbacks.rb:221
   #5    block in run_callbacks at ~/.rbenv/versions/3.0.1/lib/ruby/gems/3.0.0/gems/activesupport-8.1.0.alpha/lib/active_support/callbacks.rb:118
   #6    ActionText::Rendering::ClassMethods#with_renderer(renderer=#<PostsController:0x0000000000af78>) at ~/.rbenv/versions/3.0.1/lib/ruby/gems/3.0.0/gems/actiontext-8.1.0.alpha/lib/action_text/rendering.rb:20
-  #7    block {|controller=#<PostsController:0x0000000000af78>, action=#<Proc:0x00007fd91985f1c0 /Users/st0012/...|} in <class:Engine> (4 levels) at ~/.rbenv/versions/3.0.1/lib/ruby/gems/3.0.0/gems/actiontext-8.1.0.alpha/lib/action_text/engine.rb:69
+  #7    block {|controller=#<PostsController:0x0000000000af78>, action=#<Proc:0x00007fd91985f1c0 ~/...|} in <class:Engine> (4 levels) at ~/.rbenv/versions/3.0.1/lib/ruby/gems/3.0.0/gems/actiontext-8.1.0.alpha/lib/action_text/engine.rb:69
   #8    [C] BasicObject#instance_exec at ~/.rbenv/versions/3.0.1/lib/ruby/gems/3.0.0/gems/activesupport-8.1.0.alpha/lib/active_support/callbacks.rb:127
   ..... and more
 
@@ -480,7 +480,7 @@ And to remove them, you can use:
 
 # and 72 frames (use `bt' command for all frames)
 (rdbg) b 28    # break command
-#0  BP - Line  /Users/st0012/projects/rails-guide-example/app/controllers/posts_controller.rb:28 (line)
+#0  BP - Line  ~/projects/rails-guide-example/app/controllers/posts_controller.rb:28 (line)
 
 ```
 (rdbg) c    # continue command
@@ -500,7 +500,7 @@ And to remove them, you can use:
 
 # and 74 frames (use `bt' command for all frames)
 
-Stop by #0  BP - Line  /Users/st0012/projects/rails-guide-example/app/controllers/posts_controller.rb:28 (line)
+Stop by #0  BP - Line  ~/projects/rails-guide-example/app/controllers/posts_controller.rb:28 (line)
 
 ```
 Copy
@@ -508,7 +508,7 @@ Set a breakpoint on a given method call - e.g. `b @post.save`.
 
 # and 72 frames (use `bt' command for all frames)
 (rdbg) b @post.save    # break command
-#0  BP - Method  @post.save at /Users/st0012/.rbenv/versions/3.0.1/lib/ruby/gems/3.0.0/gems/activerecord-7.0.0.alpha2/lib/active_record/suppressor.rb:43
+#0  BP - Method  @post.save at ~/.rbenv/versions/3.0.1/lib/ruby/gems/3.0.0/gems/activerecord-7.0.0.alpha2/lib/active_record/suppressor.rb:43
 
 ```
 (rdbg) c    # continue command
@@ -528,7 +528,7 @@ Set a breakpoint on a given method call - e.g. `b @post.save`.
 
 # and 75 frames (use `bt' command for all frames)
 
-Stop by #0  BP - Method  @post.save at /Users/st0012/.rbenv/versions/3.0.1/lib/ruby/gems/3.0.0/gems/activerecord-7.0.0.alpha2/lib/active_record/suppressor.rb:43
+Stop by #0  BP - Method  @post.save at ~/.rbenv/versions/3.0.1/lib/ruby/gems/3.0.0/gems/activerecord-7.0.0.alpha2/lib/active_record/suppressor.rb:43
 
 #### 4.3.2. The `catch` Command
 Stop when an exception is raised - e.g. `catch ActiveRecord::RecordInvalid`.

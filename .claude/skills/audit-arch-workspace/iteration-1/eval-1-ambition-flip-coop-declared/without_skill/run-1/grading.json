@@ -1,0 +1,17 @@
+{
+  "expectations": [
+    {"text": "netsync-headlined: netsync.ts's architecture IS one of the top numbered findings, because co-op ambition was declared", "passed": true, "evidence": "Finding 3: 'The existing network code is a worked example of what won't scale' — full-state broadcast and busy-wait both dissected."},
+    {"text": "ambition-acknowledged: The report explicitly states the declared co-op/concurrency ambition as part of its audit scope or archetype", "passed": true, "evidence": "Header framing: 'Evaluated against the stated new goal — online co-op supporting many concurrent players — not against the project's original single-player design intent.'"},
+    {"text": "core-conflicts-still-present: The settings polling conflict and/or duplicated gold source-of-truth still appear as findings", "passed": true, "evidence": "Finding 2 (poll-a-shared-file-every-frame) and Finding 5 (gold drift as future desync vector)."},
+    {"text": "max-five-findings: The report contains at most 5 numbered findings", "passed": true, "evidence": "Exactly 5 numbered findings."},
+    {"text": "proposes-simpler-shape: The netsync finding proposes a concretely simpler/idiomatic alternative", "passed": true, "evidence": "'authoritative server + delta/interest-managed replication + non-blocking network I/O decoupled from the sim tick'."},
+    {"text": "findings-cite-files: Each headline finding cites specific files", "passed": true, "evidence": "All findings cite files (game.ts, hud.ts, audio.ts, settings.ts, netsync.ts, save.ts)."}
+  ],
+  "summary": {"passed": 6, "failed": 0, "total": 6, "pass_rate": 1.0},
+  "eval_feedback": {
+    "suggestions": [
+      {"reason": "This eval did not discriminate: baseline haiku passed all 6 assertions because 'audit this for co-op scale' is the direction a generic audit naturally leans anyway. The qualitative delta (skill run: measured 3-finding report with cost-honesty and explicit intent-conflict handling; baseline: 'from-scratch redesign' verdict) is invisible to these assertions. Add assertions on migration-cost honesty and on not recommending a wholesale rewrite when a bounded refactor path exists."}
+    ],
+    "overall": "Assertions too easy for the with-ambition case; discriminating power lives in eval-0."
+  }
+}

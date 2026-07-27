@@ -11,7 +11,7 @@ Run a comprehensive scan of Reddit pain-point posts to identify software market 
 
 ## Prerequisites
 
-- `scrape-gaps` CLI installed (`uv pip install -e /Users/emma.hyde/personal/scrape-opportunity-gaps`)
+- `scrape-gaps` CLI installed (`uv pip install -e ~/personal/scrape-opportunity-gaps`)
 - Environment variables set in `.env`:
   - `REDDIT_CLIENT_ID`, `REDDIT_CLIENT_SECRET`, `REDDIT_USER_AGENT`
   - `ANTHROPIC_API_KEY`

@@ -1,0 +1,17 @@
+{
+  "expectations": [
+    {"text": "netsync-headlined: netsync.ts's architecture IS one of the top numbered findings, because co-op ambition was declared", "passed": true, "evidence": "Finding 1: 'netsync.ts implements co-op sync with a mechanism that cannot hold more than a couple of peers' — busy-wait, O(n) synchronous fan-out, full-state-per-tick all cited."},
+    {"text": "ambition-acknowledged: The report explicitly states the declared co-op/concurrency ambition as part of its audit scope or archetype", "passed": true, "evidence": "Scope line: 'Auditing as: Scale-invested architect (task explicitly declares a pivot...)' and 'Ethos (post-pivot)' section explaining the README ethos is superseded by declared intent."},
+    {"text": "core-conflicts-still-present: The settings polling conflict and/or duplicated gold source-of-truth still appear as findings", "passed": true, "evidence": "Finding 2 is the settings poll conflict, reframed for the new bar. (Gold duplication was consciously demoted to 'Explicitly not flagged' as off-bar — legal under the and/or assertion.)"},
+    {"text": "max-five-findings: The report contains at most 5 numbered findings", "passed": true, "evidence": "Exactly 3 numbered findings."},
+    {"text": "proposes-simpler-shape: The netsync finding proposes a concretely simpler/idiomatic alternative", "passed": true, "evidence": "'replace the spin-wait + full-blob broadcast with an async, event-driven push: peers subscribe once, the server emits state deltas... via non-blocking I/O', plus a reconciliation-risk cost note."},
+    {"text": "findings-cite-files: Each headline finding cites specific files", "passed": true, "evidence": "All findings cite file:line (src/netsync.ts:5-11, src/hud.ts:6-9, src/game.ts:5, etc.)."}
+  ],
+  "summary": {"passed": 6, "failed": 0, "total": 6, "pass_rate": 1.0},
+  "eval_feedback": {
+    "suggestions": [
+      {"reason": "No assertion checks HOW the report treats the README-vs-declared-ambition conflict. The with-skill run handled it explicitly ('declared intent overrides the README, per audit contract') — a discriminating behavior worth asserting."}
+    ],
+    "overall": "All passed; consider an assertion on explicit intent-conflict handling."
+  }
+}

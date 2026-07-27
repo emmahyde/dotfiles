@@ -4,7 +4,7 @@
 
 Self-driven memory lifecycle plugin for Claude Code. Memories progress through stages: `ephemeral` → `consolidated` → `crystallized` → `instinctive`. Ingests observations, curates them via LLM consolidation (privacy-filtered), and re-injects relevant memories at session start. The canonical memory writer.
 
-- **Source**: `/Users/emmahyde/projects/memesis/` (sibling of ccmanager)
+- **Source**: `$HOME/projects/memesis/` (sibling of ccmanager)
 - **Lang**: Python 3.10+
 - **Persists**: `~/.claude/memory/index.db` (global) or `~/.claude/projects/<hash>/memory/index.db` (per-project) — sqlite via Peewee ORM, FTS5, sqlite-vec
 - **Entrypoints**: Claude Code skills (`/memesis:learn`, `/memesis:recall`, `/memesis:forget`) + `scripts/dashboard.py`, `scripts/heartbeat.py`, `scripts/consolidate.py`
@@ -245,7 +245,7 @@ Memesis exposes everything to read **what happened**, but not enough to **eval w
 | `affect_log` — periodic snapshots of affect state | Affect Timeline overlay | new model + heartbeat write |
 | Sidecar HTTP at `localhost:4101` exposing the above | Observer reads via HTTP not direct sqlite | new `scripts/observer_api.py` Flask |
 
-These are documented in `/Users/emmahyde/projects/ccmanager/.context/SEED-w6-w7-memesis-viz.md` as Wave 6 work on the memesis side.
+These are documented in `$HOME/projects/ccmanager/.context/SEED-w6-w7-memesis-viz.md` as Wave 6 work on the memesis side.
 
 ## Pitfalls when integrating Memesis
 

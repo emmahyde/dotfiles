@@ -220,7 +220,7 @@ Returns a [`Pathname`](https://api.rubyonrails.org/classes/Pathname.html) object
 ```
 Rails.public_path
 
-# => #<Pathname:/Users/someuser/some/path/project/public>
+# => #<Pathname:~/some/path/project/public>
 
 Source: [show](javascript:toggleSource\('method-c-public_path_source'\)) | [on GitHub](https://github.com/rails/rails/blob/fa8f0812160665bff083a089d2bb2fc1817ea03e/railties/lib/rails.rb#L129)
 
@@ -236,7 +236,7 @@ Returns a [`Pathname`](https://api.rubyonrails.org/classes/Pathname.html) object
 ```
 Rails.root
 
-# => #<Pathname:/Users/someuser/some/path/project>
+# => #<Pathname:~/some/path/project>
 
 Source: [show](javascript:toggleSource\('method-c-root_source'\)) | [on GitHub](https://github.com/rails/rails/blob/fa8f0812160665bff083a089d2bb2fc1817ea03e/railties/lib/rails.rb#L64)
 

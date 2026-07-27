@@ -4,7 +4,7 @@
 
 Local-first JS dashboard that unifies RTK + Headroom + Memesis (and, by extension, mex-style scaffold tooling) into one surface. Reads each tool's on-disk artefacts via read-only adapters, persists its own traces in `apps/data/observer.db`, and serves a Vite SPA + Hono backend.
 
-- **Repo**: `/Users/emmahyde/projects/ccmanager/`
+- **Repo**: `$HOME/projects/ccmanager/`
 - **Stack**: pnpm monorepo — `apps/web` (Vite + React 18 + React Router v7 + TanStack Query + Radix Themes + Tailwind + cmdk + Zustand + Cytoscape + react-force-graph) + `apps/proxy` (Hono + better-sqlite3 + sqlite-vec) + `packages/shared`
 - **Lang**: JavaScript (no TypeScript — explicit decision)
 - **Listens**: `localhost:5173` (web) + `localhost:3001` (proxy)

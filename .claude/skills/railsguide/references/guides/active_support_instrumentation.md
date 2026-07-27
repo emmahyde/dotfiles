@@ -334,7 +334,7 @@ Additional keys may be added by the caller.
 
 ```
 {
-  identifier: "/Users/adam/projects/notifications/app/views/posts/index.html.erb",
+  identifier: "~/projects/notifications/app/views/posts/index.html.erb",
   layout: "layouts/application",
   locals: { foo: "bar" }
 }
@@ -347,7 +347,7 @@ Additional keys may be added by the caller.
 
 ```
 {
-  identifier: "/Users/adam/projects/notifications/app/views/posts/_form.html.erb",
+  identifier: "~/projects/notifications/app/views/posts/_form.html.erb",
   locals: { foo: "bar" }
 }
 
@@ -361,7 +361,7 @@ The `:cache_hits` key is only included if the collection is rendered with `cache
 
 ```
 {
-  identifier: "/Users/adam/projects/notifications/app/views/posts/_post.html.erb",
+  identifier: "~/projects/notifications/app/views/posts/_post.html.erb",
   count: 3,
   cache_hits: 0
 }
@@ -373,7 +373,7 @@ The `:cache_hits` key is only included if the collection is rendered with `cache
 
 ```
 {
-  identifier: "/Users/adam/projects/notifications/app/views/layouts/application.html.erb"
+  identifier: "~/projects/notifications/app/views/layouts/application.html.erb"
 }
 
 ### 3.8. Active Job

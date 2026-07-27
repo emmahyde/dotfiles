@@ -1,5 +1,5 @@
 ---
-name: mcconnell-construction
+name: decomplexify
 description: "Knowledge base from \"Code Complete, 2nd Edition\" by Steve McConnell. Use when applying McConnell's software-construction frameworks for design, routines, defensive programming, variables/naming, testing, debugging, refactoring, code tuning, integration, and layout/style — while coding, studying the book, or referencing its concepts."
 allowed-tools:
   - Read

@@ -29,7 +29,7 @@ Scopes: `agentic` | `plugin` | `skill` | `hook` | `agent` | `mcp` |
 `proxy` | `project-md` | `user-md` (multi-allowed: `--scope plugin,hook`).
 
 Helper scripts live in `scripts/`. Canon source list in
-`references/canon-sources.md`. RTK shaping notes in `references/rtk-tips.md`.
+`references/canon-sources.md`.
 
 ---
 
@@ -307,8 +307,8 @@ Save hybrid to ~/.claude/skills/<name>/SKILL.md ? [y/N/path]
 | `dedupe.sh`         | Dedupe pipe-rows by name, keep highest-stars  |
 
 All scripts emit pipe-delimited rows (or TSV). Token-shaped — feed to
-`rtk grep` to filter further; do NOT pipe through `rtk read`, they're
-already compact. See `references/rtk-tips.md`.
+`grep` to filter further; they are already compact, so do not run them
+through another summarizing reader.
 
 ---
 
