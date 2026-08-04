@@ -125,6 +125,15 @@
           "marketplace": "codemode-mcp"
         }
       ]
+    },
+    {
+      "name": "comment-budget",
+      "source": "./plugins/comment-budget",
+      "description": "Pre-generation comment suppression: doctrine at session start/compact, two-line per-turn reminder, and a deterministic PreToolUse gate that denies changelog/banner comments before they reach disk.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Emma Hyde"
+      }
     }
   ],
   "allowCrossMarketplaceDependenciesOn": [
