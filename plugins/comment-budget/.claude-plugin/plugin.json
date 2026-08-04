@@ -1,0 +1,8 @@
+{
+  "name": "comment-budget",
+  "description": "Pre-generation comment suppression: doctrine injected at session start and after compaction, a two-line per-turn reminder, and a deterministic PreToolUse gate that rejects changelog/banner comments before they reach disk.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Emma Hyde"
+  }
+}
