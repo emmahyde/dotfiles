@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/emmahyde/mcx/internal/executor"
+	"github.com/emmahyde/dotfiles/tools/mcx/internal/executor"
 )
 
 // isolate points every layer at temp dirs: an empty plugin root (skipped), a

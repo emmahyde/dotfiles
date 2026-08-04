@@ -5,9 +5,9 @@ import (
 	"testing"
 )
 
-const tool = "mcp__jiraconfluencegusto__getJiraIssue"
+const tool = "mcp__jira__getJiraIssue"
 
-const tool2 = "mcp__gsheetsgusto__fetch"
+const tool2 = "mcp__gsheets__fetch"
 
 func TestCall_BatchFiresOnSecondCallEvenDifferentTool(t *testing.T) {
 	st := NewState()
@@ -88,10 +88,10 @@ func TestCall_BothFireSameCall(t *testing.T) {
 
 func TestShort(t *testing.T) {
 	cases := map[string]string{
-		"mcp__jiraconfluencegusto__getJiraIssue": "getJiraIssue",
-		"mcp__server__tool":                      "tool",
-		"Bash":                                   "Bash",
-		"":                                       "",
+		"mcp__jira__getJiraIssue": "getJiraIssue",
+		"mcp__notion__tool":       "tool",
+		"Bash":                    "Bash",
+		"":                        "",
 	}
 	for in, want := range cases {
 		if got := Short(in); got != want {
@@ -102,7 +102,7 @@ func TestShort(t *testing.T) {
 
 func TestChainCoversTool(t *testing.T) {
 	sources := []string{
-		`forward("jiraconfluencegusto", "getJiraIssue", args)`,
+		`forward("jira", "getJiraIssue", args)`,
 		`forward("notion", "search", args)`,
 	}
 	if !ChainCoversTool(sources, tool) {

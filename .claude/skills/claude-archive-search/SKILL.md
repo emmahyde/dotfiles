@@ -31,7 +31,7 @@ Where everything under `~/.claude/` lives, and how to grep it fast.
   plugins/cache/<pkg>/<ver>/                 installed plugin skills + agents
 ```
 
-Slug for this repo: `-Users-emmahyde-projects-sector` (prefix dash + `/`→`-`).
+Slug example for `/path/to/project`: `-path-to-project` (prefix dash + `/`→`-`).
 
 ## Transcript JSONL format
 
@@ -84,7 +84,7 @@ Use `recover-writes.py` in this skill dir. It extracts every `Write` tool call f
 ~/.claude/skills/claude-archive-search/recover-writes.py
 
 # Filter to a path substring, write a markdown report
-~/.claude/skills/claude-archive-search/recover-writes.py --path Sector.Engine/Crew -o writes.md
+~/.claude/skills/claude-archive-search/recover-writes.py --path src/module -o writes.md
 
 # Restore latest version of each written file to disk under ./recovered/
 ~/.claude/skills/claude-archive-search/recover-writes.py --restore --out recovered/

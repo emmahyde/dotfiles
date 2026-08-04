@@ -13,8 +13,8 @@ Detailed rationale per pattern detected by `scripts/audit.py`. Load this when tr
 **Why it wastes.** Every byte of `tool_result` enters the conversation and is re-tokenized on every subsequent turn (until compaction). A single 50KB Read costs ~12k tokens forever.
 
 **Suggested swap.** Move processing into a sandbox.
-- `mcp__plugin_context-mode_context-mode__ctx_execute_file(path, language, code)` — analyze a file; only `console.log` output enters context.
-- `mcp__plugin_context-mode_context-mode__ctx_batch_execute(commands, queries)` — multi-shell-command research with co-located FTS5 search.
+- `ctx_execute_file(path, language, code)` — analyze a file; only `console.log` output enters context.
+- `ctx_batch_execute(commands, queries)` — multi-shell-command research with co-located FTS5 search.
 
 **False positives.** A large Read may be unavoidable when the next step is `Edit` (Edit needs the bytes to match against). Don't flag automatically — flag as *candidates*.
 
@@ -52,7 +52,7 @@ Detailed rationale per pattern detected by `scripts/audit.py`. Load this when tr
 
 **False positives.**
 - User asked you to verify the file looks correct.
-- Auto-formatter is known to rewrite files post-Edit (sector repo has this — content matches but layout differs).
+- Auto-formatters can rewrite files post-Edit in some repositories — content matches but layout differs.
 
 ## 5. Repeated Grep/Glob
 

@@ -31,12 +31,15 @@ def triage(thread, cloud, project)
   }
 end
 
+project = args["projectKey"]
+raise "projectKey is required" unless project.is_a?(String) && !project.empty?
+slack_server = args["slackServer"] || "slack"
 thread = forward(
-  "slackgusto",
+  slack_server,
   "slack_read_thread",
   {
     "channel_id" => args["channel_id"],
     "message_ts" => args["message_ts"]
   }
 )
-emit(triage(thread, args["cloudId"], args["projectKey"] || "PROJ"))
+emit(triage(thread, args["cloudId"], project))

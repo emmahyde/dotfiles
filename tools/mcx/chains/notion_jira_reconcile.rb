@@ -1,15 +1,18 @@
-# notion_jira_reconcile — cross-reference a Notion roadmap against live Jira epics; report gaps.
-project = args["projectKey"] || "PROJ"
+project = args["projectKey"]
+raise "projectKey is required" unless project.is_a?(String) && !project.empty?
 raise "invalid projectKey #{project.inspect}" unless project.match?(/\A[A-Za-z0-9_]+\z/)
+
+jira_server = args["jiraServer"] || "jira"
+notion_server = args["notionServer"] || "notion"
 notion = forward(
-  "notiongusto",
+  notion_server,
   "notion-fetch",
   {
     "id" => args["notionId"]
   }
 )
 jira = forward(
-  "jiraconfluencegusto",
+  jira_server,
   "searchJiraIssuesUsingJql",
   {
     "cloudId" => args["cloudId"],

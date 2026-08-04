@@ -12,7 +12,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/emmahyde/mcx/internal/observe"
+	"github.com/emmahyde/dotfiles/tools/mcx/internal/observe"
 )
 
 // ToolCount is a tool and how many times it was called.

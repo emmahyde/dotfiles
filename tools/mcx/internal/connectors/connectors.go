@@ -1,8 +1,4 @@
-// Package connectors bridges the plugin's shipped default MCP "connectors"
-// (canonical local key -> backend URL, in url_configs.yml) into Claude Code's
-// local ~/.claude.json config: it reports what a sync would change (Plan) and
-// performs the idempotent read-modify-write (Sync). It is pure config
-// plumbing — it writes server entries, never credentials.
+// Package connectors syncs caller-configured MCP endpoints into local server config.
 package connectors
 
 import (
@@ -14,14 +10,10 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/emmahyde/mcx/internal/mcpclient"
+	"github.com/emmahyde/dotfiles/tools/mcx/internal/mcpclient"
 )
 
-// Load reads a url_configs.yml at path: canonical local server key -> the
-// backend URL for a connector this plugin ships a default filter or chain for.
-// The URL is fixed per connector, not per user — RunLayer routes by URL path and
-// personalizes only via each user's own keychain OAuth bearer token — so the same
-// checked-in URL is correct for every engineer who installs this plugin.
+// Load keeps connector endpoints data-driven so installations can supply their own URLs.
 func Load(path string) (map[string]string, error) {
 	raw, err := os.ReadFile(path)
 	if err != nil {

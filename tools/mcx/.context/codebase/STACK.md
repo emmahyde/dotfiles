@@ -1,27 +1,40 @@
-# STACK
+# Stack
 
 ## Primary
-- **Go** — module `github.com/emmahyde/mcx`. Single static CLI binary, no CGO.
-  Build: `go build -o bin/mcx ./cmd/mcx`. Test: `go test ./...`. Vet: `go vet ./...`.
-- **MCP transport:** `github.com/modelcontextprotocol/go-sdk` **pinned v1.6.1** (API drifts; do not float).
 
-## Secondary (sandbox runtimes, not compiled in)
-- **Ruby / Python / JS / shell** — executed by `internal/executor` as sandboxed chain scripts,
-  PATH-probed at runtime (`ruby`/`uv`/`python3`/`bun`/`node`/`/bin/sh`). Chains are authored in
-  these languages; mcx itself never depends on them being present.
-- **Python (bench only):** `tiktoken cl100k_base` token counting in `bench/count_tokens.py`.
+- **Go module:** `github.com/emmahyde/dotfiles/tools/mcx`
+- **MCP transport:** `github.com/modelcontextprotocol/go-sdk` pinned at v1.6.1
+- **Build:** `go build -o bin/mcx ./cmd/mcx`
 
-## Platform coupling
-- macOS-only keychain access via shelling to `/usr/bin/security` (build-tagged `darwin`;
-  `keychain_other.go` is the `!darwin` stub returning `errUnsupported`).
-- No external services, no network except: MCP forward calls and RFC 8414 OAuth refresh.
+mcx builds as a single CLI binary without CGO.
 
-## Config / storage locations
-- Scripts + `manifest.json`: `~/.config/mcx/scripts/` (honors `XDG_CONFIG_HOME`).
-- OAuth creds: macOS keychain generic-password item `Claude Code-credentials`.
-- Server discovery: `<cwd>/.mcp.json` → `~/.claude.json` → `~/.claude/*.json`.
+## Optional chain runtimes
 
-## Planned additions (this work)
-- Native-Go declarative JSON transform engine (`mcx trim`) reading a `modifiers.json` config.
-- Claude Code **plugin** wrapper: `.claude-plugin/plugin.json`, `hooks/hooks.json`,
-  `skills/`, `scripts/` (mcx binary relocates here), `modifiers.json`, `chains/`.
+The executor probes for Ruby, Python, JavaScript, or POSIX shell at runtime. These interpreters run
+user-selected chains but are not compile-time dependencies of the Go binary.
+
+The benchmark uses Python `tiktoken` with the `cl100k_base` encoding for reproducible token counts.
+
+## Platform integration
+
+macOS keychain access shells out to `/usr/bin/security` from a Darwin-specific implementation.
+Other platforms compile against a stub and may use statically configured transport headers.
+
+Network access is limited to MCP calls and OAuth metadata or token refresh requests.
+
+## Plugin assets
+
+- `.claude-plugin/plugin.json` — plugin manifest
+- `hooks/hooks.json` — PostToolUse and UserPromptSubmit commands
+- `scripts/mcx` — packaged binary
+- `filters.yml` and `chains.yml` — shipped defaults
+- `chains/` — packaged chain sources
+- `skills/` and `commands/` — user-facing guidance
+
+## Configuration
+
+Filters and chains resolve from plugin defaults, project `.mcx/`, and user `~/.config/mcx/`
+layers. MCP server discovery reads project and user Claude Code configuration.
+
+Public examples use `jira`, `notion`, `slack`, `gdocs`, and `gsheets`; full keys use
+`mcp__<alias>__<tool>`.

@@ -9,14 +9,19 @@ REPO="$(cd "$(dirname "$0")/.." && pwd)"
 # "minion"/"minions" is deliberately absent: it is the cmux plugin's own command
 # and directory name, so renaming it would break the plugin. What must never
 # appear is anything that identifies the org, a real ticket, or a real machine.
-PATTERN='gustohq|guideline-app|\bzenpayroll\b|\bGusto\b|RETIRE-[0-9]+|\bgroot\b|/Users/(emma\.hyde|emmahyde)/'
+PATTERN='gustohq|guideline-(?:app|platform)|internal\.guideline\.tools|\bzenpayroll\b|\bGusto\b|(?:RETIRE|PLATFORM)-[0-9]+|mcp__[a-z0-9_-]*gusto__|\b(?:groot|glop|genesis-play|cloud-agents)\b|/Users/(?:emma\.hyde|emmahyde)/'
 
 EXCLUDES=(
-  --glob='!**/node_modules/**' --glob='!**/dist/**' --glob='!.git/**'
-  --glob='!bin/scan-leaks' --glob='!.claude/skills.redact.pl' --glob='!.claude/skills-sync.sh'
+  --glob='!.git/**'
+  --glob='!**/node_modules/**'
+  --glob='!**/dist/**'
+  --glob='!.claude/plugins/cache/**'
+  --glob='!bin/scan-leaks'
+  --glob='!.claude/skills.redact.pl'
+  --glob='!.claude/skills-sync.sh'
 )
 
-hits=$(rg -n --pcre2 -i "$PATTERN" "${EXCLUDES[@]}" "$REPO" 2>/dev/null || true)
+hits=$(rg -n --hidden --pcre2 -i "$PATTERN" "${EXCLUDES[@]}" "$REPO" 2>/dev/null || true)
 
 if [[ -n "$hits" ]]; then
   echo "Internal references found — this repo is public:"

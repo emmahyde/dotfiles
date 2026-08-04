@@ -1,6 +1,7 @@
 # sprint_to_sheet — roll up the open sprint into status/assignee counts and dry-run Sheet rows.
+jira_server = args["jiraServer"] || "jira"
 raw = forward(
-  "jiraconfluencegusto",
+  jira_server,
   "searchJiraIssuesUsingJql",
   {
     "cloudId" => args["cloudId"],

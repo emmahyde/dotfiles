@@ -85,17 +85,12 @@
         <span class="k">forward()</span><span class="v">✗</span>
         <span class="k">applied</span><span class="v">auto, in PostToolUse hook</span>
       </div>
-<pre><code><span class="cmt">// filters.json — fixed declarative vocabulary</span>
-<span class="key">"mcp__jira__getJiraIssue"</span>: {
-  <span class="kw">"drop"</span>: [<span class="str">"expand"</span>,<span class="str">"self"</span>,<span class="str">"fields.renderedFields"</span>,
-           <span class="str">"fields.changelog"</span>,<span class="str">"fields.comment"</span>],
-  <span class="kw">"rename"</span>: {<span class="str">"fields.assignee.displayName"</span>:<span class="str">"who"</span>},
-  <span class="kw">"truncate"</span>: {<span class="str">"fields.description"</span>: <span class="str">400</span>}
-},
-<span class="key">"mcp__slack__slack_read_thread"</span>: {
-  <span class="kw">"maxTextChars"</span>: <span class="str">4000</span>   <span class="cmt">// prose → blunt cut</span>
-}
-<span class="cmt">// no entry → pass through untouched (fail-open)</span></code></pre>
+<pre><code><span class="cmt"># filters.yml — mcp__&lt;alias&gt;__&lt;tool&gt;</span>
+<span class="key">mcp__jira__getJiraIssue:</span>
+  <span class="kw">drop:</span>
+    - <span class="str">expand</span>
+    - <span class="str">self</span>
+<span class="cmt"># unmatched tools pass through unchanged</span></code></pre>
       <div class="flowline">
         <span class="chip on">tool_response</span><span class="arrow">→</span>
         <span class="chip on">mcx filter</span><span class="arrow">→</span>
@@ -116,22 +111,22 @@
         <span class="k">forward()</span><span class="v">✓ baked-in preamble</span>
         <span class="k">applied</span><span class="v">on purpose, model-invoked</span>
       </div>
-<pre><code><span class="cmt"># baked env: forward() + emit() injected, no boilerplate</span>
-issues = <span class="key">args</span>[<span class="str">"keys"</span>].map { |k|
-  <span class="kw">forward</span>(<span class="str">"jira"</span>, <span class="str">"getJiraIssue"</span>, {<span class="str">"issueIdOrKey"</span> =&gt; k})
+<pre><code><span class="cmt"># synthetic input: {"keys":["PROJ-123"]}</span>
+keys = <span class="key">args</span>.fetch(<span class="str">"keys"</span>)
+issues = keys.map { |key|
+  <span class="kw">forward</span>(<span class="str">"jira"</span>, <span class="str">"getJiraIssue"</span>, {<span class="str">"issueIdOrKey"</span> =&gt; key})
 }
 rows = issues.map { |i| {key: i[<span class="str">"key"</span>],
         status: i.dig(<span class="str">"fields"</span>,<span class="str">"status"</span>,<span class="str">"name"</span>)} }
 <span class="kw">emit</span>({count: rows.length, issues: rows})
-<span class="cmt"># 5 payloads (~90k tok) fan out + die in the sandbox;</span>
-<span class="cmt"># only the digest (~200 tok) re-enters context</span></code></pre>
+<span class="cmt"># intermediate payloads stay in the sandbox; only the digest returns</span></code></pre>
       <div class="flowline">
         <span class="chip on">one mcx run</span><span class="arrow">→</span>
         <span class="chip on">N forwards</span><span class="arrow">→</span>
         <span class="chip on">emit digest</span>
       </div>
-      <p class="note">This is the existing register / list / run / remove registry (manifest.json). Skills + the
-      UserPromptSubmit nudge steer the model here when a prompt implies a fan-out.</p>
+      <p class="note">Chains provide register / list / run / remove. Skills + the UserPromptSubmit
+      nudge steer the model here when a prompt implies a fan-out.</p>
     </div>
   </div>
 
@@ -144,8 +139,8 @@ rows = issues.map { |i| {key: i[<span class="str">"key"</span>],
       <span class="arrow">◂ overridden by ◂</span>
       <span class="lvl">user <code>~/.config/mcx/</code><br><span class="cmt mono">personal</span></span>
     </div>
-    <p class="note">Same resolution mcx already uses for server discovery. Filters and chains each merge by
-    key (tool name / script name); most-specific source wins.</p>
+    <p class="note">Filters and chains resolve by layer and merge by key (tool name / script name);
+    the most-specific source wins.</p>
   </div>
 
   <div class="cols3">
@@ -154,12 +149,12 @@ rows = issues.map { |i| {key: i[<span class="str">"key"</span>],
       <div class="tree"><b>mcx-plugin/</b>
   <b>.claude-plugin/</b>plugin.json
   <b>hooks/</b>hooks.json      <span class="a"># UserPromptSubmit + PostToolUse</span>
-  <b>scripts/</b>              <span class="cmt"># mcx engine moves in here</span>
+  <b>scripts/</b>
     mcx (built binary)
   <b>skills/</b>
     mcx/SKILL.md          <span class="a"># /mcx quickstart + cheatsheet</span>
     mcx-author/SKILL.md   <span class="c"># write &amp; register a chain</span>
-  <b>filters.json</b>         <span class="m"># Registry 1 defaults</span>
+  <b>filters.yml</b>
   <b>chains/</b>*.rb           <span class="c"># Registry 2 example scripts</span></div>
     </div>
     <div class="panel" style="margin:0">
@@ -168,7 +163,7 @@ rows = issues.map { |i| {key: i[<span class="str">"key"</span>],
         <span class="k" style="color:var(--mcp)">PostToolUse hook</span><span class="v">shells to <code>mcx filter</code>; auto-applies a filter to every configured tool. No nudging.</span>
         <span class="k" style="color:var(--accent)">UserPromptSubmit hook</span><span class="v">factual one-liner nudging a chain when the prompt implies a fan-out.</span>
         <span class="k" style="color:var(--good)">skills</span><span class="v"><code>/mcx</code> cheatsheet; <code>mcx-author</code> teaches writing + registering a chain.</span>
-        <span class="k">mcx (Go)</span><span class="v">owns both registries: <code>filter</code> reads filters.json; <code>run</code> executes chains.</span>
+        <span class="k">mcx (Go)</span><span class="v">owns both registries: <code>filter</code> reads filters.yml; <code>run</code> executes chains.</span>
       </div>
       <p class="note">Filters need no steering — they just happen. All steering effort goes toward getting the
       model onto <b style="color:var(--good)">chains</b> for multi-call work.</p>

@@ -21,7 +21,7 @@ hook; they do not orchestrate multiple calls.
 Example:
 
 ```yaml
-mcp__jiraconfluencegusto__getJiraIssue:
+mcp__jira__getJiraIssue:
   drop:
     - expand
     - self

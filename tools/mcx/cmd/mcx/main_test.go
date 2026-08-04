@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/emmahyde/mcx/internal/registry"
+	"github.com/emmahyde/dotfiles/tools/mcx/internal/registry"
 )
 
 // captureStdout redirects os.Stdout for the duration of fn and returns what it wrote.
@@ -110,7 +110,7 @@ func TestHasAuthHeaderIsCaseInsensitive(t *testing.T) {
 
 func TestPrintNeedsAuth(t *testing.T) {
 	out := captureStdout(t, func() {
-		if err := printNeedsAuth("notiongusto"); err != nil {
+		if err := printNeedsAuth("notion"); err != nil {
 			t.Fatalf("printNeedsAuth: %v", err)
 		}
 	})
@@ -130,7 +130,7 @@ func TestPrintNeedsAuth(t *testing.T) {
 	if len(result.Content) != 1 || result.Content[0].Type != "text" {
 		t.Fatalf("expected one text content block, got %+v", result.Content)
 	}
-	if !bytes.Contains([]byte(result.Content[0].Text), []byte("notiongusto")) {
+	if !bytes.Contains([]byte(result.Content[0].Text), []byte("notion")) {
 		t.Errorf("message should name the server: %q", result.Content[0].Text)
 	}
 	if !bytes.Contains([]byte(result.Content[0].Text), []byte("/mcp")) {

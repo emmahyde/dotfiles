@@ -1,6 +1,8 @@
 # jira_notion_crossref — pull one Jira issue and one Notion page and report how they reference each other.
+jira_server = args["jiraServer"] || "jira"
+notion_server = args["notionServer"] || "notion"
 jira = forward(
-  "jiraconfluencegusto",
+  jira_server,
   "getJiraIssue",
   {
     "cloudId" => args["cloudId"],
@@ -8,7 +10,7 @@ jira = forward(
   }
 )
 notion = forward(
-  "notiongusto",
+  notion_server,
   "notion-fetch",
   {
     "id" => args["notionId"]
@@ -17,7 +19,7 @@ notion = forward(
 
 f = jira["fields"] || {}
 key = jira["key"].to_s
-project = key.split("-").first || "PROJ"
+project = key.split("-").first
 notion_text = JSON.generate(notion)
 jira_text = JSON.generate(jira)
 

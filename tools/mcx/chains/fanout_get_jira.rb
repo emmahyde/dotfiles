@@ -1,4 +1,5 @@
 # fanout_get_jira — fetch N Jira issues in one call and return a compact table.
+jira_server = args["jiraServer"] || "jira"
 def row(issue)
   f = issue["fields"] || {}
   {
@@ -15,7 +16,7 @@ failed = []
 (args["keys"] || []).each do |k|
   rows << row(
     forward(
-      "jiraconfluencegusto",
+      jira_server,
       "getJiraIssue",
       {
         "cloudId" => cloud,

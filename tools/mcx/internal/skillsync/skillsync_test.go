@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/emmahyde/mcx/internal/registry"
+	"github.com/emmahyde/dotfiles/tools/mcx/internal/registry"
 )
 
 // isolate points HOME at a temp dir so Dir() resolves under it instead of the

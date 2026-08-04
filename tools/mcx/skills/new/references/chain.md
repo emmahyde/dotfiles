@@ -13,11 +13,11 @@ sandbox and only a digest should return to context.
    aggregation, and filtering inside it:
 
    ```sh
-   mcx run '{"cloudId":"…","keys":["PROJ-1","PROJ-2"]}' ruby <<'RUBY'
+   mcx run '{"jiraServer":"jira","cloudId":"00000000-0000-0000-0000-000000000000","keys":["PROJ-123","PROJ-124"]}' ruby <<'RUBY'
    # Fetch issue statuses and return a compact table.
    rows = args["keys"].map do |key|
      issue = forward(
-       "jiraconfluencegusto",
+       args["jiraServer"],
        "getJiraIssue",
        { "cloudId" => args["cloudId"], "issueIdOrKey" => key }
      )

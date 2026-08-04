@@ -1,25 +1,28 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-# capture_live — fetch real MCP payloads via `mcx forward` and write them as
-# benchmark fixtures under bench/captures/ (gitignored — real data never lands in
-# the repo). Run once to produce the numbers the README reports:
-#
-#   CLOUD_ID=<id> ruby bench/capture_live.rb
-#   MCX_FIXTURES=bench/captures ruby bench/bench.rb
-#
-# Config via env (all have working defaults for the RETIRE project):
-#   CLOUD_ID, JIRA_KEYS (comma-sep), NOTION_ID, SLACK_CHANNEL, SLACK_TS, PROJECT
+# Live captures require explicit identifiers because generated payloads may contain private data.
 
 require "json"
 require "fileutils"
 
-CLOUD = ENV["CLOUD_ID"] || "3fd33630-4e39-4689-ad04-db32e3843117"
-PROJECT = ENV["PROJECT"] || "RETIRE"
-KEYS = (ENV["JIRA_KEYS"] || "TICKET-1234,TICKET-1234,TICKET-1234,TICKET-1234,TICKET-1234").split(",")
-NOTION_ID = ENV["NOTION_ID"] || "328ad673-c6c2-80d0-9d03-f6ec834170c9"
-SLACK_CHANNEL = ENV["SLACK_CHANNEL"] || "C0ALGQCCHL7"
-SLACK_TS = ENV["SLACK_TS"] || "1780488009.179439"
+REQUIRED_ENV = %w[
+  JIRA_SERVER NOTION_SERVER SLACK_SERVER CLOUD_ID PROJECT JIRA_KEYS NOTION_ID SLACK_CHANNEL SLACK_TS
+].freeze
+missing_env = REQUIRED_ENV.select { |name| ENV[name].nil? || ENV[name].empty? }
+abort("missing required environment variables: #{missing_env.join(', ')}") unless missing_env.empty?
+
+JIRA_SERVER = ENV.fetch("JIRA_SERVER")
+NOTION_SERVER = ENV.fetch("NOTION_SERVER")
+SLACK_SERVER = ENV.fetch("SLACK_SERVER")
+CLOUD = ENV.fetch("CLOUD_ID")
+PROJECT = ENV.fetch("PROJECT")
+KEYS = ENV.fetch("JIRA_KEYS").split(",").map(&:strip).reject(&:empty?)
+NOTION_ID = ENV.fetch("NOTION_ID")
+SLACK_CHANNEL = ENV.fetch("SLACK_CHANNEL")
+SLACK_TS = ENV.fetch("SLACK_TS")
+
+abort("JIRA_KEYS must contain at least one issue key") if KEYS.empty?
 
 def forward(server, tool, args)
   out = IO.popen(["mcx", "forward", "--server", server, "--tool", tool, "--args", JSON.generate(args)], &:read)
@@ -42,37 +45,37 @@ def save(dir, name, obj)
 end
 
 puts "getJiraIssue #{KEYS[0]}"
-one = forward("jiraconfluencegusto", "getJiraIssue", { "cloudId" => CLOUD, "issueIdOrKey" => KEYS[0] })
+one = forward(JIRA_SERVER, "getJiraIssue", { "cloudId" => CLOUD, "issueIdOrKey" => KEYS[0] })
 save(dir, "get_jira_issue.json", one)
 # editJiraIssue echoes the full issue back; the single-issue payload is that echo.
 save(dir, "edit_jira_issue.json", one)
 
 puts "fan-out getJiraIssue ×#{KEYS.length}"
-fan = KEYS.map { |k| forward("jiraconfluencegusto", "getJiraIssue", { "cloudId" => CLOUD, "issueIdOrKey" => k }) }.compact
+fan = KEYS.map { |k| forward(JIRA_SERVER, "getJiraIssue", { "cloudId" => CLOUD, "issueIdOrKey" => k }) }.compact
 save(dir, "fanout_get_jira.json", fan)
 
 puts "searchJiraIssues (10)"
-search = forward("jiraconfluencegusto", "searchJiraIssuesUsingJql",
+search = forward(JIRA_SERVER, "searchJiraIssuesUsingJql",
                  { "cloudId" => CLOUD, "jql" => "project = #{PROJECT} ORDER BY updated DESC", "maxResults" => 10,
                    "fields" => %w[summary status assignee] })
 save(dir, "search_jira.json", search)
 
 puts "sprint metrics (40)"
-sprint = forward("jiraconfluencegusto", "searchJiraIssuesUsingJql",
+sprint = forward(JIRA_SERVER, "searchJiraIssuesUsingJql",
                  { "cloudId" => CLOUD, "jql" => "project = #{PROJECT} ORDER BY updated DESC", "maxResults" => 40,
                    "fields" => %w[summary status assignee created resolutiondate] })
 save(dir, "sprint_to_sheet.json", sprint)
 
 puts "notion-fetch + jira epics (reconcile / cross-ref)"
-notion = forward("notiongusto", "notion-fetch", { "id" => NOTION_ID })
-epics = forward("jiraconfluencegusto", "searchJiraIssuesUsingJql",
+notion = forward(NOTION_SERVER, "notion-fetch", { "id" => NOTION_ID })
+epics = forward(JIRA_SERVER, "searchJiraIssuesUsingJql",
                 { "cloudId" => CLOUD, "jql" => "project = #{PROJECT} AND issuetype = Epic ORDER BY updated DESC",
                   "maxResults" => 50, "fields" => %w[summary status] })
 save(dir, "notion_jira_reconcile.json", { "projectKey" => PROJECT, "notion" => notion, "jira" => epics }) if notion && epics
 save(dir, "jira_notion_crossref.json", { "jira" => one, "notion" => notion }) if notion && one
 
 puts "slack thread"
-thread = forward("slackgusto", "slack_read_thread", { "channel_id" => SLACK_CHANNEL, "message_ts" => SLACK_TS })
+thread = forward(SLACK_SERVER, "slack_read_thread", { "channel_id" => SLACK_CHANNEL, "message_ts" => SLACK_TS })
 save(dir, "slack_to_bug.json", thread)
 
 puts "done → #{dir}"

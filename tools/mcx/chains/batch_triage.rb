@@ -1,11 +1,12 @@
 # batch_triage — flip one custom field across many Jira issues; return only a count.
+jira_server = args["jiraServer"] || "jira"
 field = args["field"]
 value = args["value"]
 done = []
 failed = []
 (args["keys"] || []).each do |key|
   forward(
-    "jiraconfluencegusto",
+    jira_server,
     "editJiraIssue",
     {
       "cloudId" => args["cloudId"],

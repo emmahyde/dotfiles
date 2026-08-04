@@ -6,15 +6,15 @@ Standalone Go CLI. Two jobs, one binary — **it is an MCP *client*, never an MC
    injecting macOS-keychain OAuth bearer tokens (refreshing when expired).
 2. **run/register/list/remove** — execute ad-hoc scripts without registration, or manage a durable local store of named scripts.
 
-Extracted from `contextmode-v2` (ported `forward`'s MCP-client transport + the sandbox executor);
-the keychain-OAuth and script-registry pieces are net-new here.
+Shipped examples use the neutral MCP aliases `jira`, `notion`, `slack`, `gdocs`, and `gsheets`.
+Full MCP tool keys follow `mcp__<alias>__<tool>`.
 
 ## Language / Tooling
 
-- Go, module `github.com/your-org/mcx`. Build: `go build -o bin/mcx ./cmd/mcx`.
+- Go, module `github.com/emmahyde/dotfiles/tools/mcx`. Build: `go build -o bin/mcx ./cmd/mcx`.
 - Test: `go test ./...`  ·  Vet: `go vet ./...`.
-- MCP transport via `github.com/modelcontextprotocol/go-sdk` **pinned v1.6.1** — the version the
-  ported transport code compiles against. Do not float it to `@latest`; the API drifts.
+- MCP transport via `github.com/modelcontextprotocol/go-sdk` **pinned v1.6.1**. Do not float it
+  to `@latest`; the API drifts.
 - No CGO, no external services. Keychain access shells out to `/usr/bin/security` (macOS only).
 
 ## Layout
@@ -26,7 +26,7 @@ the keychain-OAuth and script-registry pieces are net-new here.
   (`keychain_darwin.go` + `keychain_other.go` stub), RFC 8414 discovery + refresh + write-back
   (`refresh.go`), config dir (`config.go`).
 - `internal/registry/` — durable script store (`store.go`) + execution (`run.go`).
-- `internal/executor/` — sandboxed runtimes (shell/python/js/ruby), ported from contextmode-v2.
+- `internal/executor/` — sandboxed runtimes (shell/python/js/ruby).
 - `internal/filters/` — declarative JSON filter engine for the `filter` command: transform
   (`transform.go`), envelope unwrap/rewrap (`envelope.go`), precedence config (`config.go`),
   hook-payload glue (`run.go`). Pure data, no sandbox, no forward.
@@ -45,8 +45,8 @@ the keychain-OAuth and script-registry pieces are net-new here.
 
 This repo is also a Claude Code plugin. Plugin files live at repo root alongside the Go module:
 `.claude-plugin/plugin.json`, `hooks/hooks.json` (PostToolUse→`mcx filter` + `mcx observe`, UserPromptSubmit→`mcx nudge`),
-`skills/mcx` + `skills/new` + `skills/save`, `commands/setup.md` (the `/setup` command), `filters.yml` (shipped drop-only defaults), `chains.yml` (shipped default chains), and `scripts/mcx` (the built binary the hooks invoke via
-`${CLAUDE_PLUGIN_ROOT}`). Rebuild it with `go build -o scripts/mcx ./cmd/mcx`.
+`skills/mcx` + `skills/new` + `skills/save`, `commands/setup.md` (the `/setup` command), `filters.yml` (shipped filter defaults), `chains.yml` (shipped default chains), and `scripts/mcx` (the built binary the hooks invoke via
+`${CLAUDE_PLUGIN_ROOT}`). Rebuild it with `go build -trimpath -o scripts/mcx ./cmd/mcx`.
 
 ## Connecting knowledge to what you'll encounter
 
@@ -132,9 +132,9 @@ When you touch a piece of this code, the non-obvious facts behind it:
 - **Envelope-preserving.** `ApplyToEnvelope` reshapes only the JSON inside `content[].text` and
   keeps `isError`/`structuredContent`/`_meta` intact, so the value still matches the go-sdk v1.6.1
   `CallToolResult` shape the PostToolUse `updatedToolOutput` field requires.
-- Shipped `filters.yml` defaults are **drop-only** and every drop path is validated against
-  `testdata/captures/getJiraIssue.json` by `TestShippedDefaults_SafeByConstruction`, which also
-  asserts no signal field is dropped. Add a filter only with a matching checked-in capture.
+- Shipped `filters.yml` defaults are **drop-only** and validated against synthetic fixtures such as
+  `testdata/captures/getJiraIssue.json`; tests assert that every removed path exists and that signal
+  fields remain available. Add a filter only with a matching synthetic fixture.
 - Shipped `chains.yml` provides example chains as defaults; all entries point via `path` to
   `chains/` scripts (metadata inferred). The three-layer precedence (plugin → project → user)
   still applies — a user's registered chain overrides a shipped one by name.

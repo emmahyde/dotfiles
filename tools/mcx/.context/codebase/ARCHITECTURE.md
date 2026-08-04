@@ -1,45 +1,51 @@
-# ARCHITECTURE
+# Architecture
 
-mcx is a **plain CLI, MCP client only — never an MCP server.** Two jobs today; a third
-(declarative trimming) and a plugin wrapper are being added.
+mcx is a Go CLI and MCP client packaged as a Claude Code plugin. The module path is
+`github.com/emmahyde/dotfiles/tools/mcx`.
 
-## Current subsystems
+## Request paths
 
-### 1. forward (`cmd/mcx/main.go` `cmdForward` + `internal/mcpclient/`)
-Call one tool on an external MCP server discovered from Claude Code config, injecting a
-keychain OAuth bearer token.
-- `resolve.go` — server discovery + precedence (`.mcp.json` → `~/.claude.json` → `~/.claude/*.json`).
-- `transport.go` — StreamableHTTP transport + `headerRoundTripper` bearer injection.
-- `call.go` — one-shot connect / call / close.
-- `internal/keychain/` — read `Claude Code-credentials`, match `mcpOAuth` by `serverName` **field**
-  (not composite key), `expiresAt` compared as **epoch ms**, refresh via RFC 8414 discovery
-  (`/.well-known/oauth-authorization-server`), write back read-modify-write of the whole blob under
-  a per-service `flock`. `injectAuth` only adds a bearer for HTTP servers with no existing auth header.
+### Direct MCP call
 
-### 2. registry (`internal/registry/` + executor)
-Durable named-script store: `register` / `list` / `run` / `remove`.
-- `store.go` — scripts dir + `manifest.json`; `validName` blocks path traversal.
-- `run.go` — feed args JSON to script **stdin**; execute via `internal/executor`.
-- `internal/executor/` — sandboxed runtimes; env stripped to `safeEnv` allow-list (PATH/HOME/locale
-  only — no API keys forwarded). Ruby chains get a baked `forward()`/`emit()` preamble
-  (`runtimes.go rubyPreamble`) that shells to `mcx forward`.
+1. Claude Code invokes a tool named `mcp__<alias>__<tool>`.
+2. PostToolUse runs `mcx filter` and `mcx observe`.
+3. A configured filter reshapes JSON text while preserving the MCP result envelope.
+4. An unconfigured or invalid filter exits cleanly without output, leaving the result unchanged.
 
-## Planned architecture — two registries + plugin
+### Chain call
 
-- **Modifiers (Registry 1, passive):** declarative JSON reshaping (keep/drop/rename/truncate)
-  applied to *every* call of a configured MCP tool. Native Go, no sandbox, no forward. New
-  `mcx trim` command; auto-applied by a **PostToolUse** hook that returns `updatedToolOutput`
-  (must preserve the tool's output envelope shape).
-- **Chains (Registry 2, active):** the existing register/run script store — orchestrate MCP calls
-  and return a digest. Model-invoked (`mcx run`), nudged by a **UserPromptSubmit** hook's
-  `additionalContext`.
-- **Config precedence (both registries):** plugin defaults → project `.mcx/` → user `~/.config/mcx/`;
-  most-specific source wins, merged by key.
-- **Plugin layout:** binary moves into plugin `scripts/`; `mcx` must stay resolvable on the
-  sandbox `safeEnv` PATH for chain `forward()` to work.
+1. The model invokes `mcx run` with JSON arguments and a chain name or source.
+2. The executor starts a supported sandbox runtime with a restricted environment.
+3. The chain calls one or more tools through the baked `forward()` helper.
+4. Only the value passed to `emit()` returns to model context.
 
-## State machine — a single MCP tool response
-`tool call → (PostToolUse fires) → mcx trim reads modifiers.json → matching entry? →
-yes: reshape inner payload, re-wrap in envelope, return updatedToolOutput → no: pass through
-(fail-open) → context`. Chains bypass this: one `mcx run` fans out N forwards inside the sandbox;
-only the emitted digest re-enters context.
+## Components
+
+- `cmd/mcx/main.go` — command dispatch.
+- `internal/mcpclient/` — server discovery, transport, header injection, and one-shot calls.
+- `internal/keychain/` — macOS OAuth credential lookup, refresh, and preserving write-back.
+- `internal/registry/` — layered chain discovery, registration, removal, and execution.
+- `internal/executor/` — Ruby, Python, JavaScript, and shell sandboxes.
+- `internal/filters/` — filter configuration, transformations, envelope handling, and hook input.
+- `internal/observe/` and `internal/scan/` — live and retrospective workflow-candidate detection.
+- `internal/connectors/` — connector URL planning and configuration synchronization.
+- `internal/skillsync/` — generated skill reconciliation for registered chains.
+
+## Naming
+
+Public examples use the aliases `jira`, `notion`, `slack`, `gdocs`, and `gsheets`. Full tool keys
+follow `mcp__<alias>__<tool>`. A synthetic example is `mcp__jira__getJiraIssue` with key
+`PROJ-123`.
+
+## Configuration layers
+
+Plugin defaults are merged with project `.mcx/` configuration and then user
+`~/.config/mcx/` configuration. Later layers override earlier entries by key.
+
+## Boundaries
+
+- mcx is not an MCP server.
+- Credentials are injected only into eligible HTTP transports.
+- Sandbox processes receive no ambient API keys.
+- Filters never replace output on failure.
+- Connector synchronization preserves unrelated configuration.

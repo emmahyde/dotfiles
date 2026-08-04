@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/emmahyde/mcx/internal/executor"
+	"github.com/emmahyde/dotfiles/tools/mcx/internal/executor"
 )
 
 // Run executes the resolved chain named name, feeding argsJSON to the script's

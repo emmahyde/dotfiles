@@ -84,11 +84,11 @@ SCENARIOS = [
   },
   {
     name: "batch-triage (14× editJiraIssue)", chain: "batch-triage",
-    args: ->(r) { JSON.generate({ "cloudId" => CLOUD, "field" => "customfield_14733", "value" => "Testing Not Needed", "keys" => r.map { |i| i["key"] } }) },
+    args: ->(r) { JSON.generate({ "cloudId" => CLOUD, "field" => "example_field", "value" => "Example Value", "keys" => r.map { |i| i["key"] } }) },
     replay: ->(r) { r },
     # Native: 14 edits, each echoing the whole updated issue back.
     native_recv: ->(r) { r.map { |i| JSON.generate(i) }.join },
-    native_emit: ->(r) { r.map { |i| JSON.generate({ "cloudId" => CLOUD, "issueIdOrKey" => i["key"], "fields" => { "customfield_14733" => { "value" => "Testing Not Needed" } } }) }.join }
+    native_emit: ->(r) { r.map { |i| JSON.generate({ "cloudId" => CLOUD, "issueIdOrKey" => i["key"], "fields" => { "example_field" => { "value" => "Example Value" } } }) }.join }
   },
   {
     name: "Jira + Notion cross-ref", chain: "jira-notion-crossref",

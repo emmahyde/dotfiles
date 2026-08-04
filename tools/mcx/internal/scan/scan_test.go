@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/emmahyde/mcx/internal/observe"
+	"github.com/emmahyde/dotfiles/tools/mcx/internal/observe"
 )
 
 // buildTranscript assembles JSONL lines. big is a result payload sized above the

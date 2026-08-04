@@ -7,7 +7,7 @@ The recommended capture pattern for Claude Code plugins. Decouples capture from 
 ### Flag-file cursor pattern
 
 ```
-~/.claude/memesis/cursors/{session_id}.json
+~/.claude/memory/cursors/{session_id}.json
 {
   "transcript_path": "/path/to/.claude/projects/.../session.jsonl",
   "last_byte_offset": 48291,

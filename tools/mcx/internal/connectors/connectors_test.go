@@ -12,14 +12,14 @@ func TestPlan_DiffsAgainstLocalConfig(t *testing.T) {
 	// mcpclient.ListServers also reads $HOME sources; isolate from the developer's real config.
 	t.Setenv("HOME", t.TempDir())
 	cwd := t.TempDir()
-	mcpJSON := `{"mcpServers": {"Notion_Gusto": {"type": "http", "url": "https://runlayer.example.com/api/v1/proxy/aaa/mcp"}}}`
+	mcpJSON := `{"mcpServers": {"legacy-notion": {"type": "http", "url": "https://example.invalid/mcp/notion"}}}`
 	if err := os.WriteFile(filepath.Join(cwd, ".mcp.json"), []byte(mcpJSON), 0o600); err != nil {
 		t.Fatalf("write fixture: %v", err)
 	}
 
 	configs := map[string]string{
-		"notiongusto": "https://runlayer.example.com/api/v1/proxy/aaa/mcp",
-		"wizgusto":    "https://runlayer.example.com/api/v1/proxy/bbb/mcp",
+		"notion": "https://example.invalid/mcp/notion",
+		"slack":  "https://example.invalid/mcp/slack",
 	}
 
 	plans := Plan(configs, cwd)
@@ -30,16 +30,16 @@ func TestPlan_DiffsAgainstLocalConfig(t *testing.T) {
 	for _, p := range plans {
 		byKey[p.Key] = p
 	}
-	notion := byKey["notiongusto"]
-	if !notion.AlreadyConfigured || notion.CurrentKey != "Notion_Gusto" {
-		t.Errorf("notiongusto should be flagged already-configured under its current local key: %+v", notion)
+	notion := byKey["notion"]
+	if !notion.AlreadyConfigured || notion.CurrentKey != "legacy-notion" {
+		t.Errorf("notion should be flagged already-configured under its current local key: %+v", notion)
 	}
 	if !notion.NeedsRename {
-		t.Errorf("notiongusto's local key differs from its canonical key; NeedsRename should be true: %+v", notion)
+		t.Errorf("notion's local key differs from its canonical key; NeedsRename should be true: %+v", notion)
 	}
-	wiz := byKey["wizgusto"]
-	if wiz.AlreadyConfigured {
-		t.Errorf("wizgusto has no matching local URL; should not be already-configured: %+v", wiz)
+	slack := byKey["slack"]
+	if slack.AlreadyConfigured {
+		t.Errorf("slack has no matching local URL; should not be already-configured: %+v", slack)
 	}
 }
 
@@ -49,7 +49,7 @@ func TestSync_AddsMissingAndPreservesUnrelatedKeys(t *testing.T) {
 	claudeJSON := `{
 		"someUnrelatedField": "keep-me",
 		"mcpServers": {
-			"existingother": {"type": "http", "url": "https://runlayer.example.com/api/v1/proxy/zzz/mcp"}
+			"existingother": {"type": "http", "url": "https://example.invalid/mcp/other"}
 		}
 	}`
 	if err := os.WriteFile(filepath.Join(home, ".claude.json"), []byte(claudeJSON), 0o600); err != nil {
@@ -57,7 +57,7 @@ func TestSync_AddsMissingAndPreservesUnrelatedKeys(t *testing.T) {
 	}
 
 	configs := map[string]string{
-		"notiongusto": "https://runlayer.example.com/api/v1/proxy/aaa/mcp",
+		"notion": "https://example.invalid/mcp/notion",
 	}
 	if _, err := Sync(configs); err != nil {
 		t.Fatalf("Sync: %v", err)
@@ -80,11 +80,11 @@ func TestSync_AddsMissingAndPreservesUnrelatedKeys(t *testing.T) {
 	if err := json.Unmarshal(doc["mcpServers"], &servers); err != nil {
 		t.Fatalf("mcpServers is not valid JSON: %v", err)
 	}
-	if servers["existingother"].URL != "https://runlayer.example.com/api/v1/proxy/zzz/mcp" {
+	if servers["existingother"].URL != "https://example.invalid/mcp/other" {
 		t.Error("pre-existing unrelated server entry must be preserved untouched")
 	}
-	if servers["notiongusto"].URL != "https://runlayer.example.com/api/v1/proxy/aaa/mcp" {
-		t.Fatalf("expected new entry under key 'notiongusto', got %+v", servers)
+	if servers["notion"].URL != "https://example.invalid/mcp/notion" {
+		t.Fatalf("expected new entry under key 'notion', got %+v", servers)
 	}
 
 	// Idempotent: running again with the same input must not duplicate or change anything.
@@ -106,7 +106,7 @@ func TestSync_RenamesMismatchedExistingKey(t *testing.T) {
 	t.Setenv("HOME", home)
 	claudeJSON := `{
 		"mcpServers": {
-			"Notion_Gusto": {"type": "http", "url": "https://runlayer.example.com/api/v1/proxy/aaa/mcp"}
+			"legacy-notion": {"type": "http", "url": "https://example.invalid/mcp/notion"}
 		}
 	}`
 	if err := os.WriteFile(filepath.Join(home, ".claude.json"), []byte(claudeJSON), 0o600); err != nil {
@@ -114,7 +114,7 @@ func TestSync_RenamesMismatchedExistingKey(t *testing.T) {
 	}
 
 	configs := map[string]string{
-		"notiongusto": "https://runlayer.example.com/api/v1/proxy/aaa/mcp",
+		"notion": "https://example.invalid/mcp/notion",
 	}
 	if _, err := Sync(configs); err != nil {
 		t.Fatalf("Sync: %v", err)
@@ -125,11 +125,11 @@ func TestSync_RenamesMismatchedExistingKey(t *testing.T) {
 	json.Unmarshal(data, &doc)
 	var servers map[string]json.RawMessage
 	json.Unmarshal(doc["mcpServers"], &servers)
-	if _, exists := servers["Notion_Gusto"]; exists {
+	if _, exists := servers["legacy-notion"]; exists {
 		t.Error("mismatched-key entry should have been renamed away, not left in place")
 	}
-	if _, exists := servers["notiongusto"]; !exists {
-		t.Fatalf("expected entry renamed to key 'notiongusto', got %+v", servers)
+	if _, exists := servers["notion"]; !exists {
+		t.Fatalf("expected entry renamed to key 'notion', got %+v", servers)
 	}
 	if len(servers) != 1 {
 		t.Fatalf("rename must not duplicate the entry, got %d entries: %+v", len(servers), servers)
@@ -139,7 +139,7 @@ func TestSync_RenamesMismatchedExistingKey(t *testing.T) {
 func TestLoad_ParsesYAML(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "url_configs.yml")
-	content := "notiongusto: https://runlayer.example.com/api/v1/proxy/aaa/mcp\njiraconfluencegusto: https://runlayer.example.com/api/v1/proxy/bbb/mcp\n"
+	content := "notion: https://example.invalid/mcp/notion\nslack: https://example.invalid/mcp/slack\n"
 	if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
 		t.Fatalf("write fixture: %v", err)
 	}
@@ -150,7 +150,7 @@ func TestLoad_ParsesYAML(t *testing.T) {
 	if len(configs) != 2 {
 		t.Fatalf("expected 2 entries, got %+v", configs)
 	}
-	if configs["notiongusto"] != "https://runlayer.example.com/api/v1/proxy/aaa/mcp" {
-		t.Errorf("notiongusto url = %q", configs["notiongusto"])
+	if configs["notion"] != "https://example.invalid/mcp/notion" {
+		t.Errorf("notion url = %q", configs["notion"])
 	}
 }

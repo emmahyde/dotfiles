@@ -6,11 +6,7 @@
 # "Message TS:" and "Reactions:" as text lines — NOT structured objects. So this
 # chain parses that text rather than iterating hashes.
 
-# Daily parent messages are posted by a per-channel bot whose display name
-# varies ("Daily PR Review Thread - Robot-Factory", "Daily PR Thread -
-# Retirement Dev Infra", ...) but always starts "Daily PR ... Thread". Match
-# on the From name, not message text — text-based matching is unreliable
-# against the rest of a channel's chatter.
+# Match senders like "Daily PR Review Thread - Example Team"; channel text is unreliable.
 DAILY_PARENT_RE = /\ADaily PR .*Thread/i
 PR_URL_RE = %r{https://github\.com/[^/\s|>]+/[^/\s|>]+/pull/\d+}
 # Only an explicit "merged" reaction or a struck-through (~...~) post means "no
@@ -104,7 +100,9 @@ def blurb_for(text)
       .gsub(/\s+/, " ").strip[0, 120]
 end
 
-channel_ids = args["channel_ids"] || %w[C0ALGQCCHL7 C09QX29JEQ5]
+channel_ids = args["channel_ids"]
+raise "channel_ids must be a non-empty array" unless channel_ids.is_a?(Array) && !channel_ids.empty?
+slack_server = args["slackServer"] || "slack"
 since_hours = args["since_hours"] || 24
 oldest = (Time.now - (since_hours * 3600)).to_f.to_s
 
@@ -113,7 +111,7 @@ prs_by_url = {}
 
 channel_ids.each do |cid|
   channel_resp = forward(
-    "slackgusto",
+    slack_server,
     "slack_read_channel",
     { "channel_id" => cid, "oldest" => oldest, "limit" => 100, "response_format" => "detailed" }
   )
@@ -130,7 +128,7 @@ channel_ids.each do |cid|
   # Daily threads are small; a single detailed read (limit 200) covers them. The
   # string response format exposes no reliable pagination cursor, so we don't page.
   thread_resp = forward(
-    "slackgusto",
+    slack_server,
     "slack_read_thread",
     { "channel_id" => cid, "message_ts" => ts, "limit" => 200, "response_format" => "detailed" }
   )

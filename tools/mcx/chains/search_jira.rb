@@ -1,6 +1,7 @@
 # search_jira — run a JQL search and return one compact row per hit.
+jira_server = args.delete("jiraServer") || "jira"
 args["fields"] ||= %w[summary status assignee]
-raw = forward("jiraconfluencegusto", "searchJiraIssuesUsingJql", args)
+raw = forward(jira_server, "searchJiraIssuesUsingJql", args)
 
 issues = raw["issues"] || []
 rows = issues.map do |i|

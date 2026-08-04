@@ -1,0 +1,15 @@
+{
+  "name": "comment-cleanup",
+  "version": "1.0.0",
+  "description": "Aggressively prune comments from source code so every remaining comment earns its place. Proactively nudges after Edit/Write and gates turn-end until pending files are cleaned.",
+  "author": {
+    "name": "Emma Hyde"
+  },
+  "keywords": [
+    "comment-cleanup",
+    "comments",
+    "code-cleanup",
+    "ai-comments",
+    "code-review"
+  ]
+}

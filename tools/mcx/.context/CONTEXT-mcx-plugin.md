@@ -1,112 +1,81 @@
-# CONTEXT: mcx two-registry Claude Code plugin
+# mcx plugin technical context
 
-**Slug:** mcx-plugin
-**Date:** 2026-07-13
-**Mode:** panel (--auto), Wave 1 + user decision on the one open tension
+## Purpose
 
-## Scope
+mcx is an MCP client and sandboxed workflow runner packaged as a Claude Code plugin. It reduces
+context growth through two complementary mechanisms:
 
-Wrap the existing `mcx` binary in a Claude Code plugin that steers the agent toward two
-context-saving registries:
+- **Filters** reshape configured tool responses automatically after a direct MCP call.
+- **Chains** orchestrate one or more MCP calls inside a sandbox and emit a compact digest.
 
-- **Registry 1 — Modifiers (passive):** declarative JSON reshaping applied to *every* call of a
-  configured MCP tool. Native Go, new `mcx trim` subcommand, auto-applied by a PostToolUse hook.
-- **Registry 2 — Chains (active):** the existing register/list/run/remove sandbox script store.
-  Model-invoked via `mcx run`, returns a digest. Steered by a UserPromptSubmit nudge.
+mcx does not expose an MCP server and does not implement interactive browser authentication.
 
-Out of scope: browser PKCE re-auth, MCP-server mode, new chain runtimes, rewriting forward/keychain.
+## Public naming contract
 
-## Locked decisions
+- Go module: `github.com/emmahyde/dotfiles/tools/mcx`
+- Neutral server aliases: `jira`, `notion`, `slack`, `gdocs`, `gsheets`
+- Full tool keys: `mcp__<alias>__<tool>`
 
-### D1 — `mcx trim` I/O contract
-- Reads the PostToolUse hook payload as **JSON on stdin**.
-- Unwraps the MCP result envelope, applies the transform to the inner payload, **re-wraps**, and
-  emits `{"hookSpecificOutput":{"hookEventName":"PostToolUse","updatedToolOutput":<result>}}`.
-- `updatedToolOutput` MUST match the go-sdk v1.6.1 `CallToolResult` shape verbatim:
-  `{"content":[{"type":"text","text":"<json>"}],"isError":...,"structuredContent":...}`.
-  A bare-JSON return is a silent contract violation (Lena, HIGH confidence).
-- **Fail-open = exit 0 with EMPTY stdout** on no-match, parse failure, or any error. Never emit an
-  empty/partial `updatedToolOutput` (that would blank the tool result).
-- Escape hatch: `MCX_TRIM=off` (env) bypasses all trimming.
+For example, a Jira issue lookup may be configured as `mcp__jira__getJiraIssue` and exercised with
+the synthetic key `PROJ-123`.
 
-### D2 — Transform engine (native Go, `internal/modifiers/`)
-- Vocabulary: **keep** (allowlist), **drop** (denylist), **rename**, **truncate** — over **dotted
-  paths** for nested traversal (`fields.comment`, `fields.description`). **No wildcards.**
-- Package split: `config.go` (load + merge-by-key precedence), `transform.go` (engine),
-  `envelope.go` (unwrap/rewrap the CallToolResult). One `cmdTrim` case in `cmd/mcx/main.go`.
-- Modifiers are declarative data only — **never** executed in a sandbox runtime.
+## Filter contract
 
-### D3 — Shipped `modifiers.json` defaults are drop-only + capture-backed
-- Shipped defaults use **drop only** (no rename/truncate) so they cannot hide signal.
-- **DECISION (user):** check in **sanitized** capture fixtures under `testdata/captures/`. Every
-  shipped modifier entry cites one, and a Go test asserts the shipped defaults (a) only drop keys
-  that exist in the cited fixture and (b) never touch an allowlisted signal key. This resolves the
-  Wave-1 tension (Marcus wanted checked-in proof; `bench/captures/` is gitignored real data — so we
-  ship a *sanitized* copy instead of the raw one).
-- Initial defaults: Jira `getJiraIssue` — drop `expand`, `self`, `fields.*.avatarUrls`,
-  `fields.*.iconUrl`, reporter/assignee `timeZone`/`accountType`/`active`. Slack/Notion entries
-  are added only once a sanitized capture for them is checked in.
+The PostToolUse hook sends its JSON payload to `mcx filter` on stdin. A matching rule transforms
+only JSON held in text content and returns:
 
-### D4 — Two distinct PATH-resolution contexts (both required)
-- **Hook → `mcx trim`:** hook command invokes `${CLAUDE_PLUGIN_ROOT}/scripts/mcx` (absolute; no PATH
-  dependency).
-- **Chain ruby `forward()` → `IO.popen(["mcx",...])`:** runs under stripped `safeEnv`. Patch
-  `safeEnv()` in `internal/executor/runtimes.go` to prepend `os.Executable()`'s directory onto the
-  outgoing `PATH` so the relocated binary is resolvable. Both are needed; they don't interact.
-
-### D5 — Hooks (`hooks/hooks.json`)
-- **PostToolUse**, matcher `mcp__.*`, command → `${CLAUDE_PLUGIN_ROOT}/scripts/mcx trim`.
-- **UserPromptSubmit**, no matcher, command → a fast (<1s) `mcx nudge` that decides whether to inject
-  `additionalContext` naming a concrete `mcx run` chain. 30s timeout silently discards output, so it
-  must be fast. No native cooldown → hand-roll a per-session rate-limit state file under
-  `${CLAUDE_PLUGIN_DATA}`. Phrasing is factual, not imperative, gated on a fan-out/oversized-response
-  heuristic to avoid nudge-fatigue.
-
-### D6 — Skills
-- `skills/mcx/SKILL.md` — user-invoked `/mcx` quickstart + cheatsheet. Description kept **narrow** so
-  it does not shadow `mcx-author`'s auto-trigger.
-- `skills/mcx-author/SKILL.md` — auto-triggers when the user wants to capture a reusable chain;
-  teaches writing + `mcx register`.
-
-### D7 — Config precedence (both registries)
-- plugin defaults → project `.mcx/` → user `~/.config/mcx/`; merge by key (tool name / script name),
-  most-specific source wins. Reuse the loader-skeleton pattern from `internal/mcpclient/resolve.go`
-  (but note resolve.go is first-match-wins; modifiers are merge-by-key — different semantics).
-
-### D8 — Plugin layout
-```
-mcx-plugin/
-  .claude-plugin/plugin.json
-  hooks/hooks.json
-  scripts/mcx                 # binary relocates here
-  skills/mcx/SKILL.md
-  skills/mcx-author/SKILL.md
-  modifiers.json              # Registry 1 defaults
-  chains/*.rb                 # Registry 2 examples
+```json
+{
+  "hookSpecificOutput": {
+    "hookEventName": "PostToolUse",
+    "updatedToolOutput": {
+      "content": [{"type": "text", "text": "<filtered JSON>"}]
+    }
+  }
+}
 ```
 
-## Conventions to enforce
-- `cmd/mcx/main.go` stays dispatch-only; `cmdTrim`/`cmdNudge` follow the `cmdX(args) error` shape.
-- Positional-NAME subcommands use `splitName` before `flag.Parse`.
-- Explicit nil/empty comparisons (never truthiness) — esp. around trim's presence checks.
-- `GOOS=linux go build ./...` must still pass (modifiers are pure Go; safeEnv patch is portable).
-- Tests never touch the real keychain / real captures; `XDG_CONFIG_HOME` → temp dir.
-- Comments: WHY-only, one line, no ticket refs.
+The complete MCP result envelope is preserved, including `isError`, `structuredContent`, and
+`_meta` when present. An unconfigured tool, malformed input, disabled filtering, or an internal
+error produces exit status zero with empty stdout so the original response passes through.
 
-## Concerns to watch
-- **Silent hook no-op** from a wrong field name or wrong envelope shape (highest risk). Guard with a
-  golden-file test that runs `mcx trim` on a fixture payload and asserts the exact emitted JSON.
-- **Field cruft-vs-signal ambiguity** — a dropped key that is load-bearing in another response shape.
-  Mitigated by drop-only defaults + capture-backed test (D3).
-- **Nudge fatigue / nudge ignored** — gate + rate-limit + factual phrasing (D5).
-- **Relocated-binary PATH breakage** for chains (D4).
+Shipped rules are drop-only and use explicit dotted paths. More aggressive keep, rename, or
+truncate rules belong in project or user configuration and require synthetic fixtures that protect
+signal fields.
 
-## Reusable assets
-- `internal/mcpclient/resolve.go` — loader/precedence skeleton.
-- `internal/executor` — sandbox + `safeEnv` (to be patched).
-- `cmd/mcx/main.go` dispatch switch + `splitName`.
-- `bench/` harness — add a trim bench row (recv-only ratio; do not blend with chains' metric).
-- Wave-1 stakeholder notes: `.context/research/panel-mcx-plugin-wave-1-{dmitri,lena,marcus}.md`.
+## Chain contract
 
-## Unresolved
-None — the capture-citation tension is resolved by D3 (user decision).
+Chains run with a restricted environment and receive parsed arguments through the executor's baked
+helpers. They call MCP tools through `forward(alias, tool, args)` and return one value through
+`emit(value)`. Intermediate responses remain inside the sandbox.
+
+Chain names resolve across plugin, project, and user layers. More-specific entries override
+less-specific entries by name.
+
+## Plugin hooks
+
+- **PostToolUse** runs filtering and observation for `mcp__.*` tools.
+- **UserPromptSubmit** may add concise factual context about mcx when the prompt names it.
+- Observation and filtering are separate so recommendation logic cannot corrupt tool output.
+
+Hook commands invoke `${CLAUDE_PLUGIN_ROOT}/scripts/mcx` directly. The executor prepends the running
+binary's directory to its restricted `PATH` so a chain's baked `forward()` resolves the same binary.
+
+## Configuration precedence
+
+Both filters and chains resolve in this order:
+
+1. plugin defaults
+2. project `.mcx/`
+3. user `~/.config/mcx/`
+
+Entries merge by key, with the more-specific layer winning. User registration commands write only
+to the user layer.
+
+## Safety invariants
+
+- Sandbox environments never inherit API keys or bearer tokens.
+- Filter failures are no-ops, never partial replacements.
+- Credential updates preserve unrelated keychain entries.
+- Script and tool names reject path traversal.
+- Tests use temporary configuration roots and synthetic payloads only.

@@ -1,4 +1,4 @@
-module github.com/emmahyde/mcx
+module github.com/emmahyde/dotfiles/tools/mcx
 
 go 1.25.0
 

@@ -191,7 +191,7 @@ func TestTrim_FailOpen(t *testing.T) {
 	cases := map[string][]byte{
 		"malformed":                 []byte("{not json"),
 		"no tool_name":              []byte(`{"tool_response":[]}`),
-		"unconfigured tool":         []byte(`{"tool_name":"mcp__other__x","tool_response":[]}`),
+		"unconfigured tool":         []byte(`{"tool_name":"mcp__slack__x","tool_response":[]}`),
 		"no tool_response":          []byte(`{"tool_name":"mcp__jira__getJiraIssue"}`),
 		"nothing to change (array)": []byte(`{"tool_name":"mcp__jira__getJiraIssue","tool_response":[{"type":"text","text":"{\"key\":\"P-1\"}"}]}`),
 		"non-JSON block":            []byte(`{"tool_name":"mcp__jira__getJiraIssue","tool_response":[{"type":"text","text":"not json"}]}`),
@@ -518,15 +518,15 @@ func TestShippedDefaults_CaptureCoverage(t *testing.T) {
 		fixture         string
 		expectedNoMatch bool
 	}{
-		{"getJiraIssue", "mcp__jiraconfluencegusto__getJiraIssue", "getJiraIssue.json", false},
-		{"editJiraIssue", "mcp__jiraconfluencegusto__editJiraIssue", "editJiraIssue.json", false},
-		{"searchJiraIssuesUsingJql", "mcp__jiraconfluencegusto__searchJiraIssuesUsingJql", "searchJiraIssuesUsingJql.json", false},
-		{"slack_read_thread", "mcp__slackgusto__slack_read_thread", "slack_read_thread.json", false},
-		{"slack_read_channel", "mcp__slackgusto__slack_read_channel", "slack_read_channel.json", false},
-		{"slack_search_public_and_private", "mcp__slackgusto__slack_search_public_and_private", "slack_search_public_and_private.json", false},
-		{"notion-fetch", "mcp__notiongusto__notion-fetch", "notion-fetch.json", false},
-		{"notion-query-database-view", "mcp__notiongusto__notion-query-database-view", "notion-query-database-view.json", true},
-		{"notion-search", "mcp__notiongusto__notion-search", "notion-search.json", false},
+		{"getJiraIssue", "mcp__jira__getJiraIssue", "getJiraIssue.json", false},
+		{"editJiraIssue", "mcp__jira__editJiraIssue", "editJiraIssue.json", false},
+		{"searchJiraIssuesUsingJql", "mcp__jira__searchJiraIssuesUsingJql", "searchJiraIssuesUsingJql.json", false},
+		{"slack_read_thread", "mcp__slack__slack_read_thread", "slack_read_thread.json", false},
+		{"slack_read_channel", "mcp__slack__slack_read_channel", "slack_read_channel.json", false},
+		{"slack_search_public_and_private", "mcp__slack__slack_search_public_and_private", "slack_search_public_and_private.json", false},
+		{"notion-fetch", "mcp__notion__notion-fetch", "notion-fetch.json", false},
+		{"notion-query-database-view", "mcp__notion__notion-query-database-view", "notion-query-database-view.json", true},
+		{"notion-search", "mcp__notion__notion-search", "notion-search.json", false},
 	}
 
 	cfg, err := loadFile(repoPath(t, "filters.yml"))
@@ -593,7 +593,7 @@ func TestShippedDefaults_TransformEntry(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	const tool = "mcp__jiraconfluencegusto__getJiraIssue"
+	const tool = "mcp__jira__getJiraIssue"
 	mod, ok := cfg[tool]
 	if !ok {
 		t.Fatalf("shipped default for %s missing", tool)

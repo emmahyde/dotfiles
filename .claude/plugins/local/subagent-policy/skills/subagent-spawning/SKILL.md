@@ -76,9 +76,9 @@ Never tell a subagent "find the file that handles X." Locate the file first and 
 
 ```
 BAD:  "Find the Ship class and fix the namespace conflict"
-GOOD: "In /Users/emmahyde/projects/sector/Assets/Engine/Ship/Ship.cs,
-       the class `Ship` on line 18 conflicts with the `Sector.Ship` namespace.
-       Add a using alias `using Ship = Sector.Ship.Ship;` to resolve it."
+GOOD: "In /path/to/project/Assets/Engine/Ship/Ship.cs,
+       the class `Ship` on line 18 conflicts with the `ExampleGame.Ship` namespace.
+       Add a using alias `using Ship = ExampleGame.Ship.Ship;` to resolve it."
 ```
 
 ### Specify Line Ranges and Patterns
@@ -90,7 +90,7 @@ BAD:  "Read ServicesTabPanel.cs and fix the errors"
 GOOD: "In /path/to/ServicesTabPanel.cs:
        - Line 64: `private Ship _playerShip;` errors because Ship is a namespace.
        - Line 370: `private Ship GetPlayerShip()` same issue.
-       Fix: replace `Ship` with `Sector.Ship.Ship` on those lines.
+       Fix: replace `Ship` with `ExampleGame.Ship.Ship` on those lines.
        Use Grep to verify no other bare `Ship` type references remain."
 ```
 
@@ -171,4 +171,4 @@ When spawning multiple subagents in parallel:
 
 ## Other Lessons
 
-- [x] When a branch name suggests a feature is in-progress (e.g. `emmahyde/add-subgraphs`), verify with `git log master..HEAD` first. Zero commits ahead means the branch is stale or the work was already merged.
+- [x] When a branch name suggests a feature is in-progress (e.g. `feature/add-subgraphs`), verify with `git log master..HEAD` first. Zero commits ahead means the branch is stale or the work was already merged.

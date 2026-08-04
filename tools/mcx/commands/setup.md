@@ -85,69 +85,47 @@ Do not register a chain or edit a filter without the user's confirmation.
 
 For command syntax reference, invoke `/mcx:mcx` — the cheatsheet.
 
-## 5. Offer to sync claude.ai connectors into local config
+## 5. Offer to sync configured MCP connectors into local config
 
-mcx only forwards to servers it can find in local config (`.mcp.json`/`~/.claude.json`) plus a
-matching keychain credential — it never reads claude.ai account-level "connectors" directly, even
-though many of those connectors point at the exact same backend URL (commonly a RunLayer-proxied
-one, since org policy requires MCP traffic to route through RunLayer). A connector the user has
-authorized on claude.ai but never mirrored into local config is invisible to mcx and to any chain.
+mcx forwards only to servers present in local config (`.mcp.json` or `~/.claude.json`) with a
+matching credential. The shipped `url_configs.yml` supplies the connector endpoints that this
+installation can sync. Canonical aliases are `jira`, `notion`, `slack`, `gdocs`, and `gsheets`;
+filters and chains use full keys in the form `mcp__<alias>__<tool>`.
 
-Ask the user (yes/no) whether to review claude.ai connectors for syncing. Only continue if yes.
+Ask the user (yes/no) whether to review configured connectors for syncing. Only continue if yes.
 
 Run: `mcx sync-connectors --list`
 
-This prints a JSON array of every connector ever connected (`claudeAiMcpEverConnected`, minus
-"Claude Code Remote"), each with:
-- `url`/`status` — resolved from `claude mcp list`, empty if that connector was never actually
-  connected (nothing to sync).
-- `alreadyConfigured` — true if a local server entry already targets the same URL.
-- `localName`/`standardKey`/`needsRename` — the local entry's current key vs. the canonical
-  lowercase key filters.yml/chains.yml expect; `needsRename: true` means the entry works today but
-  under a name that won't match a shipped filter.
+This prints one JSON object per configured endpoint with:
+- `key` — the canonical alias from `url_configs.yml`.
+- `alreadyConfigured` — whether a local server already targets the same URL.
+- `currentKey` — the matching local key, when one exists.
+- `needsRename` — whether that local key differs from the canonical alias.
 
-Present every candidate that isn't a dead end (skip entries with no `url` and
-`alreadyConfigured: false` — nothing resolvable to sync) as rows in **one table**, not raw JSON,
-ordered checkmarks first, then warnings, then question marks:
+Present all entries in one table:
 
-| Connector | Status | Detail |
+| Alias | Status | Detail |
 |---|---|---|
-| Notion_Gusto | ✅ | configured as `notiongusto` |
-| Slack_Gusto_Offical | ⚠️ | configured as `slackgustoofficialmcp` — should be `slackofficalgusto` |
-| Wiz_Gusto | ❓ | not configured yet |
+| `jira` | ready | already configured as `jira` |
+| `notion` | rename | configured as `Notion_Local`; will become `notion` |
+| `slack` | add | no local server targets this endpoint |
 
-- ✅ `alreadyConfigured: true` and `needsRename: false` — already configured correctly.
-- ⚠️ `alreadyConfigured: true` and `needsRename: true` — configured, but under a name that won't
-  match a shipped filter (Detail: current `localName` -> the `standardKey` it should be).
-- ❓ non-empty `url` and `alreadyConfigured: false` — a connector this account has used before
-  (`claudeAiMcpEverConnected`) that's currently reachable (has a live URL in `claude mcp list`) but
-  isn't mirrored locally yet.
+Use `ready` when `alreadyConfigured` is true and `needsRename` is false, `rename` when both are
+true, and `add` when `alreadyConfigured` is false.
 
-If there are no ⚠️ or ❓ rows, say everything's already configured correctly and skip the rest of
-this step.
+If every row is `ready`, report that local config already matches and stop this step. Otherwise,
+ask whether to apply the complete plan. If yes, run:
 
-After the table, if there are any ⚠️ rows: tell the user the next step is renaming those so they
-work correctly — mcx's shipped filters key off the tool name (e.g. `getJiraIssue`), and a filter
-config only matches when the local server's key is the canonical lowercase form; a mismatched name
-means the connector forwards fine but never gets filtered. Ask if they want those renamed now via
-`mcx sync-connectors --only <name1>,<name2>,...` (it renames in place, no data loss).
+`mcx sync-connectors`
 
-Then, for the ❓ rows: ask the user which of these previously-used connectors they want to configure
-now — they can reply with names, or ask to see the full list (some candidates may not fit legibly in
-the table above; on request, re-print them as a **plain numbered list in prose**, not via the
-question tool, since this list commonly runs 15-20+ items, well past its 4-option cap). Accept a
-comma-separated reply, or "all"/"none", and parse their free-text reply yourself.
-
-For whatever they chose (plus anything flagged `needsRename`, if they agreed to fix those too), run:
-`mcx sync-connectors --only <name1>,<name2>,...`
-
-Report exactly what the command printed (added / renamed / skipped-no-url). If anything was added
-or renamed, tell the user: config changed, but credentials didn't — run `/mcp` (or just call the
-tool once) to authenticate each new or renamed server before it will actually forward.
+The command adds missing entries and renames URL-matched entries to their canonical aliases while
+preserving unrelated config. Report its `added`, `renamed to standard form`, and
+`already configured` lines exactly. Config changes do not create credentials; after any add or
+rename, tell the user to run `/mcp` or call one tool on each affected server to authenticate.
 
 ## 6. Offer to disable claude.ai MCP servers
 
-Registering a connector locally (step 4) creates a second, redundant path to the same backend
+Registering a connector locally (step 5) creates a second, redundant path to the same backend
 alongside the original claude.ai connector — both work, but that duplication is confusing and the
 claude.ai path bypasses mcx entirely (no filters, no chains, no keychain-based forwarding).
 

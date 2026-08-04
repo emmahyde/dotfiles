@@ -40,18 +40,17 @@ servers that carry static headers in config.
 mcx forward --list
 
 # call a tool on one of them — the OAuth token is pulled from the keychain for you
-mcx forward --server jiraconfluencegusto --tool atlassianUserInfo --args '{}'
+mcx forward --server jira --tool getJiraIssue --args '{"cloudId":"00000000-0000-0000-0000-000000000000","issueIdOrKey":"PROJ-123"}'
 
 # save a script as a reusable chain (name/lang/desc inferred) and run it
 mcx register ./chains/batch_triage.rb
-mcx run '{"cloudId":"…","field":"customfield_14733","value":"Testing Not Needed","keys":["TICKET-1234","TICKET-1234"]}' batch-triage
+mcx run '{"jiraServer":"jira","cloudId":"00000000-0000-0000-0000-000000000000","field":"customfield_10001","value":"Example Value","keys":["PROJ-123","PROJ-124"]}' batch-triage
 ```
 
 ## Benchmarks
 
 The same work done natively drops every raw payload into the window. Measured with
-`tiktoken cl100k_base` against **real payloads** captured live from the RETIRE Jira project + Notion
-+ Slack (`bench/capture_live.rb`):
+`tiktoken cl100k_base` against the synthetic Jira, Notion, and Slack fixture corpus:
 
 | Scenario | Native ctx | % of 200k | mcx ctx | mcx % of native |
 |---|---:|---:|---:|---:|
@@ -66,10 +65,11 @@ The same work done natively drops every raw payload into the window. Measured wi
 | searchJiraIssues (10 results) | 2,985 | 1.5% | 408 | 13.7% |
 
 The last column is what mcx keeps: the fan-out and cross-ref rows collapse to ~1% of the native
-context because they multiply or join large payloads. Savings scale with payload size. Reproduce:
-`CLOUD_ID=<id> ruby bench/capture_live.rb && MCX_FIXTURES=bench/captures ruby bench/bench.rb`. No
-servers? `ruby bench/bench.rb` runs the same scenarios over synthetic fixtures. Full methodology in
-`bench/README.md`.
+context because they multiply or join large payloads. Savings scale with payload size. Reproduce the
+synthetic corpus with `ruby bench/bench.rb`. To capture a caller-owned environment, supply every
+connector and resource explicitly:
+`JIRA_SERVER=jira NOTION_SERVER=notion SLACK_SERVER=slack CLOUD_ID=00000000-0000-0000-0000-000000000000 PROJECT=PROJ JIRA_KEYS=PROJ-123,PROJ-124 NOTION_ID=00000000-0000-0000-0000-000000000000 SLACK_CHANNEL=C00000000 SLACK_TS=1700000000.000000 ruby bench/capture_live.rb`,
+then run `MCX_FIXTURES=bench/captures ruby bench/bench.rb`. Full methodology is in `bench/README.md`.
 
 ## Configuration
 
@@ -88,11 +88,11 @@ never hides the other layers' chains.
 
 *`filters.yml`, keyed by full MCP tool name*
 
-Operations apply in the fixed order **keep → drop → rename → truncate**, over **dotted paths** (no
-wildcards — every touched field is explicit). This example exercises all four on one tool:
+Legacy path operations run in the fixed order **keep → drop → rename → truncate**, over **dotted
+paths** (no wildcards — every touched field is explicit). This example exercises all four:
 
 ```yaml
-mcp__jiraconfluencegusto__getJiraIssue:
+mcp__jira__getJiraIssue:
   keep: ["key", "fields.summary", "fields.description", "fields.status", "fields.reporter"]
   drop:
     - fields.status.self
@@ -114,9 +114,9 @@ mcp__jiraconfluencegusto__getJiraIssue:
 - **`rename`** — move `"from.path": "to.path"` (here `reporter.emailAddress` → `reporter.email`).
 - **`truncate`** — cap a string field at N chars: `"path": maxChars`.
 
-That's the whole surface. Reaching past it means you want a *chain*, not a filter. Shipped defaults
-are **drop-only** (they can't hide signal); `keep`/`rename`/`truncate` are yours to add per project or
-per user.
+Filters can use either those path operations or an exclusive `transforms` pipeline with
+`parse`, `project`, and `truncate` steps. Shipped rules use both forms and each has a matching
+synthetic fixture. Use a chain when reshaping one result is not enough.
 
 ### Chains
 
@@ -130,9 +130,10 @@ batch-triage:
   language: ruby
   description: flip one custom field across many Jira issues; return only a count
   source: |
+    jira_server = args["jiraServer"] || "jira"
     done = args["keys"].map do |key|
       forward(
-        "jiraconfluencegusto",
+        jira_server,
         "editJiraIssue",
         {
           "cloudId" => args["cloudId"],
@@ -192,7 +193,7 @@ Each configured example above, as the model actually sees it.
 The model calls the tool as usual:
 
 ```
-mcp__jiraconfluencegusto__getJiraIssue({"cloudId":"…","issueIdOrKey":"PROJ-1234"})
+mcp__jira__getJiraIssue({"cloudId":"00000000-0000-0000-0000-000000000000","issueIdOrKey":"PROJ-123"})
 ```
 
 **Before** — the raw result (excerpt; the full payload is 15 top-level and nested-object fields, most
@@ -202,8 +203,8 @@ of them `self` URLs, avatar URLs, and account metadata):
 {
   "expand": "renderedFields,names,schema,…",
   "id": "10042",
-  "self": "https://example.atlassian.net/rest/api/3/issue/10042",
-  "key": "PROJ-1234",
+  "self": "https://jira.example.invalid/rest/api/3/issue/10042",
+  "key": "PROJ-123",
   "fields": {
     "summary": "Sanitized example issue summary",
     "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
@@ -211,9 +212,9 @@ of them `self` URLs, avatar URLs, and account metadata):
     "project": {...}, "components": [...],
     "status": {"self": "…", "iconUrl": "…", "name": "In Progress", "id": "10002", "statusCategory": {...}},
     "reporter": {
-      "self": "https://example.atlassian.net/rest/api/3/user?accountId=…",
-      "accountId": "aaaaaaaaaaaaaaaaaaaaaaaa", "emailAddress": "reporter@example.com",
-      "displayName": "Example Reporter", "active": true, "timeZone": "America/Los_Angeles",
+      "self": "https://jira.example.invalid/rest/api/3/user?accountId=00000000-0000-0000-0000-000000000000",
+      "accountId": "00000000-0000-0000-0000-000000000000", "emailAddress": "reporter@example.invalid",
+      "displayName": "Example Reporter", "active": true, "timeZone": "UTC",
       "accountType": "atlassian", "avatarUrls": {"48x48": "…", "24x24": "…", "16x16": "…", "32x32": "…"}
     }
   }
@@ -224,7 +225,7 @@ of them `self` URLs, avatar URLs, and account metadata):
 
 ```json
 {
-  "key": "PROJ-1234",
+  "key": "PROJ-123",
   "fields": {
     "summary": "Sanitized example is",
     "description": "Lorem ipsum dolor sit amet, co",
@@ -232,7 +233,7 @@ of them `self` URLs, avatar URLs, and account metadata):
       "description": "Work is in progress.", "name": "In Progress", "id": "10002",
       "statusCategory": {"key": "indeterminate", "name": "In Progress", "colorName": "yellow", "id": 4, "self": "…"}
     },
-    "reporter": {"accountId": "aaaaaaaaaaaaaaaaaaaaaaaa", "displayName": "Example Reporter", "email": "reporter@example.com"}
+    "reporter": {"accountId": "00000000-0000-0000-0000-000000000000", "displayName": "Example Reporter", "email": "reporter@example.invalid"}
   }
 }
 ```
@@ -240,12 +241,12 @@ of them `self` URLs, avatar URLs, and account metadata):
 `keep` dropped `expand`/`id`/`self` and eight unkept `fields.*`; `drop` stripped the `self`/`iconUrl`
 and reporter metadata within what survived; `rename` turned `reporter.emailAddress` into
 `reporter.email`; `truncate` cut summary to 20 chars and description to 30. Measured on the
-checked-in capture: **779 → 108 tokens — ~14% of the original**, and reproducible with
+checked-in synthetic fixture: **779 → 108 tokens — ~14% of the original**, and reproducible with
 `mcx filter --config <this> < testdata/captures/getJiraIssue.json`.
 
 ### Chain: batch field update across 14 issues
 
-Say you're flipping one custom field (`customfield_14733` → `"Testing Not Needed"`) across an epic's
+Say you're setting one custom field (`customfield_10001` → `"Example Value"`) across an epic's
 14 stories.
 
 **Before** — done natively, the model calls `editJiraIssue` 14 times, and Jira echoes the **entire
@@ -253,25 +254,25 @@ updated issue** on every call — summary, description, project, reporter, avata
 you changed one field. Two of the fourteen echoes, abbreviated:
 
 ```
-editJiraIssue(issueIdOrKey: "TICKET-1234", fields: {"customfield_14733": {"value": "Testing Not Needed"}})
+editJiraIssue(issueIdOrKey: "PROJ-123", fields: {"customfield_10001": {"value": "Example Value"}})
 {
   "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
-  "id": "3012909", "self": "https://api.atlassian.com/ex/jira/…/issue/3012909", "key": "TICKET-1234",
+  "id": "10042", "self": "https://jira.example.invalid/rest/api/3/issue/10042", "key": "PROJ-123",
   "fields": {
-    "summary": "WU-01: [DB] Batch execution columns, WorkUnit state, and events table",
-    "description": "**Summary:** The additive schema migration set for the Model B engine. Verified NOT merged on `main`…",  // ~1,400 chars
-    "issuetype": {"self": "…", "iconUrl": "…", "avatarId": 10315, …},
+    "summary": "Add audit log export",
+    "description": "Expose a CSV export for project audit events.",
+    "issuetype": {"self": "…", "iconUrl": "…", "avatarId": 10001, …},
     "project": {"self": "…", "avatarUrls": {"48x48": "…", "24x24": "…", "16x16": "…", "32x32": "…"}, …},
-    "reporter": {"self": "…", "avatarUrls": {"48x48": "…", …}, "accountId": "712020:…", …},
+    "reporter": {"self": "…", "avatarUrls": {"48x48": "…", …}, "accountId": "00000000-0000-0000-0000-000000000000", …},
     "priority": {"self": "…", "iconUrl": "…"}, "status": {"self": "…", "iconUrl": "…", …}, …
   }
 }
 
-editJiraIssue(issueIdOrKey: "TICKET-1234", fields: {"customfield_14733": {"value": "Testing Not Needed"}})
+editJiraIssue(issueIdOrKey: "PROJ-124", fields: {"customfield_10001": {"value": "Example Value"}})
 {
   "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
-  "id": "3012910", "self": "…", "key": "TICKET-1234",
-  "fields": { "summary": "WU-03: Durable event-log port (Medusa::Event + Events.emit, persist only)", … }
+  "id": "10043", "self": "https://jira.example.invalid/rest/api/3/issue/10043", "key": "PROJ-124",
+  "fields": { "summary": "Document audit export limits", … }
 }
 ```
 
@@ -283,15 +284,15 @@ The model just wanted to know the edits landed.
 sandbox and emits one line:
 
 ```sh
-$ mcx run '{"cloudId":"…","field":"customfield_14733","value":"Testing Not Needed","keys":["TICKET-1234","TICKET-1234","TICKET-1234","TICKET-1234","TICKET-1234","TICKET-1234","TICKET-1234","TICKET-1234","TICKET-1234","TICKET-1234","TICKET-1234","TICKET-1234","TICKET-1234","TICKET-1234"]}' batch-triage
-{"updated":14,"field":"customfield_14733","value":"Testing Not Needed","keys":["TICKET-1234","TICKET-1234","TICKET-1234","TICKET-1234","TICKET-1234","TICKET-1234","TICKET-1234","TICKET-1234","TICKET-1234","TICKET-1234","TICKET-1234","TICKET-1234","TICKET-1234","TICKET-1234"],"failed":[]}
+$ mcx run '{"jiraServer":"jira","cloudId":"00000000-0000-0000-0000-000000000000","field":"customfield_10001","value":"Example Value","keys":["PROJ-123","PROJ-124","PROJ-125","PROJ-126","PROJ-127","PROJ-128","PROJ-129","PROJ-130","PROJ-131","PROJ-132","PROJ-133","PROJ-134","PROJ-135","PROJ-136"]}' batch-triage
+{"updated":14,"field":"customfield_10001","value":"Example Value","keys":["PROJ-123","PROJ-124","PROJ-125","PROJ-126","PROJ-127","PROJ-128","PROJ-129","PROJ-130","PROJ-131","PROJ-132","PROJ-133","PROJ-134","PROJ-135","PROJ-136"],"failed":[]}
 ```
 
 **223 tokens end to end — the `mcx run` command plus the returned digest — ~1% of the native context.** All fourteen
 full echoes are read and discarded inside the sandbox; the model sees only the confirmation, the keys
 touched, and any that failed. *(Both figures from the `batch-triage` benchmark row, `tiktoken
-cl100k_base`, measured against 14× a real `editJiraIssue` capture; live payloads with long descriptions
-run larger.)*
+cl100k_base`, measured against the synthetic fixture corpus; payloads with long descriptions may run
+larger.)*
 
 ## How the plugin wires into Claude Code
 
@@ -386,14 +387,14 @@ Resolves a server from your config, injects a keychain bearer token if the serve
 tool, and prints the JSON result.
 
 ```sh
-$ mcx forward --server jiraconfluencegusto --tool atlassianUserInfo --args '{}'
+$ mcx forward --server jira --tool atlassianUserInfo --args '{}'
 ```
 ```json
 {
   "content": [
     {
       "type": "text",
-      "text": "{\"account_id\":\"712020:8675c700-…\",\"name\":\"Jane Doe\",\"email\":\"jane.doe@example.com\"}"
+      "text": "{\"account_id\":\"00000000-0000-0000-0000-000000000000\",\"name\":\"Example User\",\"email\":\"user@example.invalid\"}"
     }
   ]
 }
@@ -410,11 +411,11 @@ the token endpoint per RFC 8414).
 `[keychain-auth]` marks HTTP servers whose token lives only in the keychain.
 
 ```text
-bamboo                       stdio    /opt/homebrew/opt/mise/bin/mise
-context7                     http     https://…/mcp [keychain-auth]
-jiraconfluencegusto          http     https://…/mcp [keychain-auth]
-notiongusto                  http     https://…/mcp [keychain-auth]
-sentry                       stdio    npx
+gdocs                        http     https://gdocs.example.invalid/mcp [keychain-auth]
+gsheets                      http     https://gsheets.example.invalid/mcp [keychain-auth]
+jira                         http     https://jira.example.invalid/mcp [keychain-auth]
+notion                       http     https://notion.example.invalid/mcp [keychain-auth]
+slack                        http     https://slack.example.invalid/mcp [keychain-auth]
 ```
 
 ### `mcx run` / `register` / `list` / `remove`
@@ -422,9 +423,9 @@ sentry                       stdio    npx
 The default for a newly written workflow is a heredoc-fed ad-hoc run, which creates neither a file nor a registry entry:
 
 ```sh
-$ mcx run '{…}' ruby <<'RUBY'
+$ mcx run '{"jiraServer":"jira","cloudId":"00000000-0000-0000-0000-000000000000","keys":["PROJ-123","PROJ-124"]}' ruby <<'RUBY'
 rows = args["keys"].map do |key|
-  forward("jiraconfluencegusto", "getJiraIssue", {
+  forward(args["jiraServer"], "getJiraIssue", {
     "cloudId" => args["cloudId"], "issueIdOrKey" => key
   })
 end
@@ -488,9 +489,9 @@ GOOS=linux go build ./...   # verify the non-macOS keychain stub still builds
 
 Plugin layout: `.claude-plugin/plugin.json`, `hooks/hooks.json`, `scripts/mcx` (the built binary the
 hooks invoke via `${CLAUDE_PLUGIN_ROOT}`), `skills/` (`/mcx:mcx` routing/reference + `/mcx:new` ephemeral creation + `/mcx:save` persistence),
-`commands/setup.md` (the `/setup` command), `filters.yml` (shipped drop-only defaults), `chains/*.rb`
-(example chains). Rebuild with `go build -o scripts/mcx ./cmd/mcx` — a `lefthook` pre-commit hook does
+`commands/setup.md` (the `/setup` command), `filters.yml` (shipped filter defaults), `chains/*.rb`
+(example chains). Rebuild with `go build -trimpath -o scripts/mcx ./cmd/mcx` — a `lefthook` pre-commit hook does
 this automatically on any Go change (run `lefthook install` once per clone).
 
-See `CLAUDE.md` for the internals — the keychain credential shape, the RFC 8414 refresh path, the
-filter/chain resolution model, and the gotchas worth knowing before changing anything.
+For implementation details, inspect `cmd/mcx/` and the focused packages under `internal/` alongside
+their tests.

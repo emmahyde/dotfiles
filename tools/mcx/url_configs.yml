@@ -1,10 +1,8 @@
-# Connectors mcx ships a default filter or chain for. `mcx sync-connectors`
-# installs each into ~/.claude.json's mcpServers under this exact key,
-# renaming an existing entry in place if it's already there under a
-# different name. The URL is fixed per connector for the whole org — RunLayer
-# routes by URL path, and personalizes only via each user's own OAuth bearer
-# token (kept in the keychain) — so the same URL is correct for every
-# engineer who installs this plugin.
-jiraconfluencegusto: https://runlayer.example.com/api/v1/proxy/00000000-0000-0000-0000-000000000000/mcp
-notiongusto: https://runlayer.example.com/api/v1/proxy/00000000-0000-0000-0000-000000000000/mcp
-slackgusto: https://runlayer.example.com/api/v1/proxy/00000000-0000-0000-0000-000000000000/mcp
+# Optional connector templates used by `mcx sync-connectors`.
+# Replace each `example.invalid` URL with the endpoint for that MCP server before syncing.
+# Entries are installed in `~/.claude.json` under these neutral aliases.
+jira: https://jira.example.invalid/mcp
+notion: https://notion.example.invalid/mcp
+slack: https://slack.example.invalid/mcp
+gdocs: https://gdocs.example.invalid/mcp
+gsheets: https://gsheets.example.invalid/mcp

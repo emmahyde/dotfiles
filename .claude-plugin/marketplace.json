@@ -5,6 +5,15 @@
   },
   "plugins": [
     {
+      "name": "comment-cleanup",
+      "source": "./plugins/comment-cleanup",
+      "description": "Aggressively prune comments from source code so every remaining comment earns its place. Nudges after Edit/Write and gates turn-end until pending files are cleaned.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Emma Hyde"
+      }
+    },
+    {
       "name": "discuss-and-execute",
       "source": "./plugins/discuss-and-execute",
       "description": "Discuss implementation decisions, then execute with parallel agents in coordinated waves",

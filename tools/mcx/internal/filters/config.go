@@ -8,8 +8,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// Config maps a full MCP tool name (e.g. "mcp__jiraconfluencegusto__getJiraIssue")
-// to the filter applied to every result from that tool.
+// Config maps full MCP tool keys such as "mcp__jira__getJiraIssue" to result filters.
 type Config map[string]Filter
 
 // Load merges filter configs by precedence, most-specific winning per tool key:

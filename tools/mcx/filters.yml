@@ -1,4 +1,4 @@
-mcp__jiraconfluencegusto__getJiraIssue:
+mcp__jira__getJiraIssue:
   transforms:
     - type: parse
       field: fields.description
@@ -23,7 +23,7 @@ mcp__jiraconfluencegusto__getJiraIssue:
       length: 400
       suffix: "…"
 
-mcp__jiraconfluencegusto__editJiraIssue:
+mcp__jira__editJiraIssue:
   keep:
     - key
     - id
@@ -31,41 +31,41 @@ mcp__jiraconfluencegusto__editJiraIssue:
     - fields.status.name
     - fields.parent
 
-mcp__jiraconfluencegusto__searchJiraIssuesUsingJql:
+mcp__jira__searchJiraIssuesUsingJql:
   keep:
     - issues
     - nextPageToken
     - isLast
 
-mcp__slackgusto__slack_read_thread:
+mcp__slack__slack_read_thread:
   keep:
     - messages
     - pagination_info
 
-mcp__slackgusto__slack_read_channel:
+mcp__slack__slack_read_channel:
   keep:
     - messages
     - pagination_info
 
-mcp__slackgusto__slack_search_public_and_private:
+mcp__slack__slack_search_public_and_private:
   keep:
     - results
     - pagination_info
 
-mcp__notiongusto__notion-fetch:
+mcp__notion__notion-fetch:
   keep:
     - metadata
     - title
     - url
     - text
 
-mcp__notiongusto__notion-query-database-view:
+mcp__notion__notion-query-database-view:
   keep:
     - results
     - next_cursor
     - has_more
 
-mcp__notiongusto__notion-search:
+mcp__notion__notion-search:
   keep:
     - results
     - next_cursor

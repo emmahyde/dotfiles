@@ -12,7 +12,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/emmahyde/mcx/internal/registry"
+	"github.com/emmahyde/dotfiles/tools/mcx/internal/registry"
 )
 
 // managedMarker sits inside every mcx-generated skill dir so Sync only ever

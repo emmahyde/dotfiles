@@ -41,8 +41,8 @@ exception.
 ## Forward one MCP call (keychain OAuth injected automatically)
 
 ```sh
-mcx forward --server jiraconfluencegusto --tool getJiraIssue \
-  --args '{"cloudId":"…","issueIdOrKey":"PROJ-123"}'
+mcx forward --server jira --tool getJiraIssue \
+  --args '{"cloudId":"00000000-0000-0000-0000-000000000000","issueIdOrKey":"PROJ-123"}'
 mcx forward --list        # every server from config ∪ keychain; [keychain-auth] = OAuth-backed
 ```
 
@@ -55,10 +55,10 @@ Run script source directly for the current task. The first operand becomes the
 script's parsed `args`; stdin carries the source into mcx, not into the child script:
 
 ```sh
-mcx run '{"cloudId":"…","issue_keys":["PROJ-1","PROJ-2"]}' ruby <<'RUBY'
+mcx run '{"jiraServer":"jira","cloudId":"00000000-0000-0000-0000-000000000000","issue_keys":["PROJ-123","PROJ-124"]}' ruby <<'RUBY'
 rows = args["issue_keys"].map do |key|
   issue = forward(
-    "jiraconfluencegusto",
+    args["jiraServer"],
     "getJiraIssue",
     { "cloudId" => args["cloudId"], "issueIdOrKey" => key }
   )
@@ -109,9 +109,10 @@ chains. Ruby example (the whole file):
 
 ```ruby
 # Fan out getJiraIssue over many keys, return a compact status table.
+jira_server = args["jiraServer"] || "jira"
 rows = args["keys"].map do |key|
   issue = forward(
-    "jiraconfluencegusto",
+    jira_server,
     "getJiraIssue",
     {
       "cloudId" => args["cloudId"],
@@ -138,7 +139,7 @@ Configured in `filters.yml`, keyed by full MCP tool name. Applied automatically
 by the PostToolUse hook; you rarely run `mcx filter` by hand.
 
 ```yaml
-mcp__jiraconfluencegusto__getJiraIssue:
+mcp__jira__getJiraIssue:
   drop:
     - expand
     - self

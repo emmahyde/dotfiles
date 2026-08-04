@@ -25,30 +25,29 @@ func swap(fake *fakeBackend) {
 	writeKeychain = func(_, payload string) error { fake.data = payload; return nil }
 }
 
-// fixture mirrors the real "Claude Code-credentials" blob shape captured from
-// the macOS keychain: top-level mcpOAuth plus sibling keys we must not disturb.
+// fixture includes sibling keys so credential updates prove they preserve unrelated data.
 func fixture(expiresAt int64) []byte {
 	blob := map[string]any{
 		"claudeAiOauth": map[string]any{"accessToken": "keep-me"},
-		"designOauth":   map[string]any{"accessToken": "keep-me-too"},
+		"otherOauth":    map[string]any{"accessToken": "keep-me-too"},
 		"mcpOAuth": map[string]any{
-			"context7|38086be306220b60": map[string]any{
-				"serverName":   "context7",
-				"serverUrl":    "https://runlayer.example.com/api/v1/proxy/abc/mcp",
-				"clientId":     "cid",
-				"clientSecret": "csec",
-				"accessToken":  "at-context7",
-				"refreshToken": "rt-context7",
+			"jira|0000000000000000": map[string]any{
+				"serverName":   "jira",
+				"serverUrl":    "https://example.invalid/mcp/jira",
+				"clientId":     "client-id",
+				"clientSecret": "client-secret",
+				"accessToken":  "jira-access-token",
+				"refreshToken": "jira-refresh-token",
 				"scope":        "read",
 				"redirectUri":  "http://127.0.0.1/callback",
 				"expiresAt":    expiresAt,
 			},
-			"gdocsgusto|deadbeef": map[string]any{
-				"serverName":   "gdocsgusto",
-				"serverUrl":    "https://runlayer.example.com/api/v1/proxy/xyz/mcp",
-				"clientId":     "cid2",
-				"clientSecret": "csec2",
-				"accessToken":  "at-gdocs",
+			"gdocs|1111111111111111": map[string]any{
+				"serverName":   "gdocs",
+				"serverUrl":    "https://example.invalid/mcp/gdocs",
+				"clientId":     "other-client-id",
+				"clientSecret": "other-client-secret",
+				"accessToken":  "gdocs-access-token",
 				"expiresAt":    expiresAt,
 			},
 		},
@@ -63,24 +62,24 @@ func TestParseCredentials(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ParseCredentials: %v", err)
 	}
-	c, ok := creds["context7"]
+	c, ok := creds["jira"]
 	if !ok {
-		t.Fatal("context7 credential missing")
+		t.Fatal("jira credential missing")
 	}
-	if c.AccessToken != "at-context7" {
-		t.Errorf("accessToken = %q, want at-context7", c.AccessToken)
+	if c.AccessToken != "jira-access-token" {
+		t.Errorf("accessToken = %q, want jira-access-token", c.AccessToken)
 	}
-	if c.RefreshToken != "rt-context7" {
-		t.Errorf("refreshToken = %q, want rt-context7", c.RefreshToken)
+	if c.RefreshToken != "jira-refresh-token" {
+		t.Errorf("refreshToken = %q, want jira-refresh-token", c.RefreshToken)
 	}
 	if c.ExpiresAt != future {
 		t.Errorf("expiresAt = %d, want %d", c.ExpiresAt, future)
 	}
-	if c.EntryKey != "context7|38086be306220b60" {
+	if c.EntryKey != "jira|0000000000000000" {
 		t.Errorf("entryKey = %q", c.EntryKey)
 	}
-	if _, ok := creds["gdocsgusto"]; !ok {
-		t.Error("gdocsgusto credential missing")
+	if _, ok := creds["gdocs"]; !ok {
+		t.Error("gdocs credential missing")
 	}
 }
 
@@ -111,10 +110,10 @@ func TestFetchOAuthMetadataAndRefresh(t *testing.T) {
 			if r.Form.Get("grant_type") != "refresh_token" {
 				t.Errorf("grant_type = %q, want refresh_token", r.Form.Get("grant_type"))
 			}
-			if r.Form.Get("refresh_token") != "rt-context7" {
+			if r.Form.Get("refresh_token") != "jira-refresh-token" {
 				t.Errorf("refresh_token = %q", r.Form.Get("refresh_token"))
 			}
-			fmt.Fprint(w, `{"access_token":"new-at","refresh_token":"new-rt","expires_in":3600,"scope":"read"}`)
+			fmt.Fprint(w, `{"access_token":"new-access-token","refresh_token":"new-refresh-token","expires_in":3600,"scope":"read"}`)
 		default:
 			http.NotFound(w, r)
 		}
@@ -123,11 +122,11 @@ func TestFetchOAuthMetadataAndRefresh(t *testing.T) {
 
 	ctx := context.Background()
 	cred := Credential{
-		ServerName:   "context7",
-		ServerURL:    srv.URL + "/api/v1/proxy/abc/mcp",
-		ClientID:     "cid",
-		ClientSecret: "csec",
-		RefreshToken: "rt-context7",
+		ServerName:   "jira",
+		ServerURL:    srv.URL + "/mcp/jira",
+		ClientID:     "client-id",
+		ClientSecret: "client-secret",
+		RefreshToken: "jira-refresh-token",
 	}
 
 	md, err := fetchOAuthMetadata(ctx, srv.Client(), cred.ServerURL)
@@ -142,7 +141,7 @@ func TestFetchOAuthMetadataAndRefresh(t *testing.T) {
 	if err != nil {
 		t.Fatalf("exchangeRefreshToken: %v", err)
 	}
-	if tr.AccessToken != "new-at" || tr.RefreshToken != "new-rt" {
+	if tr.AccessToken != "new-access-token" || tr.RefreshToken != "new-refresh-token" {
 		t.Fatalf("token response = %+v", tr)
 	}
 	if tokenHits != 1 {
@@ -160,10 +159,10 @@ func TestPersistLockedPreservesOtherKeys(t *testing.T) {
 	defer swap(nil)
 
 	updated := Credential{
-		ServerName:   "context7",
-		EntryKey:     "context7|38086be306220b60",
-		AccessToken:  "rotated-at",
-		RefreshToken: "rotated-rt",
+		ServerName:   "jira",
+		EntryKey:     "jira|0000000000000000",
+		AccessToken:  "rotated-access-token",
+		RefreshToken: "rotated-refresh-token",
 		Scope:        "read",
 		ExpiresAt:    future + 1000,
 	}
@@ -178,17 +177,17 @@ func TestPersistLockedPreservesOtherKeys(t *testing.T) {
 	if _, ok := top["claudeAiOauth"]; !ok {
 		t.Error("claudeAiOauth key was dropped")
 	}
-	if _, ok := top["designOauth"]; !ok {
-		t.Error("designOauth key was dropped")
+	if _, ok := top["otherOauth"]; !ok {
+		t.Error("otherOauth key was dropped")
 	}
 	creds, err := ParseCredentials([]byte(fake.data))
 	if err != nil {
 		t.Fatalf("reparse creds: %v", err)
 	}
-	if creds["context7"].AccessToken != "rotated-at" {
-		t.Errorf("context7 token = %q, want rotated-at", creds["context7"].AccessToken)
+	if creds["jira"].AccessToken != "rotated-access-token" {
+		t.Errorf("jira token = %q, want rotated-access-token", creds["jira"].AccessToken)
 	}
-	if creds["gdocsgusto"].AccessToken != "at-gdocs" {
-		t.Errorf("gdocsgusto entry was clobbered: %q", creds["gdocsgusto"].AccessToken)
+	if creds["gdocs"].AccessToken != "gdocs-access-token" {
+		t.Errorf("gdocs entry was clobbered: %q", creds["gdocs"].AccessToken)
 	}
 }

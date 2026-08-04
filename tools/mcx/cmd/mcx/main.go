@@ -20,16 +20,16 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/emmahyde/mcx/internal/connectors"
-	"github.com/emmahyde/mcx/internal/executor"
-	"github.com/emmahyde/mcx/internal/filters"
-	"github.com/emmahyde/mcx/internal/keychain"
-	"github.com/emmahyde/mcx/internal/mcpclient"
-	"github.com/emmahyde/mcx/internal/nudge"
-	"github.com/emmahyde/mcx/internal/observe"
-	"github.com/emmahyde/mcx/internal/registry"
-	"github.com/emmahyde/mcx/internal/scan"
-	"github.com/emmahyde/mcx/internal/skillsync"
+	"github.com/emmahyde/dotfiles/tools/mcx/internal/connectors"
+	"github.com/emmahyde/dotfiles/tools/mcx/internal/executor"
+	"github.com/emmahyde/dotfiles/tools/mcx/internal/filters"
+	"github.com/emmahyde/dotfiles/tools/mcx/internal/keychain"
+	"github.com/emmahyde/dotfiles/tools/mcx/internal/mcpclient"
+	"github.com/emmahyde/dotfiles/tools/mcx/internal/nudge"
+	"github.com/emmahyde/dotfiles/tools/mcx/internal/observe"
+	"github.com/emmahyde/dotfiles/tools/mcx/internal/registry"
+	"github.com/emmahyde/dotfiles/tools/mcx/internal/scan"
+	"github.com/emmahyde/dotfiles/tools/mcx/internal/skillsync"
 )
 
 func main() {

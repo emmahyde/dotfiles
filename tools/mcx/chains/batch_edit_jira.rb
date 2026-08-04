@@ -1,10 +1,11 @@
 # batch-edit-jira — apply the same field edits to many Jira issues; return per-issue confirmations.
+jira_server = args["jiraServer"] || "jira"
 fields = args["fields"] || {}
 results = []
 failed = []
 (args["keys"] || []).each do |key|
   issue = forward(
-    "jiraconfluencegusto",
+    jira_server,
     "editJiraIssue",
     {
       "cloudId" => args["cloudId"],
