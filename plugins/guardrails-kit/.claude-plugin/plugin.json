@@ -1,0 +1,9 @@
+{
+  "name": "guardrails-kit",
+  "version": "1.14.0",
+  "description": "Just-in-time instruction loader for Claude Code: CLAUDE.md is a dispatch table mapping observable events to routed guardrail docs (PLAN/CODE/DEBUG/VERIFY/WRITING/SESSION/...). Ships the kit docs, enforcement hooks, and an idempotent installer that deploys into ~/.claude and splices the routing table into CLAUDE.md.",
+  "author": { "name": "Emma Hyde" },
+  "homepage": "https://github.com/emmahyde/dotfiles/tree/master/plugins/guardrails-kit",
+  "license": "MIT",
+  "keywords": ["guardrails", "routing", "just-in-time", "instructions", "claude-code", "kit"]
+}
