@@ -134,6 +134,15 @@
       "author": {
         "name": "Emma Hyde"
       }
+    },
+    {
+      "name": "guardrails-kit",
+      "source": "./plugins/guardrails-kit",
+      "description": "Just-in-time instruction loader: CLAUDE.md is a dispatch table mapping observable events to routed guardrail docs (PLAN/CODE/DEBUG/VERIFY/WRITING/SESSION/...). Ships the kit docs, enforcement hooks, and an idempotent installer that deploys into ~/.claude and splices the routing table into CLAUDE.md.",
+      "version": "1.14.0",
+      "author": {
+        "name": "Emma Hyde"
+      }
     }
   ],
   "allowCrossMarketplaceDependenciesOn": [

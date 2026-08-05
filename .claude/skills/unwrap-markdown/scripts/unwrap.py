@@ -25,7 +25,9 @@ HR = re.compile(r"^\s{0,3}([-*_])[ \t]*(?:\1[ \t]*){2,}$")
 LIST = re.compile(r"^(\s*)([-*+]|\d{1,9}[.)])([ \t]+)")
 BLOCKQUOTE = re.compile(r"^\s{0,3}>")
 TABLE_ROW = re.compile(r"^\s{0,3}\|")
-TABLE_SEP = re.compile(r"^\s{0,3}\|?[ \t]*:?-{1,}:?[ \t]*(?:\|[ \t]*:?-*:?[ \t]*)*\|?[ \t]*$")
+TABLE_SEP = re.compile(
+    r"^\s{0,3}\|?[ \t]*:?-{1,}:?[ \t]*(?:\|[ \t]*:?-*:?[ \t]*)*\|?[ \t]*$"
+)
 INDENT_CODE = re.compile(r"^(?: {4,}|\t)")
 HTML = re.compile(r"^\s{0,3}<")
 SETEXT = re.compile(r"^\s{0,3}(=+|-+)\s*$")
@@ -94,20 +96,32 @@ def reflow_quote(block):
             return block
         inner.append(m.group(3))
     for line in inner:
-        if line.strip() == "" or line.startswith(">") or FENCE.match(line) \
-                or LIST.match(line) or HEADING.match(line) or TABLE_ROW.match(line):
+        if (
+            line.strip() == ""
+            or line.startswith(">")
+            or FENCE.match(line)
+            or LIST.match(line)
+            or HEADING.match(line)
+            or TABLE_ROW.match(line)
+        ):
             return block  # nested structure: preserve verbatim
     return ["> " + r if r.strip() != "" else ">" for r in reflow_paragraph(inner)]
 
 
 def reflow_block(block):
     first = block[0].rstrip("\n")
-    is_table = any(TABLE_SEP.match(l) for l in block) and \
-        any(TABLE_ROW.match(l) or "|" in l for l in block)
+    is_table = any(TABLE_SEP.match(line) for line in block) and any(
+        TABLE_ROW.match(line) or "|" in line for line in block
+    )
     if is_table or TABLE_ROW.match(first):
         return block
-    if HEADING.match(first) or HR.match(first) or HTML.match(first) \
-            or INDENT_CODE.match(first) or REFDEF.match(first):
+    if (
+        HEADING.match(first)
+        or HR.match(first)
+        or HTML.match(first)
+        or INDENT_CODE.match(first)
+        or REFDEF.match(first)
+    ):
         return block
     if len(block) == 2 and SETEXT.match(block[1].rstrip("\n")):
         return block
@@ -165,8 +179,12 @@ def unwrap(text):
         m = FENCE.match(ln)
         if in_fence:
             out.append(ln)
-            if m and m.group(2)[0] == fence_ch and len(m.group(2)) >= fence_len \
-                    and m.group(3).strip() == "":
+            if (
+                m
+                and m.group(2)[0] == fence_ch
+                and len(m.group(2)) >= fence_len
+                and m.group(3).strip() == ""
+            ):
                 in_fence = False
             i += 1
             continue
@@ -205,10 +223,25 @@ def gather(paths):
 
 
 def main(argv=None):
-    ap = argparse.ArgumentParser(description="Remove hard line wraps from Markdown files.")
-    ap.add_argument("paths", nargs="+", help="Files and/or directories (dirs recurse over Markdown files).")
-    ap.add_argument("-n", "--dry-run", action="store_true", help="Report which files would change; write nothing.")
-    ap.add_argument("--stdout", action="store_true", help="Print result to stdout instead of editing in place.")
+    ap = argparse.ArgumentParser(
+        description="Remove hard line wraps from Markdown files."
+    )
+    ap.add_argument(
+        "paths",
+        nargs="+",
+        help="Files and/or directories (dirs recurse over Markdown files).",
+    )
+    ap.add_argument(
+        "-n",
+        "--dry-run",
+        action="store_true",
+        help="Report which files would change; write nothing.",
+    )
+    ap.add_argument(
+        "--stdout",
+        action="store_true",
+        help="Print result to stdout instead of editing in place.",
+    )
     args = ap.parse_args(argv)
 
     files = gather(args.paths)

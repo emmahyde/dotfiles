@@ -34,6 +34,10 @@ before/after comparison — not a pure reference diagram.
 9. **One mermaid init for the whole doc**, shared across every `.mermaid` block regardless of section — don't re-initialize per section.
 10. **Render + colorize timing matches `mermaid-architecture`:** tag `data-kind` (`class` vs `flowchart`) on each `.mermaid` div from its source text before `mermaid.run()` wipes it; call the colorizer once synchronously after `mermaid.run()` resolves, then again at `setTimeout(…, 400)` and `setTimeout(…, 1200)` since ELK layout is async and a `MutationObserver`-only pass fires too early.
 11. **Decisions are compressed diamonds — short and wide, by default.** Keep the `{ }` rhombus for decision nodes (`X{"Target under app/frontend/ ?"}`), but never ship one at its default aspect: under ELK the rhombus renders tall and near-square, eats vertical room, and forces the whole column wider just to fit its label. After render, flatten **every** decision diamond to short-and-wide with the dedicated `squashDiamonds()` pass (below). This is the norm for this skill, not an opt-in — a full-height diamond is the bug, the compressed one is correct output. Keep the reshape **out of the colorizer**: reshaping is geometry, coloring is fill/stroke, and they have different scopes — `squashDiamonds()` must run on every `.mermaid` diagram (flowchart decisions render as `g.node polygon`), whereas the colorizer only touches `data-kind="class"` blocks. Call `squashDiamonds()` at the same async cadence as the colorizer (`0` / `400ms` / `1200ms`) since ELK settles late. The squash is **line-aware**: a single-line label needs almost no vertical room, so it flattens ~33% harder (`syFlat ≈ 0.37`) than a wrapped multi-line label (`syTall ≈ 0.55`) — the pass reads each node's label box to decide. Put the branch answers on the outbound edge labels (`X -->|frontend| Y`, `X -->|backend| Z`).
+12. **Diamond edges are re-routed by `orthogonalizeEdges()` — mandatory alongside the squash.** ELK routes edges to the *pre-squash* rhombus border, so a squashed diamond is left with diagonal stubs floating off its vertices. The pass (in the template) snaps any edge endpoint inside a squashed diamond's recorded pre-squash footprint (`poly.dataset.geom`, written by `squashDiamonds()`) onto the diamond's actual vertex, then rebuilds the whole edge as a two-bend route through a bus line at a fixed 36px offset from the vertex. All edges sharing a vertex share the offset, so they overlap into one visual trunk + bus — the grouped-arrow look; the overlap is intended. Ingress endpoints back off the vertex 4px so the arrowhead tip meets the outline instead of flaring over the fill. It also re-centers each edge label on the rebuilt route's final segment — mermaid placed the label at the *original* path's midpoint, so without this the labels float in empty space. Unsnapped edges still get a cleanup: ELK's chamfered corners are collapsed and residual diagonals become L-bends. Run it after `squashDiamonds()` at the same `0 / 400 / 1200ms` cadence.
+13. **Fan-in/fan-out edge groups get one hue via `colorizeEdgeGroups()`.** Edges sharing a common ingress or egress point (25px cluster tolerance) are tinted as a group — stroke, arrowhead, and label background all take the same color, so a label reads as belonging to its line. Arrow markers are shared defs: clone per color (the template does) or every arrow in the svg recolors together. Palette is ordered for hue separation between consecutive groups; larger clusters claim edges first. Runs last in the pass chain (it reads final path geometry).
+14. **Uniform stroke weight via page CSS, not per-element styles.** One `!important` block sets `stroke-width: 1.8px` on all edge paths and all node shapes (`rect/polygon/path/circle`) — it must beat mermaid's generated styles and any inline styles the passes set. Mixed line weights read as unintended emphasis.
+15. **Rich labels: `<code>` chips, `<b>`, explicit `<br>`, `•` bullets.** Requires `securityLevel: 'loose'` in the init (default sanitization strips the markup) plus the `.nodeLabel code` CSS chip styles. Never rely on auto-wrap for multi-part labels — choose break points with explicit `<br>` or you get dangling orphans. Bullet lines are literal `•`-prefixed lines separated by `<br>`; a real `<ul>` fights the centered label layout.
 
 ## Color palette (this doc's defaults — swap hues per project, keep the *structure*)
 
@@ -60,9 +64,7 @@ indigo), `svc` (service, blue), `data` (data object, purple), `event` (stadium p
 
 ```js
 mermaid.registerLayoutLoaders(elkLayouts)
-mermaid.initialize({
-  startOnLoad: false,
-  theme: 'default',
+mermaid.initialize({ startOnLoad: false, securityLevel: 'loose', // keeps <code>/<b>/<br> in labels (rule 15) theme: 'default',
   layout: 'elk',
   themeVariables: {
     background: '#ffffff', primaryColor: '#eef2f6',
@@ -155,6 +157,8 @@ const squashDiamonds = (sx = 1.45, syTall = 0.55, syFlat = 0.37, oneLinePx = 26)
       if (Math.abs(p.y - cy) <= tolY) onH++
     }
     if (onV < 2 || onH < 2) return
+    // record the pre-squash footprint for orthogonalizeEdges() (rule 12)
+    poly.dataset.geom = JSON.stringify({ minX, maxX, minY, maxY })
     const fo = node.querySelector('foreignObject') // htmlLabels:true → label lives in a foreignObject
     const txt = node.querySelector('text')
     let labelH = fo ? (fo.height?.baseVal?.value || 0) : 0
@@ -173,10 +177,17 @@ const squashDiamonds = (sx = 1.45, syTall = 0.55, syFlat = 0.37, oneLinePx = 26)
 Wire it next to the colorizer in `renderAll()` — same cadence, separate call:
 
 ```js
-try { await mermaid.run({ querySelector: '.mermaid' }) } catch (e) { console.error(e) }
-colorizeDelta(); squashDiamonds()
-setTimeout(() => { colorizeDelta(); squashDiamonds() }, 400)
-setTimeout(() => { colorizeDelta(); squashDiamonds() }, 1200)
+// Sequential per-block render: mermaid ids derive from Date.now(), and two diagrams
+// rendered in the same millisecond collide — the second one's ELK layout then writes
+// into the first svg. Never mermaid.run({ querySelector: '.mermaid' }) on multi-diagram docs.
+for (const el of document.querySelectorAll('.mermaid')) {
+  try { await mermaid.run({ nodes: [el] }) } catch (e) { console.error(e) }
+  await new Promise(r => setTimeout(r, 10))
+}
+const passes = () => { colorizeDelta(); squashDiamonds(); orthogonalizeEdges(); colorizeEdgeGroups() }
+passes()
+setTimeout(passes, 400)
+setTimeout(passes, 1200)
 ```
 
 Why rewrite `points` and not a CSS `transform: scaleY(...)`: a CSS transform on the `<polygon>` alone
@@ -192,10 +203,7 @@ skill's mandatory 12px theme font; scale it if you change `fontSize`.
 
 ## Templates
 
-- `references/template.html` — full self-contained starter: header, two example sections (a
-  flowchart pipeline with a `{ }` decision diamond + a namespaced classDiagram ERD), legend chips,
-  notes list, mermaid init, the substring colorizer, and the `squashDiamonds()` geometry pass wired
-  into `renderAll()` and the `MutationObserver`.
+- `references/template.html` — full self-contained starter: header, two example sections (a flowchart pipeline with a `{ }` decision diamond + a namespaced classDiagram ERD), legend chips, notes list, mermaid init, the substring colorizer, and the full post-render pass chain — `squashDiamonds()`, `orthogonalizeEdges()` (diamond vertex snap + bus rebuild + label re-centering, rule 12), and `colorizeEdgeGroups()` (rule 13) — wired into `renderAll()` at all three timings. The `MutationObserver` runs only the idempotent passes (not `colorizeEdgeGroups()`, whose marker clones would re-fire it).
 
 ## Common pitfalls (don't repeat)
 
@@ -214,6 +222,11 @@ skill's mandatory 12px theme font; scale it if you change `fontSize`.
 - **Shipping a decision diamond at its default aspect.** ELK renders `{ }` tall and near-square; every
   decision node must go through `squashDiamonds()` (rule 11). A full-height diamond in the output means
   the pass didn't run or wasn't wired at all three timings.
-- **Folding the diamond squash into the colorizer.** Different scope (all diagrams vs. `data-kind="class"`)
-  and different concern (geometry vs. color). Keep `squashDiamonds()` a separate function called
-  alongside `colorizeDelta()`, not inside it.
+- **Folding the diamond squash into the colorizer.** Different scope (all diagrams vs. `data-kind="class"`) and different concern (geometry vs. color). Keep `squashDiamonds()` a separate function called alongside `colorizeDelta()`, not inside it.
+- **Rendering all diagrams with one `mermaid.run({ querySelector })` call.** Mermaid derives svg ids from `Date.now()`; two diagrams rendered in the same millisecond collide and the second one's async ELK layout writes into the first svg. Render sequentially per block with `mermaid.run({ nodes: [el] })` plus a 10ms tick between blocks.
+- **Leaving diamond edges where ELK put them.** After the squash, edges still target the pre-squash rhombus border: diagonal stubs float off the vertices and fan-outs stair-step through per-edge channels. `orthogonalizeEdges()` (rule 12) is as mandatory as the squash itself.
+- **Repositioning edge labels with a fixed back-off from the arrowhead.** Edges converging on one target share the endpoint, so equal back-offs stack the labels on top of each other. Use the final-segment midpoint — differing segment lengths separate them for free.
+- **Recoloring an edge's arrowhead by styling the shared marker def.** Every arrow in the svg changes hue together. Clone the marker per color and repoint `marker-end` (see `colorizeEdgeGroups()`).
+- **Adjacent similar hues in the group palette.** Green next to teal, or indigo next to purple, read as the same line at thin stroke widths. Order the palette for maximum hue separation between consecutive groups.
+- **Relying on label auto-wrap.** Long labels wrap at arbitrary points, leaving dangling bullets or orphaned words. Choose the break points with explicit `<br>` (rule 15).
+- **`flowchart LR` with a nested `direction TB` subgraph.** Fragile under the ELK renderer — layout can collapse or ignore the nested direction. Prefer a single top-level direction; restructure rather than nest opposing directions.

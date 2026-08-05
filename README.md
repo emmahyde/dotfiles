@@ -27,3 +27,4 @@ This repo is a Claude Code plugin marketplace. To subscribe, add to your `settin
 - **search-conversations** — Search past Claude Code conversations across all projects by description, returning resume commands.
 - **wispr** — Voice interaction with Claude Code via Wispr Flow dictation and macOS TTS.
 - **review-canvas** — PR-style transcript review canvas: drag-select line ranges in a JSONL transcript, attach comments, and stream them into the running session as channel events.
+- **guardrails-kit** — Just-in-time instruction loader: CLAUDE.md as a dispatch table that routes observable events to guardrail docs (PLAN/CODE/DEBUG/VERIFY/...). Ships an idempotent installer that deploys the kit into `~/.claude` and splices the routing table into CLAUDE.md.

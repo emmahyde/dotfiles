@@ -42,6 +42,30 @@
     padding: 0 4px; font-family: ui-monospace, monospace; color: #0d3b66; }
   .tag-new { color: var(--accent); font-weight: 700; }
   .tag-plan { color: #3949ab; font-weight: 700; }
+
+  /* Inline code chips + bold inside node/edge labels (labels are HTML via htmlLabels;
+     needs securityLevel:'loose' or mermaid strips the markup). */
+  .mermaid .nodeLabel code, .mermaid .edgeLabel code {
+    font-family: ui-monospace, Menlo, monospace;
+    background: rgba(0, 0, 0, .07);
+    border: 1px solid rgba(0, 0, 0, .13);
+    border-radius: 4px;
+    padding: 0 4px;
+    font-size: 11px;
+  }
+  .mermaid .nodeLabel b { font-weight: 700; }
+  /* Uniform line weight everywhere: edges (grouped or not) and node/shape borders.
+     !important beats mermaid's generated styles and the inline styles the passes set. */
+  .mermaid svg .edgePaths path,
+  .mermaid svg path.flowchart-link {
+    stroke-width: 1.8px !important;
+  }
+  .mermaid svg g.node rect,
+  .mermaid svg g.node polygon,
+  .mermaid svg g.node path,
+  .mermaid svg g.node circle {
+    stroke-width: 1.8px !important;
+  }
 </style>
 </head>
 <body>
@@ -145,6 +169,7 @@ classDiagram
   mermaid.registerLayoutLoaders(elkLayouts)
   mermaid.initialize({
     startOnLoad: false,
+    securityLevel: 'loose', // keeps <code>/<b>/<br> in labels; default sanitization strips them
     theme: 'default',
     layout: 'elk',
     themeVariables: {
@@ -229,6 +254,9 @@ classDiagram
         if (Math.abs(p.y - cy) <= tolY) onH++
       }
       if (onV < 2 || onH < 2) return
+      // Pre-squash footprint, consumed by orthogonalizeEdges() to find edge endpoints
+      // that ELK routed to the original (unsquashed) rhombus border.
+      poly.dataset.geom = JSON.stringify({ minX, maxX, minY, maxY })
       const fo = node.querySelector('foreignObject')
       const txt = node.querySelector('text')
       let labelH = fo ? (fo.height?.baseVal?.value || 0) : 0
@@ -243,22 +271,266 @@ classDiagram
     })
   }
 
+  // Flatten a path's d into absolute points; bail on commands we can't safely rewrite.
+  const parsePath = d => {
+    const pts = []
+    const re = /([A-Za-z])([^A-Za-z]*)/g
+    let m
+    while ((m = re.exec(d))) {
+      const cmd = m[1]
+      const nums = (m[2].match(/-?\d*\.?\d+(?:e-?\d+)?/gi) || []).map(Number)
+      if (cmd === 'M' || cmd === 'L') {
+        for (let i = 0; i + 1 < nums.length; i += 2) pts.push({ x: nums[i], y: nums[i + 1] })
+      } else if (cmd === 'C') {
+        for (let i = 0; i + 5 < nums.length; i += 6) pts.push({ x: nums[i + 4], y: nums[i + 5] })
+      } else if (cmd === 'Q') {
+        for (let i = 0; i + 3 < nums.length; i += 4) pts.push({ x: nums[i + 2], y: nums[i + 3] })
+      } else if (cmd === 'Z' || cmd === 'z') {
+        continue
+      } else {
+        return null
+      }
+    }
+    return pts.length >= 2 ? pts : null
+  }
+
+  // House rule: every edge segment is axis-aligned. ELK routes to the pre-squash rhombus
+  // border, so squashed diamonds are left with diagonal stubs floating off their vertices.
+  // Pass 1: snap any endpoint inside a squashed diamond's original footprint onto the
+  // diamond's actual vertex (grouped arrows overlapping at the vertex is intended).
+  // Pass 2: rewrite every remaining diagonal segment as an L-bend.
+  const orthogonalizeEdges = () => {
+    document.querySelectorAll('.mermaid svg').forEach(svg => {
+      const diamonds = [...svg.querySelectorAll('g.node polygon[data-squashed]')].map(poly => {
+        const geom = JSON.parse(poly.dataset.geom || 'null')
+        const ctm = poly.getCTM()
+        if (!geom || !ctm) return null
+        const pp = poly.points
+        let top = null, bottom = null, left = null, right = null
+        for (let i = 0; i < 4; i++) {
+          const p = pp.getItem(i)
+          if (!top || p.y < top.y) top = { x: p.x, y: p.y }
+          if (!bottom || p.y > bottom.y) bottom = { x: p.x, y: p.y }
+          if (!left || p.x < left.x) left = { x: p.x, y: p.y }
+          if (!right || p.x > right.x) right = { x: p.x, y: p.y }
+        }
+        return { geom, ctm, top, bottom, left, right }
+      }).filter(Boolean)
+
+      const labels = [...svg.querySelectorAll('.edgeLabels g.edgeLabel')]
+      ;[...svg.querySelectorAll('.edgePaths path, path.flowchart-link')].forEach((path, pathIdx) => {
+        if (path.dataset.ortho) return
+
+        // Mermaid positions each edge label at the ORIGINAL path's midpoint; once the
+        // path is rebuilt the label floats in empty space. Re-center it on the new
+        // route's final segment (unique per edge, unlike the shared bus run).
+        const moveLabel = route => {
+          const g = labels[pathIdx]                  // document order matches path order
+          if (!g) return
+          const a = route[route.length - 2], b = route[route.length - 1]
+          // Midpoint, not a fixed back-off from the arrowhead: edges converging on one
+          // target share the endpoint, so equal back-offs stack their labels.
+          const p = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }
+          const pl = g.parentNode.getCTM()
+          if (!pl) return
+          const q = new DOMPoint(p.x, p.y).matrixTransform(pl.inverse().multiply(pctm))
+          g.setAttribute('transform', `translate(${q.x.toFixed(2)}, ${q.y.toFixed(2)})`)
+        }
+        const pts = parsePath(path.getAttribute('d') || '')
+        const pctm = path.getCTM()
+        if (!pts || !pctm) return
+        const inv = pctm.inverse()
+
+        const snap = (idx, nbrIdx) => {
+          const p = pts[idx]
+          for (const d of diamonds) {
+            const M = inv.multiply(d.ctm)
+            const a = new DOMPoint(d.geom.minX - 6, d.geom.minY - 6).matrixTransform(M)
+            const b = new DOMPoint(d.geom.maxX + 6, d.geom.maxY + 6).matrixTransform(M)
+            if (p.x < Math.min(a.x, b.x) || p.x > Math.max(a.x, b.x) ||
+                p.y < Math.min(a.y, b.y) || p.y > Math.max(a.y, b.y)) continue
+            const q = pts[nbrIdx]
+            const name = Math.abs(q.y - p.y) >= Math.abs(q.x - p.x)
+              ? (q.y > p.y ? 'bottom' : 'top')
+              : (q.x > p.x ? 'right' : 'left')
+            // Ingress arrows (idx > 0) back off the vertex by 4px so the arrowhead
+            // tip meets the outline like it does on box borders, instead of the
+            // head flaring over the diamond fill.
+            const off = idx > 0 ? 4 : 0
+            const v = new DOMPoint(
+              d[name].x + (name === 'left' ? -off : name === 'right' ? off : 0),
+              d[name].y + (name === 'top' ? -off : name === 'bottom' ? off : 0)
+            ).matrixTransform(M)
+            pts[idx] = { x: v.x, y: v.y, axis: (name === 'top' || name === 'bottom') ? 'v' : 'h' }
+            return
+          }
+        }
+        snap(0, 1)
+        snap(pts.length - 1, pts.length - 2)
+
+        // A vertex-snapped edge ignores ELK's waypoints entirely: it is rebuilt as a
+        // two-bend route through a bus line at a fixed offset from the vertex. Every
+        // edge on the same vertex shares the same offset, so their runs overlap into
+        // one visual trunk + bus (the grouped-arrow look; overlap is intended).
+        const S = pts[0], E = pts[pts.length - 1]
+        if (S.axis || E.axis) {
+          const BUS = 36
+          let out2
+          const axis = S.axis || E.axis
+          if (axis === 'v') {
+            if (Math.abs(E.x - S.x) < 1) out2 = [S, E]
+            else {
+              const sgn = Math.sign(E.y - S.y) || 1
+              const off = Math.min(BUS, Math.abs(E.y - S.y) / 2) * sgn
+              const busY = S.axis ? S.y + off : E.y - off
+              out2 = [S, { x: S.x, y: busY }, { x: E.x, y: busY }, E]
+            }
+          } else {
+            if (Math.abs(E.y - S.y) < 1) out2 = [S, E]
+            else {
+              const sgn = Math.sign(E.x - S.x) || 1
+              const off = Math.min(BUS, Math.abs(E.x - S.x) / 2) * sgn
+              const busX = S.axis ? S.x + off : E.x - off
+              out2 = [S, { x: busX, y: S.y }, { x: busX, y: E.y }, E]
+            }
+          }
+          path.setAttribute('d', 'M' + out2.map(p => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join('L'))
+          moveLabel(out2)
+          path.dataset.ortho = '1'
+          return
+        }
+
+        // ELK emits chamfered corners (short diagonal corner cuts); keeping them turns each
+        // into a tiny stair after the L-bend pass. Drop sub-12px waypoints first so bends
+        // land on the true corner, then flatten near-axis segments before inserting bends.
+        const clean = [pts[0]]
+        for (let i = 1; i < pts.length - 1; i++) {
+          const p = clean[clean.length - 1], q = pts[i]
+          if (Math.hypot(q.x - p.x, q.y - p.y) >= 12) clean.push(q)
+        }
+        clean.push(pts[pts.length - 1])
+
+        const NEAR = 6
+        const out = [clean[0]]
+        for (let i = 1; i < clean.length; i++) {
+          const p = out[out.length - 1], q = { x: clean[i].x, y: clean[i].y }
+          const dx = q.x - p.x, dy = q.y - p.y
+          const last = i === clean.length - 1
+          if (Math.abs(dx) <= NEAR && Math.abs(dy) <= NEAR && !last) continue
+          if (Math.abs(dx) <= NEAR) {
+            if (!last) q.x = p.x
+            else if (Math.abs(dx) > 0.5) out.push({ x: q.x, y: p.y })
+          } else if (Math.abs(dy) <= NEAR) {
+            if (!last) q.y = p.y
+            else if (Math.abs(dy) > 0.5) out.push({ x: p.x, y: q.y })
+          } else {
+            let firstAxis
+            if (i === 1 && pts[0].axis) firstAxis = pts[0].axis
+            else if (last) firstAxis = Math.abs(dy) >= Math.abs(dx) ? 'h' : 'v'
+            else firstAxis = Math.abs(dx) >= Math.abs(dy) ? 'h' : 'v'
+            out.push(firstAxis === 'v' ? { x: p.x, y: q.y } : { x: q.x, y: p.y })
+          }
+          out.push(q)
+        }
+        path.setAttribute('d', 'M' + out.map(p => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join('L'))
+        path.dataset.ortho = '1'
+      })
+    })
+  }
+
+  // Edges sharing a common ingress or egress point form a visual group (they overlap
+  // into one trunk/bus after the rebuild); tint each group's lines, arrowheads, and
+  // label backgrounds with one hue so a label reads as belonging to its line.
+  // Ordered for max hue separation between consecutive groups — green/teal or
+  // indigo/purple side by side read as the same line at thin stroke widths.
+  const GROUP_COLORS = [
+    ['#2e7d32', '#e8f5e9'], ['#3949ab', '#e8eaf6'], ['#ef6c00', '#fff3e0'],
+    ['#ad1457', '#fce4ec'], ['#00838f', '#e0f7fa'], ['#5e35b1', '#ede7f6']
+  ]
+  const colorizeEdgeGroups = () => {
+    document.querySelectorAll('.mermaid svg').forEach(svg => {
+      const labels = [...svg.querySelectorAll('.edgeLabels g.edgeLabel')]
+      const recs = [...svg.querySelectorAll('.edgePaths path, path.flowchart-link')].map((path, i) => {
+        const pts = parsePath(path.getAttribute('d') || '')
+        const ctm = path.getCTM()
+        if (!pts || !ctm) return null
+        return {
+          path, label: labels[i],
+          S: new DOMPoint(pts[0].x, pts[0].y).matrixTransform(ctm),
+          E: new DOMPoint(pts[pts.length - 1].x, pts[pts.length - 1].y).matrixTransform(ctm)
+        }
+      }).filter(Boolean)
+      const clusters = []
+      const put = (rec, p, kind) => {
+        // 25px tolerance: arrows hit a node border at slightly different points.
+        let c = clusters.find(c => c.kind === kind && Math.hypot(c.x - p.x, c.y - p.y) <= 25)
+        if (!c) { c = { kind, x: p.x, y: p.y, members: [] }; clusters.push(c) }
+        c.members.push(rec)
+      }
+      recs.forEach(r => { put(r, r.S, 'egress'); put(r, r.E, 'ingress') })
+      let ci = 0
+      const done = new Set()
+      clusters.filter(c => c.members.length >= 2)
+        .sort((a, b) => b.members.length - a.members.length)   // larger clusters claim edges first
+        .forEach(c => {
+          const fresh = c.members.filter(r => !done.has(r))
+          if (fresh.length < 2) return
+          const [stroke, bg] = GROUP_COLORS[ci++ % GROUP_COLORS.length]
+          fresh.forEach(r => {
+            done.add(r)
+            r.path.style.stroke = stroke
+            // Arrowheads use a shared marker def; clone it per color or every arrow
+            // in the svg changes hue together.
+            const mref = (r.path.getAttribute('marker-end') || '').match(/url\(['"]?#([^'")]+)/)
+            if (mref) {
+              const mid = mref[1] + '-' + stroke.slice(1)
+              let cl = svg.querySelector('#' + CSS.escape(mid)) || document.getElementById(mid)
+              if (!cl) {
+                const orig = svg.querySelector('#' + CSS.escape(mref[1])) || document.getElementById(mref[1])
+                if (orig) {
+                  cl = orig.cloneNode(true)
+                  cl.id = mid
+                  cl.querySelectorAll('*').forEach(e => { e.style.fill = stroke; e.style.stroke = stroke })
+                  orig.parentNode.appendChild(cl)
+                }
+              }
+              if (cl) r.path.setAttribute('marker-end', `url(#${mid})`)
+            }
+            if (r.label) {
+              r.label.querySelectorAll('rect').forEach(e => { e.style.fill = bg })
+              r.label.querySelectorAll('span, div, p').forEach(e => { e.style.background = bg })
+            }
+          })
+        })
+    })
+  }
+
+  const passes = () => { colorizeDelta(); squashDiamonds(); orthogonalizeEdges(); colorizeEdgeGroups() }
+
   const renderAll = async () => {
     // Tag data-kind BEFORE mermaid.run() wipes textContent — the colorizer depends on it.
     document.querySelectorAll('.mermaid').forEach(m => {
       const src = (m.textContent || '').trim()
       m.dataset.kind = /^classDiagram\b/.test(src) ? 'class' : 'flowchart'
     })
-    try { await mermaid.run({ querySelector: '.mermaid' }) } catch (e) { console.error(e) }
-    colorizeDelta(); squashDiamonds()
-    setTimeout(() => { colorizeDelta(); squashDiamonds() }, 400)
-    setTimeout(() => { colorizeDelta(); squashDiamonds() }, 1200)
+    // Sequential render with a tick between blocks: mermaid ids derive from Date.now(),
+    // and two diagrams rendered in the same millisecond collide — the second one's ELK
+    // layout then writes into the first svg (duplicate-id querySelector hit).
+    for (const el of document.querySelectorAll('.mermaid')) {
+      try { await mermaid.run({ nodes: [el] }) } catch (e) { console.error(e) }
+      await new Promise(r => setTimeout(r, 10))
+    }
+    passes()
+    setTimeout(passes, 400)
+    setTimeout(passes, 1200)
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', renderAll)
   else renderAll()
 
-  new MutationObserver(() => { colorizeDelta(); squashDiamonds() }).observe(document.body, { childList: true, subtree: true })
+  // Observer runs only the idempotent passes: colorizeEdgeGroups() appends marker clones
+  // (a childList mutation), so putting it here would re-fire the observer on its own work.
+  new MutationObserver(() => { colorizeDelta(); squashDiamonds(); orthogonalizeEdges() }).observe(document.body, { childList: true, subtree: true })
 </script>
 </body>
 </html>
