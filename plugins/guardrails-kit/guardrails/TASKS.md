@@ -1,4 +1,5 @@
 <!-- guardrails-kit: v1.0 | Editing this file? Read ~/.claude/guardrails/_FORMAT.md first. Never paraphrase kit text. -->
+
 You are here because you are about to act on a request with ANY ambiguity in scope, target files/symbols, or acceptance criteria — before enumerating interpretations or guessing the most probable one.
 
 - TQ1. Clarify before building: two or more readings would produce materially different diffs? Do not enumerate interpretations and guess — batch the open questions via AskUserQuestion with a recommended default first, and iterate until scope, target, and acceptance criteria are concrete and shared.
@@ -10,7 +11,9 @@ You are here because you are about to act on a request with ANY ambiguity in sco
 --- reference ---
 
 ## Why this is a routing row, not a soft nudge
+
 A UserPromptSubmit hook (`~/.claude/hooks/task-framework.py`) injects this same procedure once per session, on the first prompt, then goes silent — a model can drift off it by turn 20. This routing row re-arms the procedure at the moment ambiguity is actually detected, every time, independent of session-start timing.
 
 ## The request has ambiguity but the repo already answers it
+
 Do not ask — TQ1's AskUserQuestion is for cases a single search cannot disambiguate. If a Grep/Read of code, tests, or docs resolves the reading, write `ASSUMPTION: <choice> because <evidence>` (~/.claude/guardrails/PLAN.md P7) and proceed to TQ2.

@@ -2,7 +2,7 @@
 You are here because a Tool routing row in ~/.claude/CLAUDE.md fired. These sections replace the always-loaded deleg8/browser/tokensave blocks of the old CLAUDE.md.
 
 ## §deleg8
-`deleg8` wraps `omp --mode rpc` as persistent, resumable subagents via MCP. All subagent WORK goes through deleg8; native Task/Agent is reserved for read-only exploration. Consult the advisor as a reviewer before committing to a substantive approach, when available.
+When running under Oh My Pi or using a non-Anthropic model, use native OMP subagents; otherwise route substantive subagent work through deleg8 and consult its advisor before committing to a substantive approach.
 - `mcp__deleg8__spawn` (fan out; `background: true` for long builds/tests) → review → `mcp__deleg8__send` follow-ups to the same agent (it keeps context) → `mcp__deleg8__output` with `digest`/`summary`/`raw`.
 - Wave orchestration: agent A analyzes → read it → agent B implements from it.
 - Always pass a descriptive `agent_id` (`compiler`, `security-auditor`, `ui-builder`) — never an unnamed, role-less agent.
