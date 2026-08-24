@@ -1,7 +1,4 @@
 #!/usr/bin/env bash
-# SessionStart (startup|resume|compact): emit the full doctrine as context.
-# Reads doctrine.md so edits to the source of truth propagate; falls back to a
-# minimal rule if the file is missing so activation never silently no-ops.
 set -u
 doc=""
 for candidate in \
@@ -12,6 +9,6 @@ done
 if [ -n "$doc" ]; then
   printf '%s' "$doc"
 else
-  printf 'COMMENT BUDGET ACTIVE. Comments say only why / watch-out / pointer / contract / marker / units — never what, never history ("Added/Fixed/V2/see STATE"). At most ~1 comment line per 10 code lines, one line each.'
+  printf 'COMMENT BUDGET ACTIVE. Before typing any comment, default DELETE. Keep only non-obvious WHY; WATCH-OUT; POINTER for a removal condition, unavoidable vendor constraint, or external contract; public CONTRACT; TODO/FIXME/HACK with owner+problem+action and a ticket identifying the removal condition; or units/magic constant/empty catch. One line by default; scope to changed constructs.'
 fi
 exit 0

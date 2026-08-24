@@ -1,8 +1,13 @@
 {
+  "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
   "name": "comment-budget",
-  "description": "Pre-generation comment suppression: doctrine injected at session start and after compaction, a two-line per-turn reminder, and a deterministic PreToolUse gate that rejects changelog/banner comments before they reach disk.",
-  "version": "0.1.0",
+  "version": "0.2.0",
+  "description": "Pre-generation comment reminder with deterministic pre-write enforcement",
   "author": {
-    "name": "Emma Hyde"
-  }
+    "name": "Emma Hyde",
+    "email": "emmajhyde@gmail.com"
+  },
+  "skills": [
+    "./"
+  ]
 }
