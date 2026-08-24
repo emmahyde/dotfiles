@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Doc title — one-line subject</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --panel: #ffffff; --line: #e2e5e9;
+    --ink: #1f2328; --dim: #6a737d; --accent: #2e7d32;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, ui-sans-serif, sans-serif; font-size: 14px; line-height: 1.45; }
+  header { padding: 18px 24px 0; border-bottom: 1px solid var(--line); background: var(--panel); }
+  h1 { margin: 0 0 4px; font-size: 18px; font-weight: 600; }
+  .sub { color: var(--dim); font-size: 12px; margin-bottom: 14px; }
+  main { padding: 24px; max-width: 1500px; margin: 0 auto; }
+  section { background: var(--panel); border: 1px solid var(--line); border-radius: 6px;
+    margin-bottom: 22px; padding: 16px 20px 20px; box-shadow: 0 1px 2px rgba(16,22,26,.04); }
+  section h2 { margin: 0 0 4px; font-size: 15px; font-weight: 600; color: var(--accent); }
+  section p.lede { margin: 0 0 14px; color: var(--dim); font-size: 12.5px; }
+  .mermaid { background: #ffffff; border: 1px solid var(--line); border-radius: 4px;
+    padding: 14px; overflow-x: auto; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 10px; padding: 8px 12px;
+    background: #f0f2f4; border: 1px solid var(--line); border-radius: 4px;
+    margin-bottom: 12px; font-size: 11.5px; }
+  .legend .chip { display: inline-flex; align-items: center; padding: 2px 8px;
+    border-radius: 10px; border: 1px solid; font-family: ui-monospace, monospace; font-weight: 500; }
+  /* Swap these hues per-project; keep the background/border/color triplet shape. */
+  .chip.l-new    { background: #e8f5e9; border-color: #2e7d32; color: #1b5e20; }
+  .chip.l-plan   { background: #e8eaf6; border-color: #3949ab; color: #1a237e; border-style: dashed; }
+  .chip.l-core   { background: #e3f2fd; border-color: #1565c0; color: #0d3b66; }
+  .chip.l-second { background: #e0f2f1; border-color: #00897b; color: #004d40; }
+  .chip.l-edge   { background: #fff3e0; border-color: #ef6c00; color: #e65100; }
+  .chip.l-runtime{ background: #ede7f6; border-color: #5e35b1; color: #311b92; }
+  .chip.l-poly   { background: #fff; border-color: #90a4ae; color: #546e7a; }
+
+  /* The two typographic registers (rule 12). Bold mono is a symbol that exists in the
+     repo; gray italic is authored prose, and it is the SAME gray on every node so the
+     reader can separate the map from the narration at a glance. */
+  .mermaid .sym  { display: block; font-family: ui-monospace, Menlo, monospace;
+    font-weight: 700; font-size: 12px; letter-spacing: -.01em; }
+  .mermaid .qual { font-weight: 400; opacity: .62; }
+  .mermaid .nar  { display: block; margin-top: 2px; color: #6b7780;
+    font-family: -apple-system, ui-sans-serif, sans-serif; font-style: italic;
+    font-size: 10.5px; font-weight: 400; letter-spacing: 0; }
+  .mermaid .nar-only { display: block; color: #607d8b;
+    font-family: -apple-system, ui-sans-serif, sans-serif; font-style: italic;
+    font-size: 11px; font-weight: 400; }
+
+  .notes { font-size: 12.5px; color: #37414a; }
+  .notes li { margin: 3px 0; }
+  .notes code { background: #f0f2f4; border: 1px solid var(--line); border-radius: 3px;
+    padding: 0 4px; font-family: ui-monospace, monospace; color: #0d3b66; }
+  .tag-new { color: var(--accent); font-weight: 700; }
+  .tag-plan { color: #3949ab; font-weight: 700; }
+
+  .sec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+  .export-svg { border: 1px solid var(--line); background: #f9fafb; color: var(--dim);
+    font-size: 11px; font-family: ui-monospace, monospace; border-radius: 4px;
+    padding: 3px 8px; cursor: pointer; white-space: nowrap; }
+  .export-svg:hover { background: #eef1f4; color: var(--ink); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Doc title &mdash; one-line subject</h1>
+  <div class="sub">flowchart + classDiagram &middot; <span class="tag-plan">dashed indigo</span> = upstream/planned &middot; <span class="tag-new">green</span> = new &middot; solid hues = existing today</div>
+</header>
+
+<main>
+  <!-- Section 1: an overarching flowchart. Keep to shapes: [rect]=process, (stadium)=decisive event,
+       [(cylinder)]=data store, subgraph=swimlane. classDef+:::tag for flowchart coloring. -->
+  <section>
+    <div class="sec-head">
+      <h2>Pipeline &mdash; one sentence describing the flow</h2>
+      <button class="export-svg" data-export-name="pipeline">Export SVG</button>
+    </div>
+    <p class="lede">One or two sentences of plain-language context: who calls what, what triggers the flow, what the terminal state is. Decisions are <code>{ }</code> diamonds, flattened short-and-wide by <code>squashDiamonds()</code> after render.</p>
+<div class="mermaid">
+flowchart TB
+  subgraph UP["Upstream side — not in this repo"]
+    direction TB
+    A[Input]:::pl
+    B{"Approved?"}:::plev
+    A --> B
+  end
+  B -->|approved| C
+  subgraph EXEC["Execution side — in repo"]
+    direction TB
+    C[Entry point]:::svc
+    C --> D[(Store)]:::ledger
+    D --> E(["Terminal event"]):::event
+  end
+
+  classDef pl fill:#e8eaf6,stroke:#3949ab,color:#1a237e,stroke-dasharray:5 3;
+  classDef plev fill:#e8eaf6,stroke:#3949ab,color:#1a237e,stroke-dasharray:5 3;
+    /* Decision style */
+    .decision { fill: #f7fbff; stroke: #1565c0; stroke-width: 1.6px; }
+
+    graph TD
+    A[Input] --> B[Processing]
+    B --> C[Decision]:::decision
+    C -->|Yes| D[Done]
+    C -->|No| E[Retry]
+</div>
+  </section>
+
+  <!-- Section 2: an ERD via classDiagram, grouped with namespace. Coloring is the post-render
+       substring pass below — do NOT add :::tag to these class blocks. -->
+  <section>
+    <div class="sec-head">
+      <h2>Data model &mdash; grouped by concern</h2>
+      <button class="export-svg" data-export-name="data-model">Export SVG</button>
+    </div>
+    <div class="legend">
+      <span class="chip l-plan">upstream (design, not in repo)</span>
+      <span class="chip l-new">new</span>
+      <span class="chip l-core">core entity</span>
+      <span class="chip l-second">secondary entity</span>
+      <span class="chip l-edge">edge / dependency</span>
+      <span class="chip l-runtime">runtime actor</span>
+      <span class="chip l-poly">polymorphic / hand-off edge (dashed)</span>
+    </div>
+    <p class="lede">Group tables by concern with mermaid `namespace` blocks; stereotype each class with its real table/entity name so the post-render colorizer can match on it.</p>
+<div class="mermaid">
+classDiagram
+  direction TB
+
+  namespace Upstream {
+    class InputEntity {
+      &lt;&lt;upstream_input_entities&gt;&gt;
+      uuid id PK
+      string state
+    }
+  }
+
+  namespace Core {
+    class CoreEntity {
+      &lt;&lt;core_entities&gt;&gt;
+      uuid id PK
+      uuid owner_id FK
+      string state
+    }
+    class SecondaryEntity {
+      &lt;&lt;secondary_entities&gt;&gt;
+      uuid id PK
+      uuid core_entity_id FK
+    }
+  }
+
+  InputEntity ..> CoreEntity : hand-off
+  CoreEntity "1" --> "*" SecondaryEntity : owns
+</div>
+  </section>
+
+  <section>
+    <h2>Notes</h2>
+    <ul class="notes">
+      <li><span class="tag-plan">Upstream</span> entities are design, not yet in the repo &mdash; call out the source of truth and its date.</li>
+      <li><span class="tag-new">New</span> is reserved for schema that doesn't exist on <code>main</code> yet.</li>
+      <li>State anything the diagram can't show: deliberate omissions, still-`NOT NULL` columns pending migration, target-state vs. current-state caveats.</li>
+    </ul>
+  </section>
+</main>
+
+<script type="module">
+      'elk.padding': '[top=34,left=14,bottom=14,right=14]',
+      'elk.spacing.edgeNode': 16,
+      'elk.spacing.edgeEdge': 12,
+      'elk.layered.spacing.nodeNodeBetweenLayers': 55,
+      'elk.layered.spacing.nodeNode': 42
+    elk: {
+      'elk.algorithm': 'layered',
+      // Reserve the band a subgraph title needs INSIDE the lane box. Without this the
+      // title lands on the lane's first node, and the obvious repair — growing the box
+      // upward afterwards — pushes the border into the channel ELK routed edges through,
+      // which is where superimposed edge-and-border strokes come from.
+      'elk.padding': '[top=34,left=14,bottom=14,right=14]',
+      'elk.direction': 'DOWN',
+      'elk.edgeRouting': 'ORTHOGONAL',
+      'elk.layered.spacing.nodeNodeBetweenLayers': 55,
+      'elk.spacing.nodeNode': 42,
+      'elk.layered.nodePlacement.strategy': 'NETWORK_SIMPLEX',
+      'elk.layered.mergeEdges': true,
+      // Without these an orthogonal route is free to run flush along a node or lane
+      // border, and two superimposed strokes read as one thick wrong line. This keeps a
+      // channel; unhugBorders() below only has to clean up what a tight layout still
+      // forces onto a border.
+      'elk.spacing.edgeNode': 16,
+      'elk.spacing.edgeEdge': 12,
+      'elk.layered.spacing.edgeNodeBetweenLayers': 16,
+      'elk.layered.spacing.edgeEdgeBetweenLayers': 12,
+      'elk.hierarchyHandling': 'INCLUDE_CHILDREN'
+    }
+  })
+
+  // ERD coloring is a post-render substring match on rendered textContent, not mermaid
+  // classDef/cssClass — namespaced classDiagram entities don't compose well with per-node
+  // :::tag assignment (one more line to maintain per table, desyncs as tables are added).
+  const PLANNING = ['upstream_input_entities']
+  const PLAN_FILL = '#e6e6f5', PLAN_STROKE = '#6c71c4', PLAN_INK = '#3a3f6b'
+  const TABLES = [
+    // [stereotypeSubstring, fill, stroke, ink]
+    ['core_entities',      '#d6e9f7', '#268bd2', '#0d3b66'],
+    ['secondary_entities', '#dcecf8', '#3f7fc9', '#123a63'],
+  ]
+  const NEW_COLS = [] // exact column names to flag as new-in-schema, painted after the table pass
+  const NEW_INK = '#1b5e20'
+
+  const paint = (g, fill, stroke, ink, dashed) => {
+    g.querySelectorAll('rect, path, polygon').forEach(s => {
+      s.style.fill = fill; s.style.stroke = stroke; s.style.strokeWidth = '1.6px'
+      if (dashed) s.style.strokeDasharray = '5 3'
+    })
+    g.querySelectorAll('text, foreignObject span, foreignObject p, foreignObject div').forEach(el => {
+      el.style.fill = ink; el.style.color = ink
+  // Simplified polish pass — geometric repair is no longer required for rect decisions.
+  const polish = (svg) => {
+    if (svg.dataset.polished) return
+    colorizeDelta(svg)
+    svg.dataset.polished = 'true'
+  }
+
+  const tick = () => {
+    document.querySelectorAll('.mermaid[data-processed="true"] svg').forEach(polish)
+  }
+
+  new MutationObserver(tick).observe(document.body, { childList: true, subtree: true })
+
+  window.exportSvg = (name) => {
+    const svg = document.querySelector(`[data-diagram="${name}"] svg`)
+    if (!svg) return
+    const blob = new Blob([new XMLSerializer().serializeToString(svg)], { type: 'image/svg+xml' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url; a.download = `${name}.svg`; a.click()
+    URL.revokeObjectURL(url)
+  }
+        if (Math.abs(p.x - cx) <= tolX) onV++
+        if (Math.abs(p.y - cy) <= tolY) onH++
+      }
+      if (onV < 2 || onH < 2) return
+      const fo = node0(poly).querySelector('foreignObject')
+      const txt = node0(poly).querySelector('text')
+      let labelH = fo ? (fo.height?.baseVal?.value || 0) : 0
+      if (!labelH && txt) { try { labelH = txt.getBBox().height } catch (e) {} }
+      const sy = (labelH && labelH <= oneLinePx) ? syFlat : syTall
+      const halfW = (maxX - minX) / 2, halfH = (maxY - minY) / 2
+      const c = toRoot(poly, cx, cy), e = toRoot(poly, cx + halfW, cy + halfH)
+      poly.dataset.box = [c.x, c.y, Math.abs(e.x - c.x), Math.abs(e.y - c.y)].join(',')
+      for (let i = 0; i < 4; i++) {
+        const p = pts.getItem(i)
+        p.x = cx + (p.x - cx) * sx
+        p.y = cy + (p.y - cy) * sy
+      }
+      poly.dataset.squashed = '1'
+    })
+  }
+  const node0 = poly => poly.closest('g.node') || poly.parentNode
+
+  // Point-to-segment distance, used both to simplify a sampled route and to test flatness.
+  const distToSeg = (p, a, b) => {
+    const dx = b.x - a.x, dy = b.y - a.y
+    const l2 = dx * dx + dy * dy
+    const t = l2 ? Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / l2)) : 0
+    return Math.hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy))
+  }
+
+  // Edges arrive as one <path>. Sampling it and re-emitting a polyline is
+  // representation-agnostic: it survives whatever curve mermaid's ELK renderer chose,
+  // which parsing the `d` string does not. Everything below works in viewport coords —
+  // node polygons, lane rects and edge paths each carry their own transform otherwise.
+  const EDGE_SEL = '.edgePaths path, path.flowchart-link, g.edgePath path'
+  const readEdge = (path, step = 3) => {
+    let len = 0
+    try { len = path.getTotalLength() } catch (e) { return null }
+    if (!len) return null
+    const n = Math.max(2, Math.ceil(len / step)), pts = []
+    for (let i = 0; i <= n; i++) {
+      const p = path.getPointAtLength((len * i) / n)
+      const r = toRoot(path, p.x, p.y)
+      pts.push({ x: r.x, y: r.y })
+    }
+    // Collapse the straight runs the sampler just over-described, keep the corners.
+    const out = [pts[0]]
+    for (let i = 1; i < pts.length - 1; i++) {
+      if (distToSeg(pts[i], out[out.length - 1], pts[i + 1]) > 0.35) out.push(pts[i])
+    }
+    out.push(pts[pts.length - 1])
+    return out
+  }
+  const writeEdge = (path, pts) => {
+    const r = v => Math.round(v * 100) / 100
+    path.setAttribute('d', pts.map((p, i) => {
+      const q = fromRoot(path, p.x, p.y)
+      return `${i ? 'L' : 'M'}${r(q.x)},${r(q.y)}`
+    }).join(''))
+  }
+
+  // Geometry pass 2 — enter a decision through one of its four points, at a right angle.
+  // mermaid's ELK renderer pushes the diamond's CENTRE onto the route and then clips the
+  // result against the outline (layout-elk render.ts, cutPathAtIntersect with isDiamond),
+  // so the last leg is a straight run from the final bend to the centre, cut part-way up
+  // whichever slanted face it happens to cross. No ELK option changes that: the diagonal
+  // is produced after layout. So discard that leg and rebuild it — keep the route up to
+  // the last point outside the diamond's box, then turn once and arrive on-axis at the
+  // nearest apex. Two arrows meeting at one apex is the accepted cost; a diagonal stub
+  // into the middle of a face next to five orthogonal edges is not.
+  const snapDiamondEdges = (svg, slack = 8) => {
+    const boxes = []
+    svg.querySelectorAll('g.node polygon[data-box]').forEach(poly => {
+      const [cx, cy, hw, hh] = poly.dataset.box.split(',').map(Number)
+      const pts = poly.points, v = []
+      for (let i = 0; i < pts.numberOfItems; i++) {
+        const p = pts.getItem(i), r = toRoot(poly, p.x, p.y)
+        v.push({ x: r.x, y: r.y })
+      }
+      boxes.push({ cx, cy, hw, hh, v })
+    })
+    if (!boxes.length) return
+    const inBox = (b, p) => Math.abs(p.x - b.cx) <= b.hw + slack && Math.abs(p.y - b.cy) <= b.hh + slack
+    // The apex on the side the route approaches from — normalised by aspect, or a
+    // wide-flat diamond sends an approach from above to a side point.
+    const apex = (b, from) => {
+      const vertical = Math.abs(from.y - b.cy) / b.hh >= Math.abs(from.x - b.cx) / b.hw
+      const key = vertical
+        ? (from.y > b.cy ? p => p.y : p => -p.y)
+        : (from.x > b.cx ? p => p.x : p => -p.x)
+      return b.v.reduce((best, p) => (key(p) > key(best) ? p : best), b.v[0])
+    }
+    const snapTail = (pts, b) => {
+      let k = pts.length - 1
+      while (k > 0 && inBox(b, pts[k])) k--
+      const from = pts[k]
+      if (inBox(b, from)) return null
+      const v = apex(b, from)
+      const vertical = Math.abs(v.y - b.cy) > Math.abs(v.x - b.cx)
+      const offAxis = vertical ? Math.abs(from.x - v.x) : Math.abs(from.y - v.y)
+      const knee = vertical ? { x: v.x, y: from.y } : { x: from.x, y: v.y }
+      return pts.slice(0, k + 1).concat(offAxis < 1 ? [v] : [knee, v])
+    }
+    new Set(svg.querySelectorAll(EDGE_SEL)).forEach(path => {
+      let pts = readEdge(path)
+      if (!pts || pts.length < 2) return
+      let changed = false
+      let b = boxes.find(x => inBox(x, pts[pts.length - 1]))
+      if (b) { const r = snapTail(pts, b); if (r) { pts = r; changed = true } }
+      b = boxes.find(x => inBox(x, pts[0]))
+      if (b) { const r = snapTail(pts.slice().reverse(), b); if (r) { pts = r.reverse(); changed = true } }
+      if (changed) writeEdge(path, pts)
+    })
+  }
+
+  // Geometry pass 3 — take edges off shape borders. Even with a spacing channel ELK will
+  // route flush against a node or lane box when the layout is tight, and two superimposed
+  // 1.6px strokes read as one thick wrong line rather than as an edge beside a box. Offset
+  // the run to whichever side the rest of its own route lives on, so an edge routed inside
+  // a lane is not shoved out through that lane's border.
+  const unhugBorders = (svg, near = 3, minRun = 16, push = 8) => {
+    const rects = []
+    svg.querySelectorAll('g.node rect, g.cluster rect, g.subgraph rect').forEach(el => {
+      const w = el.width?.baseVal?.value || 0, h = el.height?.baseVal?.value || 0
+      if (!w || !h) return
+      const x = el.x?.baseVal?.value || 0, y = el.y?.baseVal?.value || 0
+      const a = toRoot(el, x, y), c = toRoot(el, x + w, y + h)
+      rects.push({
+        x0: Math.min(a.x, c.x), x1: Math.max(a.x, c.x),
+        y0: Math.min(a.y, c.y), y1: Math.max(a.y, c.y),
+      })
+    })
+    if (!rects.length) return
+    new Set(svg.querySelectorAll(EDGE_SEL)).forEach(path => {
+      let pts = readEdge(path)
+      if (!pts || pts.length < 3) return
+      let changed = false
+      for (let i = 0; i < pts.length - 1; i++) {
+        const a = pts[i], b = pts[i + 1]
+        const dx = Math.abs(b.x - a.x), dy = Math.abs(b.y - a.y)
+        // ELK's "orthogonal" runs drift by a pixel or so over a long span, so flatness is a
+        // question of slope, not of an exact match. A strict test misses the worst cases,
+        // which are precisely the longest runs.
+        const vert = dy > minRun && dx <= Math.max(1.5, dy * 0.04)
+        const horz = dx > minRun && dy <= Math.max(1.5, dx * 0.04)
+        if (vert === horz) continue
+        const at = vert ? (a.x + b.x) / 2 : (a.y + b.y) / 2
+        const s = vert ? Math.min(a.y, b.y) : Math.min(a.x, b.x)
+        const e = vert ? Math.max(a.y, b.y) : Math.max(a.x, b.x)
+        // Borders parallel to this run that it actually travels alongside.
+        const lines = []
+        for (const r of rects) {
+          const span = vert ? [r.y0, r.y1] : [r.x0, r.x1]
+          if (Math.min(e, span[1]) - Math.max(s, span[0]) < minRun) continue
+          lines.push(vert ? r.x0 : r.y0, vert ? r.x1 : r.y1)
+        }
+        const touched = lines.filter(q => Math.abs(at - q) <= near)
+        if (!touched.length) continue
+        // Prefer the side the rest of the route lives on, and keep stepping out until the
+        // run clears every parallel border — an 8px nudge can land on the next box in.
+        const rest = pts.filter((_, j) => j !== i && j !== i + 1)
+        const mean = rest.reduce((t, p) => t + (vert ? p.x : p.y), 0) / rest.length
+        const sign = mean < touched[0] ? -1 : 1
+        let away = 0
+        for (const k of [1, 2, 3]) {
+          for (const d of [sign * k * push, -sign * k * push]) {
+            if (lines.every(q => Math.abs(at + d - q) > near + 1)) { away = d; break }
+          }
+          if (away) break
+        }
+        if (!away) continue
+        // Absorbing the offset needs a perpendicular neighbour on each side. Interior runs
+        // already have them; a run that starts or ends the route gets one inserted, so the
+        // arrowhead stays on the node it was attached to and every segment stays on-axis.
+        const shift = p => (vert ? { x: p.x + away, y: p.y } : { x: p.x, y: p.y + away })
+        const head = i === 0 ? [a, vert ? { x: a.x + away, y: a.y } : { x: a.x, y: a.y + away }] : [shift(a)]
+        const tail = i + 1 === pts.length - 1
+          ? [vert ? { x: b.x + away, y: b.y } : { x: b.x, y: b.y + away }, b]
+          : [shift(b)]
+        pts = pts.slice(0, i).concat(head, tail, pts.slice(i + 2))
+        i += head.length + tail.length - 2
+        changed = true
+      }
+      if (changed) writeEdge(path, pts)
+    })
+  }
+
+  // One polish per diagram, once: nothing here relayouts after mermaid returns, and
+  // re-sampling every edge of every diagram on every DOM mutation is enough cost to stall
+  // a page carrying forty of them mid-render. Order matters — the squash moves shapes, so
+  // both edge passes measure the geometry a reader will actually see.
+  const polish = svg => {
+    // mermaid inserts a container before it fills it. A one-shot pass that ran on that
+    // mutation would flag an empty diagram as done and never look at it again.
+    if (svg.dataset.polished || !svg.querySelector('g.node')) return
+    svg.dataset.polished = '1'
+    if (svg.closest('.mermaid')?.dataset.kind === 'class') colorizeDelta(svg)
+    squashDiamonds(svg)
+    snapDiamondEdges(svg)
+    unhugBorders(svg)
+  }
+
+  // data-processed is mermaid's own "this element is rendered" marker.
+  const tick = () => document.querySelectorAll('.mermaid[data-processed="true"] svg').forEach(polish)
+
+  const renderAll = async () => {
+    // Tag data-kind BEFORE mermaid.run() wipes textContent — the colorizer depends on it.
+    document.querySelectorAll('.mermaid').forEach(m => {
+      const src = (m.textContent || '').trim()
+      m.dataset.kind = /^classDiagram\b/.test(src) ? 'class' : 'flowchart'
+    })
+    try { await mermaid.run({ querySelector: '.mermaid' }) } catch (e) { console.error(e) }
+    tick()
+    setTimeout(tick, 400)
+    setTimeout(tick, 1200)
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', renderAll)
+  else renderAll()
+
+  // Debounced: mermaid renders one diagram per turn, and polishing is worth doing once the
+  // batch has gone quiet rather than once per insertion.
+  let queued = null
+  new MutationObserver(() => {
+    clearTimeout(queued)
+    queued = setTimeout(tick, 150)
+  }).observe(document.body, { childList: true, subtree: true })
+
+  // SVG export. Reads the LIVE rendered <svg> at click time, after color/squash have
+  // already landed as inline attributes/styles on the DOM — so the clone needs no
+  // reflow pass of its own. Two things a bare `outerHTML` grab would still miss:
+  // (1) htmlLabels:true means labels live in <foreignObject><div>...</div></foreignObject>,
+  //     which only paints outside the browser if the div's used font/color are inlined; and
+  //     (2) the SVG needs an explicit width/height (mermaid leaves it responsive via
+  //     viewBox + 100%), or opening the file standalone renders at 0x0 in most viewers.
+  const inlineForeignObjectStyles = (svgClone, svgLive) => {
+    const liveNodes = svgLive.querySelectorAll('foreignObject *')
+    const cloneNodes = svgClone.querySelectorAll('foreignObject *')
+    liveNodes.forEach((liveEl, i) => {
+      const cloneEl = cloneNodes[i]
+      if (!cloneEl) return
+      const cs = getComputedStyle(liveEl)
+      cloneEl.style.fontFamily = cs.fontFamily
+      cloneEl.style.fontSize = cs.fontSize
+      cloneEl.style.color = cloneEl.style.color || cs.color
+      cloneEl.style.whiteSpace = cs.whiteSpace
+      // The code-vs-prose registers live only in the page stylesheet; without these
+      // the exported SVG renders every label in one undifferentiated face.
+      cloneEl.style.fontWeight = cs.fontWeight
+      cloneEl.style.fontStyle = cs.fontStyle
+      cloneEl.style.display = cs.display
+      cloneEl.style.marginTop = cs.marginTop
+      cloneEl.style.letterSpacing = cs.letterSpacing
+      cloneEl.style.opacity = cs.opacity
+    })
+  }
+
+  // Mermaid emits generic def IDs (marker-end, clip paths, gradients). GitHub's lightbox
+  // renders attachments inline in the page DOM, so two SVGs sharing an ID make url(#id)
+  // resolve to whichever the browser hit first — the artwork clips to a foreign path and
+  // renders as a black slab. Namespacing every ID to the file removes the collision.
+  const prefixSvgIds = (svg, prefix) => {
+    const remap = new Map()
+    const owners = [...svg.querySelectorAll('[id]')]
+    if (svg.id) owners.unshift(svg)   // querySelectorAll skips the root it is called on
+    owners.forEach(el => {
+      const next = `${prefix}-${el.id}`
+      remap.set(el.id, next)
+      el.id = next
+    })
+    if (!remap.size) return
+    const rewrite = value => {
+      let out = value
+      remap.forEach((next, old) => {
+        out = out.split(`url(#${old})`).join(`url(#${next})`)
+        if (out === `#${old}`) out = `#${next}`
+      })
+      return out
+    }
+    svg.querySelectorAll('*').forEach(el => {
+      for (const attr of Array.from(el.attributes)) {
+        if (attr.name === 'id') continue
+        const next = rewrite(attr.value)
+        if (next !== attr.value) el.setAttribute(attr.name, next)
+      }
+    })
+    // Mermaid scopes its whole stylesheet under the root id (#mermaid-123 .flowchart-link
+    // { fill: none }). Rename the root without this and every edge path loses fill:none
+    // and paints as a solid black slab. Longest id first so no id is a prefix of another.
+    const ids = [...remap.keys()].sort((a, b) => b.length - a.length)
+    svg.querySelectorAll('style').forEach(styleEl => {
+      let css = styleEl.textContent
+      ids.forEach(old => { css = css.split(`#${old}`).join(`#${remap.get(old)}`) })
+      styleEl.textContent = css
+    })
+  }
+
+  // Returns the XML rather than downloading it, so the headless driver in
+  // scripts/render-diagrams.mjs can call the exact same code path the button uses.
+  window.exportSvg = (mermaidDiv, name) => {
+    const svgLive = mermaidDiv.querySelector('svg')
+    if (!svgLive) { console.warn('export-svg: no rendered <svg> yet for', name); return null }
+    const svgClone = svgLive.cloneNode(true)
+    inlineForeignObjectStyles(svgClone, svgLive)
+    prefixSvgIds(svgClone, name || 'diagram')
+
+    const bbox = svgLive.getBBox()
+    const pad = 12
+    svgClone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
+    svgClone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink')
+    svgClone.setAttribute('viewBox', `${bbox.x - pad} ${bbox.y - pad} ${bbox.width + pad * 2} ${bbox.height + pad * 2}`)
+    svgClone.setAttribute('width', String(Math.ceil(bbox.width + pad * 2)))
+    svgClone.setAttribute('height', String(Math.ceil(bbox.height + pad * 2)))
+    if (!svgClone.style.background) svgClone.style.background = '#ffffff'
+
+    const xml = new XMLSerializer().serializeToString(svgClone)
+    return '<?xml version="1.0" encoding="UTF-8"?>\n' + xml
+  }
+
+  document.querySelectorAll('.export-svg').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mermaidDiv = btn.closest('section').querySelector('.mermaid')
+      const xml = window.exportSvg(mermaidDiv, btn.dataset.exportName)
+      if (!xml) return
+      const blob = new Blob([xml], { type: 'image/svg+xml' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${btn.dataset.exportName || 'diagram'}.svg`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(url)
+    })
+  })
+</script>
+</body>
+</html>
