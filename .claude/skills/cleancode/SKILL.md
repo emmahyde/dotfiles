@@ -129,4 +129,4 @@ When you ask about a topic not covered in Core Frameworks below, I read the rele
 
 ## Scope & Limits
 
-This skill covers the book's content (Java-flavored examples; principles are language-agnostic). It is a knowledge base, not a linter — for mechanical enforcement combine with project tools (formatters, static analysis, coverage). For construction practice beyond this book, see the companion `mcconnell-construction` skill (Code Complete). For topics outside the book, ask the agent directly.
+This skill covers the book's content (Java-flavored examples; principles are language-agnostic). It is a knowledge base, not a linter — for mechanical enforcement combine with project tools (formatters, static analysis, coverage). For construction practice beyond this book, see the companion `decomplexify` skill (Code Complete). For topics outside the book, ask the agent directly.

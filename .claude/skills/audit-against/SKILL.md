@@ -1,6 +1,6 @@
 ---
 name: audit-against
-description: "Grade a piece of work against the rubric of a book-to-skill knowledge skill (e.g. /metzify, /mcconnell-construction) using a parallel mixture-of-experts council. Use when the user runs `/audit-against <knowledge-skill> [target]`, or asks to 'audit this against <skill>', 'grade my approach against <book skill>', 'how does this hold up against Metz/McConnell', or 'run the council on this against <skill>'. Selects the glossary/pattern/chapter criteria relevant to the target, fans out one expert per criterion, adversarially verifies each weakness, and returns a graded scorecard plus severity-ranked weaknesses. Distinct from /audit (generic PASS/FAIL against ad-hoc criteria): this derives its rubric from a book-to-skill output's actual frameworks."
+description: "Grade a piece of work against the rubric of a book-to-skill knowledge skill (e.g. /metzify, /decomplexify) using a parallel mixture-of-experts council. Use when the user runs `/audit-against <knowledge-skill> [target]`, or asks to 'audit this against <skill>', 'grade my approach against <book skill>', 'how does this hold up against Metz/McConnell', or 'run the council on this against <skill>'. Selects the glossary/pattern/chapter criteria relevant to the target, fans out one expert per criterion, adversarially verifies each weakness, and returns a graded scorecard plus severity-ranked weaknesses. Distinct from /audit (generic PASS/FAIL against ad-hoc criteria): this derives its rubric from a book-to-skill output's actual frameworks."
 allowed-tools:
   - Read
   - Grep
@@ -16,7 +16,7 @@ Grade a target against the frameworks of a book-to-skill knowledge skill, using 
 
 Invocation: `/audit-against <knowledge-skill> [target]`
 
-- Arg 1 — the knowledge skill slug (e.g. `metzify`, `/metzify`, `mcconnell-construction`). Required.
+- Arg 1 — the knowledge skill slug (e.g. `metzify`, `/metzify`, `decomplexify`). Required.
 - Arg 2 — the target (optional; defaults to the working-tree diff).
 
 ## Step 1 — Resolve the knowledge skill
