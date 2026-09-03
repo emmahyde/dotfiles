@@ -1,0 +1,50 @@
+{
+  "skill_name": "stacked-prs",
+  "evals": [
+    {
+      "id": 0,
+      "name": "silent-failure-after-sync",
+      "prompt": "I ran `gh stack sync` on my stack about ten minutes ago. It printed a bunch of stuff and the command came back fine \u2014 echo $? gave me 0 \u2014 but the PRs on GitHub still show the old diffs and the second one still says it's out of date. I've run it twice now, same thing. What's actually going on and what should I run? I work out of git worktrees if that matters.",
+      "expected_output": "Identifies that gh stack sync exits 0 even when it fails, so the zero exit is not evidence of success. Tells the user to read stdout for the \u2717 line. Connects the worktree detail to the real cause: a stack branch checked out in a second worktree makes sync fail, and stack metadata is per-worktree. Gives a concrete probe-act-reprobe sequence rather than a command to re-run blindly.",
+      "files": [],
+      "assertions": [
+        "States that the stack sync command can exit 0 while failing, so exit 0 is not proof of success",
+        "Tells the user to read the command's stdout for the error line rather than trusting the exit code",
+        "Identifies a stack branch checked out in another worktree as a cause of the failure",
+        "Mentions that stack metadata is stored per worktree, not shared across worktrees",
+        "Prescribes verifying by re-checking stack state, not by re-running the same command",
+        "Does not claim the sync succeeded or that GitHub is merely lagging"
+      ]
+    },
+    {
+      "id": 1,
+      "name": "split-oversized-branch",
+      "prompt": "My branch has a migration, two new models, a service object, a controller + routes, and a chunk of React on top of it \u2014 about 1400 lines across 38 files. My reviewer told me flat out he isn't reviewing this as one PR. Repo is squash-merge only, trunk is main. How do I break this into a stack, and what commands do I actually run to set it up?",
+      "expected_output": "Proposes layers ordered by dependency (migration, models, service, controller/routes, frontend, then the entry point or flag flip) with the reasoning that each layer must be independently reviewable and leave the build green. Gives the boundary test for whether a split is in the right place. Uses gh stack init and/or gh stack add with real flags. Notes the squash-merge implication for landing.",
+      "files": [],
+      "assertions": [
+        "Orders layers by dependency with the migration or schema at the bottom",
+        "Places the frontend/React layer above the backend layers",
+        "States the criterion that each layer must be independently reviewable and leave the build green",
+        "Gives a concrete test for whether a layer boundary is in the right place",
+        "Provides runnable stack setup commands with correct flags",
+        "Addresses the squash-merge-only constraint in the landing advice"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "mid-stack-merged-broken-children",
+      "prompt": "Bottom PR of my 3-PR stack got squash-merged this morning while I was asleep. Now PR #2 shows the bottom PR's changes as if I wrote them in #2, and #3 looks even worse. Did I lose work? What do I run to fix it, and do I need to tell my reviewers anything?",
+      "expected_output": "Explains the mechanism: the squash commit exists in no child's history, so children carry the parent diff until they restack. Confirms no work is lost. Prescribes probing state first, then gh stack sync --prune. Explicitly says restacking notifies nobody, so the reviewers of the upper layers must be told their diffs moved.",
+      "files": [],
+      "assertions": [
+        "Explains that the squash commit exists in no child's history, which is why children show the parent diff",
+        "Confirms explicitly that no work has been lost",
+        "Prescribes the stack sync repair path with prune, rather than manual per-branch rebases onto trunk",
+        "States that restacking sends no notification, so upper-layer reviewers must be told their diffs moved",
+        "Checks or probes stack state before prescribing a mutating command",
+        "Does not recommend hand-rebasing each child onto main individually"
+      ]
+    }
+  ]
+}
