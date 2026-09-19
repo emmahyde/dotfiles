@@ -216,6 +216,15 @@ two stories and wants to be split rather than extended.
 in this system, and is the only place all four channels appear in one doc: status ladder, stacking
 decision as a gate row, lane diagram, notes list.
 
+`references/worked-example-timeline.md` renders a quantity-over-time trace (a game's line-tension
+fight) with threshold crossings, aligned input/timer band rows, and a gate row for the outcome —
+the shape to copy when the story is a value moving against limits rather than steps in a flow.
+
+`references/worked-example-render.md` renders a render-pipeline guide (Project Zomboid's
+isometric frame) with spatial pictures on the tile grid, nested depth-axis spans, a bar chart,
+tilesheet strips, and a two-lane Java/Lua timeline — the shape to copy when the story is where
+things sit, what occludes what, and in what order they paint.
+
 `references/glyphs.md` is the character inventory per tier, with the width class of every character
 and the Tier A degradation of every Tier B form.
 
