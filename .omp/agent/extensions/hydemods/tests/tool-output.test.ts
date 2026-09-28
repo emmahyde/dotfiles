@@ -81,3 +81,9 @@ test("file excerpt fields that are not JSON objects stay verbatim", () => {
 test("an OSC sequence followed by ESC is stripped", () => {
 	expect(sanitizeTerminalText("\x1b]52;c;ZXZpbA==\x1b[0m done")).toBe("\x1b[0m done");
 });
+
+test("nested JSON decode unpacks fenced markdown json code blocks", () => {
+	const fenced = "```json\n{\n  \"status\": \"ok\",\n  \"data\": [1, 2, 3]\n}\n```";
+	const decoded = decodeNestedJson(fenced);
+	expect(decoded).toEqual({ status: "ok", data: [1, 2, 3] });
+});

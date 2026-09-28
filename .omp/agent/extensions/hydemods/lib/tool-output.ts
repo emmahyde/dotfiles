@@ -78,7 +78,11 @@ export function decodeNestedJson(value: unknown, depth = 0): unknown {
 	if (typeof value === "string") {
 		// A huge string is never a readable document, and re-parsing it can only misstate it.
 		if (value.length > MAX_NESTED_JSON_STRING) return value;
-		const text = value.trim().replace(/^display\[\d+\]:\s*/, "");
+		let text = value.trim().replace(/^display\[\d+\]:\s*/, "");
+		const fencedMatch = /^```(?:json)?\s*\n([\s\S]*?)\n```$/i.exec(text);
+		if (fencedMatch && /^[\[{]/.test(fencedMatch[1].trim())) {
+			text = fencedMatch[1].trim();
+		}
 		if (text.startsWith("{") || text.startsWith("[") || text.startsWith('"') || (/^(?:-?\d|true\b|false\b|null\b)/.test(text) && /[\r\n]/.test(text))) {
 			try {
 				const parsed = parseJsonDocuments(text);

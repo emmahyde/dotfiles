@@ -25,6 +25,7 @@ import { installMcpPromptRepair } from "./lib/mcp-prompts";
 import { setHostAutoTitle, shouldGenerateTitle } from "./lib/session-title";
 import { generateSessionTitle } from "@oh-my-pi/pi-coding-agent/utils/title-generator";
 import { isSettingsInitialized, settings as hostSettings } from "@oh-my-pi/pi-coding-agent/config/settings";
+import { cfgReadToolResultPreview } from "@oh-my-pi/pi-coding-agent/tools/settings";
 import { cappedRenderPayload, decodeNestedJson, formatJsonOutput, formatFileExcerpt, isFileExcerpt, formatSearchOutput, formatCommandText, formatJsonWithFooter, markdownOutput, parseGrepOutput, parseYamlDocument, sanitizeTerminalText } from "./lib/tool-output";
 import { booleanSetting, integerSetting, readSetting, settings, watchSetting } from "./lib/settings";
 import type { Setting } from "@oh-my-pi/pi-coding-agent/config/registry";
@@ -398,6 +399,15 @@ function extractToolPayload(event: { toolName: string; result: unknown }): unkno
 				// Not JSON, fall through
 			}
 		}
+		// MCP tools often serialize structuredContent as a markdown fenced ```json block.
+		const fencedRaw = /^```(?:json)?\s*\n([\s\S]*?)\n```$/i.exec(trimmedRaw);
+		if (fencedRaw && /^[\[{]/.test(fencedRaw[1].trim())) {
+			try {
+				return JSON.parse(fencedRaw[1].trim());
+			} catch {
+				// Not JSON, fall through
+			}
+		}
 
 		if (rawText.length > 0) return rawText;
 	}
@@ -488,8 +498,20 @@ function toolResultText(content: unknown): string | undefined {
 // body (command results, artifact previews, excerpts), so those results reach the model verbatim.
 function toonForModel(text: string): string | undefined {
 	const trimmed = text.trim();
-	if (!/^(?:display\[\d+\]:\s*)?[\[{]/.test(trimmed)) return undefined;
-	const decoded = decodeNestedJson(trimmed);
+	let jsonText: string;
+	const displayMatch = /^(?:display\[\d+\]:\s*)?([\[{][\s\S]*)$/.exec(trimmed);
+	if (displayMatch) {
+		jsonText = displayMatch[1];
+	} else {
+		// MCP tools often serialize structuredContent as a markdown fenced ```json block.
+		const fenced = /^```(?:json)?\s*\n([\s\S]*?)\n```$/i.exec(trimmed);
+		if (fenced && /^[\[{]/.test(fenced[1].trim())) {
+			jsonText = fenced[1].trim();
+		} else {
+			return undefined;
+		}
+	}
+	const decoded = decodeNestedJson(jsonText);
 	if (decoded === null || typeof decoded !== "object") return undefined;
 	try {
 		const output = formatJsonOutput(decoded);
@@ -1360,14 +1382,29 @@ export default function hydemods(pi: ExtensionAPI): void {
 	const takeover: CardTakeover = { display, active: () => display.cardsOn && isTweakEnabled("integrated-tool-expansion") };
 	installNativeCardTakeover(takeover);
 	installReadGroupTakeover(takeover);
+
+	// When hydemods tool cards are active, OMP's inline read previews are redundant and
+	// clash with hydemods' read cards. Override it off while active; clear override when off.
+	const syncReadPreviewMapping = () => {
+		if (!isSettingsInitialized()) return;
+		if (takeover.active()) {
+			cfgReadToolResultPreview.override(hostSettings, false);
+		} else {
+			cfgReadToolResultPreview.clearOverride(hostSettings);
+		}
+	};
+	syncReadPreviewMapping();
+	const cardsTweak = TWEAKS.find((tweak) => tweak.name === "integrated-tool-expansion");
+	if (cardsTweak) watchSetting(cardsTweak.setting, () => syncReadPreviewMapping());
+
 	const toggleCards = (ctx: ExtensionContext) => {
 		display.cardsOn = !display.cardsOn;
+		syncReadPreviewMapping();
 		repaintToolCards(ctx);
 		if (ctx.hasUI) ctx.ui.notify(`hydemods cards ${display.cardsOn ? "on" : "off"}`, "info");
 	};
 	pi.registerShortcut("super+alt+o", { description: "Toggle hydemods tool cards", handler: toggleCards });
 	pi.registerShortcut("ctrl+alt+o", { description: "Toggle hydemods tool cards (terminals without Cmd reporting)", handler: toggleCards });
-
 	// Sessions saved before the takeover carry a hydemods card message per tool call; the native
 	// card now shows that content, so those messages render as nothing.
 	pi.registerMessageRenderer("integrated-tool-expansion", () => ({ render: () => [], invalidate() {} }));
@@ -1914,6 +1951,7 @@ export default function hydemods(pi: ExtensionAPI): void {
 						done,
 						display,
 						() => {
+							syncReadPreviewMapping();
 							syncPromptRepair();
 							refreshSessionIdentity(ctx);
 							refreshLastPromptDrawer(ctx);
