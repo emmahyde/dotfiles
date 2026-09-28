@@ -64,9 +64,9 @@ const TWEAK_DEFS: TweakDef[] = [
 	{
 		name: "tool-results-toon",
 		title: "TOON for the model",
-		description: "Hands JSON tool results to the model as TOON, a compact table-like text form.",
+		description: "Hands JSON and MCP tool results to the model as TOON, a compact table-like text form.",
 		category: "Interface",
-		render: () => "TOON (Token-Oriented Object Notation) writes uniform arrays as one header row plus one row per item, so the same data costs far fewer tokens than JSON. Automatic; you still see OMP's JSON tree.",
+		render: () => "TOON (Token-Oriented Object Notation) writes uniform arrays as one header row plus one row per item, so the same data costs far fewer tokens than JSON. Unpacks native JSON, eval outputs, and MCP fenced ```json blocks automatically; you still see OMP's JSON tree.",
 	},
 	{
 		name: "session-identity",
