@@ -813,7 +813,8 @@ function toolMessageRenderer(message: ToolMessage, options: RendererOptions, the
 	const markdown = structured.format === "markdown"
 		? new Markdown(pretty.replace(/^(\[[^\]\r\n]+#[\da-f]+\]|\[(?:Source:|Showing lines|truncated;)[^\r\n]*\])$/gim, line => theme.fg("dim", line)), 0, 0, getMarkdownTheme(), { color: text => theme.fg("text", text) })
 		: undefined;
-	const contentLines = markdown ? [] : rawLines.map(line => colorizeStructuredLine(line, structured.format, theme));
+	// A failed result keeps the standard layout; the error colour is what says it failed.
+	const contentLines = markdown ? [] : rawLines.map(line => error ? theme.fg("error", line) : colorizeStructuredLine(line, structured.format, theme));
 	const heading = `${label} · expanded ${structured.lang || structured.format} output`;
 	return {
 		render(width: number): readonly string[] {
@@ -1199,10 +1200,10 @@ function renderReadTree(rows: ReadTreeRow[], state: ReadGroupState, theme: Theme
 type CardTakeover = { active: () => boolean; display: ToolDisplayState };
 
 // The hydemods view of one settled result, or undefined when the native renderer should draw it:
-// takeover off, still streaming, an error, plain text hydemods cannot improve, or a JSON
-// document OMP already shows as a tree.
+// takeover off, still streaming, plain text hydemods cannot improve, or a JSON document OMP
+// already shows as a tree. Failures get the same card in error colour rather than a different one.
 function hydemodsResultComponent(toolName: string, result: { content: unknown; details?: unknown; isError?: boolean }, options: { expanded: boolean; isPartial: boolean }, theme: Theme, args: unknown, takeover: CardTakeover) {
-	if (!takeover.active() || options.isPartial || result.isError) return undefined;
+	if (!takeover.active() || options.isPartial) return undefined;
 	const outline = toolName === "read" ? readOutlineStructured(result, args) : toolName === "edit" ? editOutlineStructured(result) : undefined;
 	if (outline) {
 		const details: ToolCardDetails = { toolName, result: outline.text, isError: false, cwd: process.cwd() };
