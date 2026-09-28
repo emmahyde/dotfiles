@@ -1262,23 +1262,43 @@ function installNativeCardTakeover(takeover: CardTakeover): void {
 	}
 }
 
+const COLLAPSED_LINE_PRESETS = [1, 3, 5, 10];
+
+// The collapsed-lines control is a row in the panel's selection order (after the Interface
+// tweaks); it is distinguished from tweaks by identity rather than by a tweak-shaped stub.
+const COLLAPSED_LINES_ROW = Symbol("collapsed-lines");
+
 function panelComponent(theme: ThemeLike, done: (result: undefined) => void, display: ToolDisplayState, onToggle?: () => void) {
 	const groups: Record<TweakCategory, readonly Tweak[]> = {
 		Workflow: TWEAKS.filter((tweak) => tweak.category === "Workflow"),
 		Interface: TWEAKS.filter((tweak) => tweak.category === "Interface"),
 		"Quality of life": TWEAKS.filter((tweak) => tweak.category === "Quality of life"),
 	};
-	const selectable = CATEGORIES.flatMap((category) => [...groups[category]]);
+	const selectable: Array<Tweak | typeof COLLAPSED_LINES_ROW> = CATEGORIES.flatMap((category) =>
+		category === "Interface" ? [...groups[category], COLLAPSED_LINES_ROW] : [...groups[category]]);
 	const body = new Box(2, 1);
 	const content = new Text();
 	let selectedIndex = 0;
+
+	const collapsedLinesRow = (selected: boolean): string[] => {
+		const marker = selected ? theme.fg("accent", "❯") : " ";
+		const options = COLLAPSED_LINE_PRESETS.map(preset => preset === display.collapsedLines
+			? theme.fg("accent", theme.bold(`[${preset}]`))
+			: theme.fg("muted", ` ${preset} `));
+		const custom = COLLAPSED_LINE_PRESETS.includes(display.collapsedLines) ? "" : theme.fg("accent", theme.bold(`[${display.collapsedLines}]`));
+		const chooser = [...options, custom].filter(Boolean).join(theme.fg("muted", "·"));
+		return [
+			` ${marker} ${chooser}  ${theme.bold("Collapsed card lines")}`,
+			theme.fg("muted", "           Lines a collapsed tool card shows before the omission marker."),
+			"           ←/→ pick a preset; +/- step by one; also /hydemods collapsed-lines N.",
+		];
+	};
 
 	const paint = () => {
 		const lines: string[] = [
 			theme.fg("accent", theme.bold("HYDEMODS")),
 			theme.fg("muted", "A visual home for small, composable session tweaks"),
-			theme.fg("muted", `Collapsed lines: ${display.collapsedLines}; expansion uses the native manual toggle`),
-			theme.fg("muted", "Saved to settings.yaml: toggles here, or /hydemods collapsed-lines N"),
+			theme.fg("muted", "Saved to settings.yaml; expansion uses the native manual toggle"),
 			"",
 		];
 
@@ -1298,11 +1318,12 @@ function panelComponent(theme: ThemeLike, done: (result: undefined) => void, dis
 				lines.push(theme.fg("muted", `           ${tweak.description}`));
 				lines.push(`           ${tweak.render()}`);
 			}
+			if (category === "Interface") lines.push(...collapsedLinesRow(selectable[selectedIndex] === COLLAPSED_LINES_ROW));
 			lines.push("");
 		}
 
 		lines.push(theme.fg("border", "────────────────────────────────────────"));
-		lines.push(theme.fg("muted", "↑/↓ or j/k select  ·  Space/Enter toggle  ·  +/- collapsed lines  ·  Esc/q close"));
+		lines.push(theme.fg("muted", "↑/↓ or j/k select  ·  Space/Enter toggle or cycle  ·  ←/→ or +/- collapsed lines  ·  Esc/q close"));
 		content.setText(lines.join("\n"));
 		body.invalidate();
 	};
@@ -1313,19 +1334,34 @@ function panelComponent(theme: ThemeLike, done: (result: undefined) => void, dis
 		paint();
 	};
 
-	const toggleSelected = () => {
-		const tweak = selectable[selectedIndex];
-		if (!tweak) return;
-		tweak.setting.set(settings, !readSetting(tweak.setting));
+	const setCollapsedLines = (next: number) => {
+		if (next < 1 || next === display.collapsedLines) return;
+		display.collapsedLines = next;
+		collapsedLinesSetting.set(settings, next);
 		paint();
 		onToggle?.();
 	};
 
-	const adjustCollapsedLines = (delta: number) => {
-		const next = Math.max(1, display.collapsedLines + delta);
-		if (next === display.collapsedLines) return;
-		display.collapsedLines = next;
-		collapsedLinesSetting.set(settings, next);
+	// Presets in order; a custom value steps to the next preset above it (or wraps).
+	const cyclePreset = (direction: 1 | -1) => {
+		const current = COLLAPSED_LINE_PRESETS.indexOf(display.collapsedLines);
+		if (current >= 0) {
+			setCollapsedLines(COLLAPSED_LINE_PRESETS[(current + direction + COLLAPSED_LINE_PRESETS.length) % COLLAPSED_LINE_PRESETS.length]);
+			return;
+		}
+		const above = COLLAPSED_LINE_PRESETS.find(preset => preset > display.collapsedLines);
+		const below = [...COLLAPSED_LINE_PRESETS].reverse().find(preset => preset < display.collapsedLines);
+		setCollapsedLines((direction === 1 ? above ?? COLLAPSED_LINE_PRESETS[0] : below ?? COLLAPSED_LINE_PRESETS[COLLAPSED_LINE_PRESETS.length - 1]));
+	};
+
+	const toggleSelected = () => {
+		const row = selectable[selectedIndex];
+		if (row === COLLAPSED_LINES_ROW) {
+			cyclePreset(1);
+			return;
+		}
+		if (!row) return;
+		row.setting.set(settings, !readSetting(row.setting));
 		paint();
 		onToggle?.();
 	};
@@ -1353,12 +1389,20 @@ function panelComponent(theme: ThemeLike, done: (result: undefined) => void, dis
 				moveSelection(1);
 				return;
 			}
+			if (data === "\u001b[C" || data === "l" || data === "L") {
+				cyclePreset(1);
+				return;
+			}
+			if (data === "\u001b[D" || data === "h" || data === "H") {
+				cyclePreset(-1);
+				return;
+			}
 			if (data === "+" || data === "=") {
-				adjustCollapsedLines(1);
+				setCollapsedLines(display.collapsedLines + 1);
 				return;
 			}
 			if (data === "-" || data === "_") {
-				adjustCollapsedLines(-1);
+				setCollapsedLines(display.collapsedLines - 1);
 				return;
 			}
 			if (data === " " || data === "\r" || data === "\n") toggleSelected();
