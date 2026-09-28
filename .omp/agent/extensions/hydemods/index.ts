@@ -22,6 +22,9 @@ import { referenceLocations } from "./lib/reference-output";
 import { listMonitors, parseMonitorArgs, startMonitor, stopAllMonitors, stopMonitorsForOtherSessions, stopMonitor, validateMonitorSpec, MONITOR_WHEN, type MonitorDelivery, type MonitorDeps, type MonitorSpec, type MonitorWhen } from "./lib/monitor";
 // Keep helper modules below lib/: configured extension roots scan direct .ts files.
 import { installMcpPromptRepair } from "./lib/mcp-prompts";
+import { setHostAutoTitle, shouldGenerateTitle } from "./lib/session-title";
+import { generateSessionTitle } from "@oh-my-pi/pi-coding-agent/utils/title-generator";
+import { isSettingsInitialized, settings as hostSettings } from "@oh-my-pi/pi-coding-agent/config/settings";
 import { cappedRenderPayload, decodeNestedJson, formatJsonOutput, formatFileExcerpt, isFileExcerpt, formatSearchOutput, formatCommandText, formatJsonWithFooter, markdownOutput, parseGrepOutput, parseYamlDocument, sanitizeTerminalText } from "./lib/tool-output";
 import { booleanSetting, integerSetting, readSetting, settings, watchSetting } from "./lib/settings";
 import type { Setting } from "@oh-my-pi/pi-coding-agent/config/registry";
@@ -98,6 +101,13 @@ const TWEAK_DEFS: TweakDef[] = [
 		description: "Adds /retro, which sends one retrospective prompt and saves the insight to the wiki.",
 		category: "Workflow",
 		render: () => "Active: /retro asks the agent to summarise the session from what is still in context and store the durable insight with the wiki_retro tool.",
+	},
+	{
+		name: "session-title",
+		title: "Session title",
+		description: "Names the session once from the first prompt, then locks the name against OMP's re-titling.",
+		category: "Workflow",
+		render: () => "Active: OMP's own title generator is off (PI_NO_TITLE). hydemods names the session from the first real prompt with the same tiny title model and saves it as a user-chosen name, which OMP never replaces on its own — so a todo list or replan no longer renames the session mid-way. A session that already carries an OMP-chosen name is pinned the same way when opened. /rename still overrides.",
 	},
 ];
 
@@ -1476,6 +1486,46 @@ export default function hydemods(pi: ExtensionAPI): void {
 		ctx.ui.setTitle(`${sigil} [${codename}] ${sanitizeLabel(pi.getSessionName() || "Session")}`);
 	};
 
+	/* ----------------------------- Session title ---------------------------- */
+
+	// `titleSource` is on the live SessionManager but outside the read-only pick the context
+	// exposes; it is the only way to tell a host-chosen name from one the user typed.
+	const titleSourceOf = (ctx: ExtensionContext): unknown => "titleSource" in ctx.sessionManager ? ctx.sessionManager.titleSource : undefined;
+
+	// A host-chosen name is still the host's to replace. Saving it again through the extension
+	// API records it as the user's, which the host's replan re-title refuses to overwrite.
+	const pinHostTitle = async (ctx: ExtensionContext) => {
+		if (!isTweakEnabled("session-title")) return;
+		const name = pi.getSessionName();
+		if (!name || titleSourceOf(ctx) !== "auto") return;
+		await pi.setSessionName(name);
+		refreshSessionIdentity(ctx);
+	};
+
+	let titleInFlightFor: string | undefined;
+	const nameSessionFromPrompt = async (prompt: string, ctx: ExtensionContext) => {
+		if (!isTweakEnabled("session-title") || !isSettingsInitialized()) return;
+		const sessionId = ctx.sessionManager.getSessionId();
+		const decision = { prompt, sessionName: pi.getSessionName(), sessionId, inFlightFor: titleInFlightFor, isLocalCommand: prompt.startsWith("/") };
+		if (!shouldGenerateTitle(decision)) return;
+		titleInFlightFor = sessionId;
+		try {
+			const title = await generateSessionTitle(prompt, ctx.modelRegistry, hostSettings, sessionId, ctx.model);
+			// The session may have been switched or named by hand while the model was thinking.
+			if (!title || ctx.sessionManager.getSessionId() !== sessionId || pi.getSessionName()) return;
+			await pi.setSessionName(title);
+			refreshSessionIdentity(ctx);
+		} finally {
+			if (titleInFlightFor === sessionId) titleInFlightFor = undefined;
+		}
+	};
+
+	const sessionTitleTweak = TWEAKS.find((tweak) => tweak.name === "session-title");
+	if (sessionTitleTweak) {
+		setHostAutoTitle(!readSetting(sessionTitleTweak.setting));
+		watchSetting(sessionTitleTweak.setting, (enabled) => { setHostAutoTitle(!enabled); });
+	}
+
 	// One handler per session event, each running the per-feature session work in a fixed order.
 	const onSession = (_event: unknown, ctx: ExtensionContext) => {
 		restoreToolDisplay(ctx);
@@ -1485,6 +1535,7 @@ export default function hydemods(pi: ExtensionAPI): void {
 		refreshSessionIdentity(ctx);
 		// Monitors belong to the session that started them; a switch, branch, or new session stops the rest.
 		stopMonitorsForOtherSessions(ctx.sessionManager.getSessionId());
+		void pinHostTitle(ctx);
 	};
 	pi.on("session_start", onSession);
 	pi.on("session_switch", onSession);
@@ -1504,6 +1555,7 @@ export default function hydemods(pi: ExtensionAPI): void {
 		if (prompt.trim().length > 0) {
 			lastPrompt = prompt;
 			refreshLastPromptDrawer(ctx);
+			void nameSessionFromPrompt(prompt, ctx);
 		}
 	});
 
