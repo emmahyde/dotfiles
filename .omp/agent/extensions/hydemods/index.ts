@@ -707,6 +707,13 @@ const EDIT_MARKER_COLOR: Record<string, ThemeColor> = { "~": "warning", "+": "su
 function colorizeEditOutlineLine(line: string, theme: ThemeLike): string {
 	const header = /^(\S[^·]*?)( · .*)$/.exec(line);
 	if (header) return `${theme.fg("accent", header[1])}${theme.fg("dim", header[2])}`;
+	const diagnosticsHeading = /^ ! (Diagnostics.*)$/.exec(line);
+	if (diagnosticsHeading) return ` ${theme.fg("error", "!")} ${theme.fg("warning", diagnosticsHeading[1])}`;
+	const diagnostic = /^(\s{5})([✖⚠ℹ·]) (.*)$/.exec(line);
+	if (diagnostic) {
+		const color: ThemeColor = diagnostic[2] === "✖" ? "error" : diagnostic[2] === "⚠" ? "warning" : "dim";
+		return `${diagnostic[1]}${theme.fg(color, diagnostic[2])} ${theme.fg(color, diagnostic[3])}`;
+	}
 	const detail = /^(\s{3,})([+−→]) (.*)$/.exec(line);
 	if (detail) return `${detail[1]}${theme.fg(EDIT_MARKER_COLOR[detail[2]], detail[2])} ${colorizeCodeLine(detail[3], theme)}`;
 	const row = /^ ([~+− ]) (\s*)(.*?)(  \([+−][\d −+]*\))?$/.exec(line);
@@ -829,9 +836,12 @@ function toolMessageRenderer(message: ToolMessage, options: RendererOptions, the
 			}
 			const limit = display.collapsedLines;
 			// Collapsed edit cards are the declaration tree; the change lines wait for expansion.
+			// Diagnostics sit below the tree and stay visible: the heading and the first few messages.
+			const diagnosticsAt = structured.format === "edit-outline" ? rawLines.findIndex(line => /^ ! Diagnostics/.test(line)) : -1;
+			const tree = diagnosticsAt >= 0 ? renderedContent.slice(0, diagnosticsAt) : renderedContent;
 			let selected = structured.format === "edit-outline"
-				? renderedContent.filter((_, index) => !/^\s{3,}[+−→] /.test(rawLines[index]))
-				: renderedContent;
+				? tree.filter((_, index) => !/^\s{3,}[+−→] /.test(rawLines[index]))
+				: tree;
 			if (selected.length > limit) {
 				if (structured.format === "outline" || structured.format === "edit-outline") {
 					// Outline rows are a list: the last row carries no summary, so count the rest.
@@ -843,6 +853,12 @@ function toolMessageRenderer(message: ToolMessage, options: RendererOptions, the
 						? [...renderedContent.slice(0, limit - 1), omission]
 						: [...renderedContent.slice(0, limit - 2), omission, renderedContent[renderedContent.length - 1]];
 				}
+			}
+			if (diagnosticsAt >= 0) {
+				const messages = renderedContent.slice(diagnosticsAt + 1);
+				const kept = messages.slice(0, 3);
+				selected = [...selected, renderedContent[diagnosticsAt], ...kept];
+				if (messages.length > kept.length) selected.push(theme.fg("muted", `       … ${messages.length - kept.length} more`));
 			}
 			return selected.map((line, index) =>
 				paintToolBlockLine(truncateToWidth(`${index === 0 ? coloredPrefix : hangingIndent}${line}`, width), width));
@@ -921,7 +937,9 @@ function computeReadOutline(result: { content: unknown; details?: unknown }, arg
 	if (!source || /^[a-z][a-z0-9+.-]*:\/\//i.test(source)) return undefined;
 	const fsPath = source.startsWith("~/") ? resolve(homedir(), source.slice(2)) : resolve(source);
 	const label = displayPath(split.path.startsWith("~/") ? resolve(homedir(), split.path.slice(2)) : resolve(split.path));
-	const shown = text.replace(/\n$/, "").split("\n");
+	// A range ending on a blank line ends the text with "\n"; `lineNumbers` counts that row.
+	const shown = text.split("\n");
+	if (!details?.displayContent?.lineNumbers && shown[shown.length - 1] === "") shown.pop();
 	const startLine = details?.displayContent?.startLine ?? 1;
 	const whole = startLine === 1 && !details?.truncation?.truncated && (details?.totalLines === undefined || Math.abs(details.totalLines - shown.length) <= 1);
 	if (whole) {
@@ -956,25 +974,35 @@ function computeReadOutline(result: { content: unknown; details?: unknown }, arg
 	// edit right beside the range rewrites it without touching what was read.
 	const requested = numbers.map((line, index) => line !== null && line >= requestedStart && line <= requestedEnd ? index : -1).filter(index => index >= 0);
 	if (requested.length === 0) return undefined;
-	const matchesAt = (offset: number) => requested.every(index => {
-		const at = numbers[index]! + offset;
-		return at >= 1 && at <= diskLines.length && diskLines[at - 1].trimEnd() === shown[index].trimEnd();
-	});
-	// An edit elsewhere in the file leaves this block intact but moved; find where it went.
-	const anchorIndex = requested.find(index => shown[index].trim().length > 0);
-	if (anchorIndex === undefined) return undefined;
-	const anchorLine = numbers[anchorIndex]!;
-	const anchorText = shown[anchorIndex].trimEnd();
-	let offset: number | undefined;
-	if (matchesAt(0)) offset = 0;
-	else {
-		for (let line = 1; line <= diskLines.length && offset === undefined; line++) {
-			if (diskLines[line - 1].trimEnd() === anchorText && matchesAt(line - anchorLine)) offset = line - anchorLine;
-		}
+	// Each contiguous run of requested lines is located on its own: an edit between two ranges
+	// of one read moves the later range without touching the earlier one.
+	const segments: number[][] = [];
+	for (const index of requested) {
+		const current = segments[segments.length - 1];
+		if (current && numbers[index] === numbers[current[current.length - 1]]! + 1) current.push(index);
+		else segments.push([index]);
 	}
-	if (offset === undefined) return undefined;
-	const rangeStart = requestedStart + offset;
-	const endLine = requestedEnd + offset;
+	const locate = (segment: number[]): number | undefined => {
+		const matchesAt = (offset: number) => segment.every(index => {
+			const at = numbers[index]! + offset;
+			return at >= 1 && at <= diskLines.length && diskLines[at - 1].trimEnd() === shown[index].trimEnd();
+		});
+		if (matchesAt(0)) return 0;
+		const anchorIndex = segment.find(index => shown[index].trim().length > 0);
+		if (anchorIndex === undefined) return undefined;
+		const anchorLine = numbers[anchorIndex]!;
+		const anchorText = shown[anchorIndex].trimEnd();
+		for (let line = 1; line <= diskLines.length; line++) {
+			if (diskLines[line - 1].trimEnd() === anchorText && matchesAt(line - anchorLine)) return line - anchorLine;
+		}
+		return undefined;
+	};
+	const offsets = segments.map(locate);
+	if (offsets.some(offset => offset === undefined)) return undefined;
+	const first = segments[0];
+	const last = segments[segments.length - 1];
+	const rangeStart = numbers[first[0]]! + offsets[0]!;
+	const endLine = numbers[last[last.length - 1]]! + offsets[offsets.length - 1]!;
 	const outline = memoOutline(`disk:${fsPath}:${stamp}`, disk, fsPath);
 	if (!outline) return undefined;
 	const rows = renderRange(outline, diskLines, rangeStart, endLine, label);
@@ -987,8 +1015,33 @@ type EditOutlineDetails = {
 	oldText?: string;
 	newText?: string;
 	snapshotsPruned?: boolean;
-	perFileResults?: unknown[];
+	perFileResults?: Array<{ diagnostics?: DiagnosticsLike }>;
+	diagnostics?: DiagnosticsLike;
 };
+
+type DiagnosticsLike = { summary?: string; messages?: string[]; errored?: boolean };
+
+const DIAGNOSTIC_GLYPH: Record<string, string> = { error: "✖", warning: "⚠", information: "ℹ", info: "ℹ", hint: "·" };
+
+// LSP diagnostics as rows under the outline: a `!` heading with the summary, then one row per
+// message with a severity glyph. The file is dropped from messages about the edited file, since
+// the card heading already names it.
+function diagnosticsRows(diagnostics: DiagnosticsLike | undefined, path: string | undefined): string[] {
+	const messages = diagnostics?.messages ?? [];
+	if (messages.length === 0) return [];
+	const rows = [` ! Diagnostics${diagnostics?.summary ? ` (${diagnostics.summary})` : ""}`];
+	for (const message of messages) {
+		const parsed = /^(.+?):(\d+):(\d+) \[(\w+)\] (.*)$/.exec(message);
+		if (!parsed) {
+			rows.push(`     · ${message}`);
+			continue;
+		}
+		const [, file, line, column, severity, text] = parsed;
+		const own = path !== undefined && (path.endsWith(file) || file.endsWith(path));
+		rows.push(`     ${DIAGNOSTIC_GLYPH[severity.toLowerCase()] ?? "·"} ${own ? "" : `${file}:`}${line}:${column} ${text}`);
+	}
+	return rows;
+}
 
 const editOutlineMemo = new Map<string, StructuredText | undefined>();
 
@@ -999,16 +1052,19 @@ function editOutlineStructured(result: { content: unknown; details?: unknown }):
 	const details = (result.details ?? undefined) as EditOutlineDetails | undefined;
 	if (!details || typeof details.diff !== "string" || !details.diff.trim() || (details.perFileResults?.length ?? 0) > 1) return undefined;
 	const path = typeof details.path === "string" ? details.path : undefined;
+	const diagnostics = details.diagnostics ?? details.perFileResults?.[0]?.diagnostics;
+	// Diagnostics can be filled in after the edit settles, so they are part of the memo key.
+	const diagnosticsKey = Bun.hash(JSON.stringify(diagnostics?.messages ?? [])).toString();
 	let newText = details.newText;
 	let oldText = details.oldText;
 	let key: string;
 	if (typeof newText === "string") {
-		key = `${path ?? ""}:${Bun.hash(details.diff)}:${Bun.hash(newText)}`;
+		key = `${path ?? ""}:${Bun.hash(details.diff)}:${Bun.hash(newText)}:${diagnosticsKey}`;
 	} else {
 		if (!path) return undefined;
 		try {
 			const stat = statSync(path);
-			key = `${path}:${Bun.hash(details.diff)}:disk:${stat.size}:${stat.mtimeMs}`;
+			key = `${path}:${Bun.hash(details.diff)}:disk:${stat.size}:${stat.mtimeMs}:${diagnosticsKey}`;
 			if (editOutlineMemo.has(key)) return editOutlineMemo.get(key);
 			newText = readFileSync(path, "utf8");
 		} catch {
@@ -1021,7 +1077,7 @@ function editOutlineStructured(result: { content: unknown; details?: unknown }):
 	let structured: StructuredText | undefined;
 	try {
 		const rows = renderEditOutline({ oldText: oldText ?? "", newText, diff: details.diff, path }, path ? displayPath(path) : "edit", summarizeCode);
-		structured = rows ? { text: rows.join("\n"), format: "edit-outline", path } : undefined;
+		structured = rows ? { text: [...rows, ...diagnosticsRows(diagnostics, path)].join("\n"), format: "edit-outline", path } : undefined;
 	} catch {
 		structured = undefined;
 	}
@@ -1199,12 +1255,23 @@ function renderReadTree(rows: ReadTreeRow[], state: ReadGroupState, theme: Theme
 
 type CardTakeover = { active: () => boolean; display: ToolDisplayState };
 
+// LSP diagnostics ride along in edit/write details (top level, in `meta`, or per file). The
+// edit outline draws its own; any other hydemods view would drop them, so those results keep
+// the native card and its diagnostics tree.
+function carriesDiagnostics(details: unknown): boolean {
+	if (!details || typeof details !== "object") return false;
+	const record = details as { diagnostics?: unknown; meta?: { diagnostics?: unknown }; perFileResults?: unknown[] };
+	if (record.diagnostics || record.meta?.diagnostics) return true;
+	return Array.isArray(record.perFileResults) && record.perFileResults.some(carriesDiagnostics);
+}
+
 // The hydemods view of one settled result, or undefined when the native renderer should draw it:
 // takeover off, still streaming, plain text hydemods cannot improve, or a JSON document OMP
 // already shows as a tree. Failures get the same card in error colour rather than a different one.
 function hydemodsResultComponent(toolName: string, result: { content: unknown; details?: unknown; isError?: boolean }, options: { expanded: boolean; isPartial: boolean }, theme: Theme, args: unknown, takeover: CardTakeover) {
 	if (!takeover.active() || options.isPartial) return undefined;
 	const outline = toolName === "read" ? readOutlineStructured(result, args) : toolName === "edit" ? editOutlineStructured(result) : undefined;
+	if (!outline && carriesDiagnostics(result.details)) return undefined;
 	if (outline) {
 		const details: ToolCardDetails = { toolName, result: outline.text, isError: false, cwd: process.cwd() };
 		return toolMessageRenderer({ customType: "integrated-tool-expansion", content: "", details }, { expanded: options.expanded }, theme, takeover.display, outline);
