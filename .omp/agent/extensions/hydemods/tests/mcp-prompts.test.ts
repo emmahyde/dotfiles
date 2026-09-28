@@ -21,11 +21,12 @@ beforeEach(async () => {
 				case "initialize":
 					result = { protocolVersion: "2024-11-05", capabilities: { tools: {}, prompts: {} }, serverInfo: { name: "prompt-protocol-fixture", version: "1" } }; break;
 				case "tools/list": result = { tools: [] }; break;
-				case "prompts/list": result = { prompts: [{ name: "no-args" }, { name: "topic" }, { name: "empty" }] }; break;
+				case "prompts/list": result = { prompts: [{ name: "no-args" }, { name: "topic" }, { name: "empty" }, { name: "image-only" }] }; break;
 				case "prompts/get":
 					lastArguments = message.params.arguments;
 					if (!Object.hasOwn(message.params, "arguments")) result = { description: "Request.Params.Arguments is null", messages: [] };
 					else if (message.params.name === "empty") result = { description: "Response data is null", messages: [] };
+					else if (message.params.name === "image-only") result = { messages: [{ role: "user", content: { type: "image", data: "aGk=", mimeType: "image/png" } }] };
 					else result = { messages: [{ role: "user", content: { type: "text", text: message.params.name === "topic" ? `Discuss ${message.params.arguments.subject}.` : "Draw surface normals." } }] };
 					break;
 				default: return Response.json({ jsonrpc: "2.0", id: message.id, error: { code: -32601, message: "Unknown method" } });
@@ -80,4 +81,33 @@ test("a disconnected server fails explicitly", async () => {
 	release = installMcpPromptRepair(manager);
 	await manager.disconnectServer("fixture");
 	await expect(manager.executePrompt("fixture", "no-args")).rejects.toThrow("MCP server fixture is not connected");
+});
+
+test("a prompt with no text content notes the omission instead of failing", async () => {
+	release = installMcpPromptRepair(manager);
+	const result = await manager.executePrompt("fixture", "image-only");
+	expect(result?.messages.at(-1)?.content).toEqual({ type: "text", text: "[image content omitted]" });
+});
+
+test("parameterised prompts take the host path; only empty argument objects are repaired", async () => {
+	const host = manager.executePrompt.bind(manager);
+	let hostCalls = 0;
+	manager.executePrompt = async (server, name, args, options) => {
+		hostCalls++;
+		return host(server, name, args, options);
+	};
+	release = installMcpPromptRepair(manager);
+	await manager.executePrompt("fixture", "topic", { subject: "normals" });
+	expect(hostCalls).toBe(1);
+	await manager.executePrompt("fixture", "no-args");
+	expect(hostCalls).toBe(1);
+});
+
+test("release leaves a foreign patch on top of the chain in place", async () => {
+	release = installMcpPromptRepair(manager);
+	const foreign = async (): Promise<undefined> => undefined;
+	manager.executePrompt = foreign;
+	release();
+	release = undefined;
+	expect(manager.executePrompt).toBe(foreign);
 });

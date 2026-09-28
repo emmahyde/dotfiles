@@ -12,7 +12,8 @@ function settingId(name: string): string {
 
 /**
  * Registers a persisted boolean under `hydemods.<camelName>` in OMP's settings store, or reuses the
- * existing handle when the extension is loaded again in the same process.
+ * existing handle when the extension is loaded again in the same process. The value belongs to the
+ * settings store, not to a session: every session in the process reads and writes the same toggle.
  */
 export function booleanSetting(name: string, label: string, description: string, fallback = true): Setting<boolean> {
 	const id = settingId(name);

@@ -1,12 +1,10 @@
 import type { ExtensionAPI, ExtensionContext } from "@oh-my-pi/pi-coding-agent";
-import { Box, formatMetricRow, Markdown, type MetricSpec, Text, truncateToWidth, visibleWidth, wrapTextWithAnsi } from "@oh-my-pi/pi-tui";
+import { Box, Ellipsis, formatMetricRow, Markdown, type MetricSpec, Text, truncateToWidth, visibleWidth, wrapTextWithAnsi } from "@oh-my-pi/pi-tui";
 // Only host-mapped specifiers share the running instance; a deeper pi-tui path would patch a private copy.
 import { ReadToolGroupComponent } from "@oh-my-pi/pi-coding-agent/modes/components";
-import { encode as encodeToon } from "@toon-format/toon";
-import { parse as parseYaml } from "yaml";
 import { MCPManager } from "@oh-my-pi/pi-coding-agent/mcp/manager";
 import { readFileSync, statSync } from "node:fs";
-import { resolve } from "node:path";
+import { resolve, sep } from "node:path";
 import { homedir } from "node:os";
 import { summarizeCode } from "@oh-my-pi/pi-natives";
 import type { Usage } from "@oh-my-pi/pi-ai";
@@ -21,13 +19,14 @@ import type { ToolRenderer } from "@oh-my-pi/pi-tui/tools/renderer";
 import { readSourceFsPath, splitPathAndSel } from "@oh-my-pi/pi-tui/tools/read";
 import { outlineSource, recoverOldText, renderEditOutline, renderOutline, renderRange, type Outline } from "./lib/code-outline";
 import { referenceLocations } from "./lib/reference-output";
+import { listMonitors, parseMonitorArgs, startMonitor, stopAllMonitors, stopMonitorsForOtherSessions, stopMonitor, validateMonitorSpec, MONITOR_WHEN, type MonitorDelivery, type MonitorDeps, type MonitorSpec, type MonitorWhen } from "./lib/monitor";
 // Keep helper modules below lib/: configured extension roots scan direct .ts files.
 import { installMcpPromptRepair } from "./lib/mcp-prompts";
-import { decodeNestedJson, formatJsonOutput, formatFileExcerpt, isFileExcerpt, formatSearchOutput, formatCommandText, formatJsonWithFooter, markdownOutput } from "./lib/tool-output";
+import { cappedRenderPayload, decodeNestedJson, formatJsonOutput, formatFileExcerpt, isFileExcerpt, formatSearchOutput, formatCommandText, formatJsonWithFooter, markdownOutput, parseGrepOutput, parseYamlDocument, sanitizeTerminalText } from "./lib/tool-output";
 import { booleanSetting, integerSetting, readSetting, settings, watchSetting } from "./lib/settings";
 import type { Setting } from "@oh-my-pi/pi-coding-agent/config/registry";
 
-type TweakCategory = "Workflow" | "Interface" | "Quality of life";
+type TweakCategory = "Workflow" | "Interface";
 
 type TweakDef = {
 	name: string;
@@ -47,16 +46,9 @@ const TWEAK_DEFS: TweakDef[] = [
 	{
 		name: "mcp-prompt-commands",
 		title: "MCP prompt commands",
-		description: "Keeps empty arguments in MCP prompt requests and reports empty server responses.",
+		description: "Keeps empty arguments in MCP prompt requests and reports empty or image-only server responses.",
 		category: "Workflow",
-		render: () => "Keep using /server:prompt [key=value], including /ai-game-developer:add-debug-visualization. Requests include empty arguments; empty server responses show errors. The MCP server must be connected and return prompt text.",
-	},
-	{
-		name: "calm-start",
-		title: "Calm start",
-		description: "Keeps the first screen focused on the work at hand.",
-		category: "Quality of life",
-		render: () => "A quiet, focused session opening.",
+		render: () => "Keep using /server:prompt [key=value], including /ai-game-developer:add-debug-visualization. Prompts that take arguments run the host's own path; parameterless ones send an empty arguments object. Empty responses show an error and image-only ones note '[image content omitted]' instead of returning nothing. The MCP server must be connected.",
 	},
 	{
 		name: "integrated-tool-expansion",
@@ -88,24 +80,24 @@ const TWEAK_DEFS: TweakDef[] = [
 	},
 	{
 		name: "session-irc-monitor",
-		title: "IRC comms & System Monitor",
-		description: "Enables session communication and deterministic System monitors over the IRC bus.",
+		title: "Session monitors & notes",
+		description: "Adds a monitor tool and /monitor that run capped shell checks on a timer, plus /irc notes; both stay in the current session.",
 		category: "Workflow",
-		render: () => "Active: Claude-style monitors execute background checks and message Main as System.",
+		render: () => "Active: /monitor and the monitor tool run a shell command on an interval and report into this session only (at most 4 monitors, 120 runs and 20 reports each; no agent turn unless wake=true). /irc posts a note into this session; there is no cross-session delivery.",
 	},
 	{
 		name: "heartbeat-command",
-		title: "Autonomous /heartbeat exploration",
-		description: "Enables /heartbeat to prompt self-directed exploration and goal-setting.",
+		title: "Heartbeat prompt",
+		description: "Adds /heartbeat, which sends one self-directed exploration prompt.",
 		category: "Workflow",
-		render: () => "Active: /heartbeat triggers a self-directed codebase exploration cycle.",
+		render: () => "Active: /heartbeat sends a single exploration prompt and waits for the current task. It schedules no repeats, adds no budget, and asks for read-only work without enforcing it.",
 	},
 	{
 		name: "session-retro-command",
-		title: "Interactive /retro summary",
-		description: "Enables /retro to run a structured session retrospective.",
+		title: "Session retro prompt",
+		description: "Adds /retro, which sends one retrospective prompt and saves the insight to the wiki.",
 		category: "Workflow",
-		render: () => "Active: /retro synthesizes session decisions, friction points, and learnings.",
+		render: () => "Active: /retro asks the agent to summarise the session from what is still in context and store the durable insight with the wiki_retro tool.",
 	},
 ];
 
@@ -116,7 +108,7 @@ const isTweakEnabled = (name: string): boolean => {
 	return tweak ? readSetting(tweak.setting) : false;
 };
 
-const CATEGORIES: readonly TweakCategory[] = ["Workflow", "Interface", "Quality of life"];
+const CATEGORIES: readonly TweakCategory[] = ["Workflow", "Interface"];
 
 type ThemeLike = {
 	fg: (color: ThemeColor, text: string) => string;
@@ -158,8 +150,6 @@ type StructuredText = {
 	path?: string;
 };
 
-const TOON_ENCODER: ((result: unknown) => string) | undefined = encodeToon;
-
 const CODE_KEYWORDS: Record<string, true> = {
 	using: true, namespace: true, public: true, private: true, protected: true, internal: true,
 	static: true, readonly: true, class: true, struct: true, interface: true, enum: true,
@@ -173,13 +163,13 @@ const CODE_KEYWORDS: Record<string, true> = {
 	yield: true, lambda: true,
 };
 
+// C#-style primitive aliases, the only lowercase types the highlighter must know: every
+// capitalised type name (Unity's Vector3, .NET's List, TypeScript's Promise) already hits the
+// generic capitalised-identifier rule in colorizeCodeLine.
 const CODE_TYPES: Record<string, true> = {
 	int: true, float: true, double: true, bool: true, string: true, char: true, byte: true,
 	sbyte: true, short: true, ushort: true, uint: true, ulong: true, long: true, decimal: true,
-	object: true, void: true, Vector2: true, Vector3: true, Vector4: true, Quaternion: true,
-	Matrix4x4: true, Color: true, GameObject: true, Transform: true, MonoBehaviour: true,
-	ScriptableObject: true, Mesh: true, Material: true, Texture: true, Action: true, Func: true,
-	List: true, Dictionary: true, HashSet: true, Task: true, Promise: true, Array: true, Record: true,
+	object: true,
 };
 
 function colorizeCodeLine(line: string, theme: ThemeLike): string {
@@ -213,32 +203,6 @@ function colorizeCodeLine(line: string, theme: ThemeLike): string {
 	});
 }
 
-function parseGrepOutput(rawText: string): unknown {
-	const lines = rawText.split(/\r?\n/);
-	const matches: Array<{ line: number; match: string }> = [];
-	const starMatches: Array<{ line: number; match: string }> = [];
-
-	for (const line of lines) {
-		const m = line.match(/^\s*(\*)?\s*(\d+)\|\s*(.*)$/);
-		if (m) {
-			const isStar = Boolean(m[1]);
-			const lineNum = parseInt(m[2], 10);
-			const matchText = m[3].trim();
-			const item = { line: lineNum, match: matchText };
-			if (isStar) starMatches.push(item);
-			matches.push(item);
-		}
-	}
-
-	const items = starMatches.length > 0 ? starMatches : matches;
-	if (items.length > 0) {
-		return {
-			matches: items.slice(0, 16),
-		};
-	}
-	return null;
-}
-
 function colorizeAstToonLine(line: string, theme: ThemeLike): string {
 	const kvMatch = line.match(/^(\s*)(?:(-\s+))?([a-zA-Z0-9_]+(?:\[\d+\])?(?:\{[^}]+\})?):\s*(.*)$/);
 	if (kvMatch) {
@@ -270,23 +234,21 @@ function colorizeAstToonLine(line: string, theme: ThemeLike): string {
 interface SessionColor {
 	name: string;
 	ansi: string;
-	hex: string;
-	themeColor: "accent" | "success" | "warning" | "error" | "info" | "muted";
 }
 
+// Every code differs from the others: two sessions in one process never share a colour.
 const SESSION_PALETTE: readonly SessionColor[] = [
-	{ name: "Cyan", ansi: "\x1b[96m", hex: "#06b6d4", themeColor: "accent" },
-	{ name: "Emerald", ansi: "\x1b[92m", hex: "#10b981", themeColor: "success" },
-	{ name: "Amber", ansi: "\x1b[93m", hex: "#f59e0b", themeColor: "warning" },
-	{ name: "Violet", ansi: "\x1b[95m", hex: "#8b5cf6", themeColor: "accent" },
-	{ name: "Coral", ansi: "\x1b[91m", hex: "#f43f5e", themeColor: "error" },
-	{ name: "Azure", ansi: "\x1b[36m", hex: "#38bdf8", themeColor: "info" },
-	{ name: "Indigo", ansi: "\x1b[34m", hex: "#6366f1", themeColor: "accent" },
-	{ name: "Mint", ansi: "\x1b[32m", hex: "#14b8a6", themeColor: "success" },
-	{ name: "Rose", ansi: "\x1b[35m", hex: "#ec4899", themeColor: "accent" },
-	{ name: "Orange", ansi: "\x1b[33m", hex: "#f97316", themeColor: "warning" },
-	{ name: "Lime", ansi: "\x1b[92m", hex: "#84cc16", themeColor: "success" },
-	{ name: "Sky", ansi: "\x1b[94m", hex: "#0ea5e9", themeColor: "info" },
+	{ name: "Cyan", ansi: "\x1b[96m" },
+	{ name: "Emerald", ansi: "\x1b[92m" },
+	{ name: "Amber", ansi: "\x1b[93m" },
+	{ name: "Violet", ansi: "\x1b[95m" },
+	{ name: "Coral", ansi: "\x1b[91m" },
+	{ name: "Azure", ansi: "\x1b[36m" },
+	{ name: "Indigo", ansi: "\x1b[34m" },
+	{ name: "Mint", ansi: "\x1b[32m" },
+	{ name: "Rose", ansi: "\x1b[35m" },
+	{ name: "Orange", ansi: "\x1b[33m" },
+	{ name: "Sky", ansi: "\x1b[94m" },
 ];
 
 const CODENAMES = [
@@ -298,189 +260,31 @@ const CODENAMES = [
 
 const SIGILS = ["◆", "▲", "●", "◈", "✦", "⬡", "★", "⬢"] as const;
 
-function hashString(str: string): number {
-	let hash = 0;
+interface SessionIdentity {
+	color: SessionColor;
+	codename: string;
+	sigil: string;
+}
+
+// Three streams of the same string, so colour, codename, and sigil do not correlate: two
+// sessions can share one field without sharing the others.
+const IDENTITY_SEEDS = { color: 0x9e3779b1, codename: 0x85ebca6b, sigil: 0xc2b2ae35 };
+
+function hashString(str: string, seed: number): number {
+	let hash = seed | 0;
 	for (let i = 0; i < str.length; i++) {
 		hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0;
 	}
 	return Math.abs(hash);
 }
 
-function getSessionIdentity(sessionId: string) {
-	const hash = hashString(sessionId || "default-session");
-	const color = SESSION_PALETTE[hash % SESSION_PALETTE.length];
-	const codename = CODENAMES[(hash >> 3) % CODENAMES.length];
-	const sigil = SIGILS[(hash >> 6) % SIGILS.length];
-	return { color, codename, sigil, id: sessionId };
-}
-
-/* -------------------------------------------------------------------------- */
-/*                              System Monitors                               */
-/* -------------------------------------------------------------------------- */
-
-type MonitorWhen = "output" | "changed" | "match" | "exit_zero" | "exit_nonzero" | "always";
-const MONITOR_WHEN: readonly MonitorWhen[] = ["output", "changed", "match", "exit_zero", "exit_nonzero", "always"];
-
-interface MonitorSpec {
-	name: string;
-	to: string;
-	from: string;
-	/** Fixed poll interval. Omit for adaptive: 5s, doubling while quiet, capped at 120s, reset on activity. */
-	intervalSec?: number;
-	command?: string;
-	message?: string;
-	when: MonitorWhen;
-	pattern?: string;
-	once: boolean;
-	urgent: boolean;
-}
-
-const MONITOR_BASE_SEC = 5;
-const MONITOR_MAX_SEC = 120;
-
-interface ActiveMonitor extends MonitorSpec {
-	timer: NodeJS.Timeout | number;
-	currentSec: number;
-	runCount: number;
-	reportCount: number;
-	lastRun?: number;
-	lastOutput?: string;
-}
-
-interface MonitorRun {
-	stdout: string;
-	stderr: string;
-	output: string;
-	code: number;
-	match: RegExpMatchArray | null;
-}
-
-const activeMonitors = new Map<string, ActiveMonitor>();
-
-// Decides whether one tick earns a report. `changed` compares against the last tick's
-// output, so the first tick reports only when there is output to compare later.
-function monitorShouldReport(mon: ActiveMonitor, run: MonitorRun): boolean {
-	switch (mon.when) {
-		case "always": return true;
-		case "output": return run.output.length > 0;
-		case "changed": return mon.lastOutput !== undefined && run.output !== mon.lastOutput;
-		case "match": return run.match !== null;
-		case "exit_zero": return run.code === 0;
-		case "exit_nonzero": return run.code !== 0;
-	}
-}
-
-// Fills `{var}` slots in the message template from the tick's context.
-// Unknown slots are left as written so a typo is visible in the delivered message.
-function renderMonitorMessage(mon: ActiveMonitor, run: MonitorRun): string {
-	const template = mon.message || (mon.command ? "{output}" : "Monitor {name} heartbeat.");
-	const vars: Record<string, string> = {
-		name: mon.name,
-		command: mon.command ?? "",
-		stdout: run.stdout,
-		stderr: run.stderr,
-		output: run.output,
-		code: String(run.code),
-		run: String(mon.runCount),
-		time: new Date().toLocaleTimeString(),
-		match: run.match?.[0] ?? "",
-		prev: mon.lastOutput ?? "",
-	};
-	run.match?.forEach((group, index) => { vars[String(index)] = group ?? ""; });
-	if (run.match?.groups) { Object.assign(vars, run.match.groups); }
-	return template.replace(/\{([a-zA-Z0-9_]+)\}/g, (slot, key: string) => (key in vars ? vars[key] : slot));
-}
-
-function stopMonitor(name: string): boolean {
-	const existing = activeMonitors.get(name);
-	if (!existing) return false;
-	clearTimeout(existing.timer);
-	activeMonitors.delete(name);
-	return true;
-}
-
-function listMonitors() {
-	return Array.from(activeMonitors.values()).map((m) => ({
-		name: m.name,
-		to: m.to,
-		from: m.from,
-		cadence: m.intervalSec === undefined ? `adaptive (now ${m.currentSec}s)` : `${m.intervalSec}s`,
-		when: m.when,
-		pattern: m.pattern,
-		once: m.once,
-		command: m.command,
-		message: m.message,
-		runs: m.runCount,
-		reports: m.reportCount,
-		lastRun: m.lastRun ? new Date(m.lastRun).toLocaleTimeString() : "none",
-	}));
-}
-
-function startMonitor(pi: ExtensionAPI, spec: MonitorSpec): ActiveMonitor {
-	stopMonitor(spec.name);
-	const regex = spec.pattern ? new RegExp(spec.pattern) : null;
-
-	const tick = async () => {
-		const mon = activeMonitors.get(spec.name);
-		if (!mon) return;
-		mon.runCount++;
-		mon.lastRun = Date.now();
-
-		let run: MonitorRun = { stdout: "", stderr: "", output: "", code: 0, match: null };
-		if (mon.command) {
-			try {
-				const result = await pi.exec("sh", ["-c", mon.command], { timeout: 15_000 });
-				const stdout = (result.stdout || "").trim();
-				const stderr = (result.stderr || "").trim();
-				run = { stdout, stderr, output: stdout || stderr, code: result.code ?? 0, match: null };
-			} catch (err) {
-				const stderr = err instanceof Error ? err.message : String(err);
-				run = { stdout: "", stderr, output: stderr, code: -1, match: null };
-			}
-		}
-		if (regex) { run.match = run.output.match(regex); }
-
-		const report = monitorShouldReport(mon, run);
-		const body = report ? renderMonitorMessage(mon, run) : "";
-		const changed = mon.lastOutput !== undefined && run.output !== mon.lastOutput;
-		mon.lastOutput = run.output;
-		// Adaptive cadence: anything interesting snaps back to the base; silence backs off fast.
-		if (mon.intervalSec === undefined) {
-			mon.currentSec = report || changed ? MONITOR_BASE_SEC : Math.min(MONITOR_MAX_SEC, mon.currentSec * 2);
-		}
-		if (activeMonitors.get(mon.name) === mon) { mon.timer = setTimeout(tick, mon.currentSec * 1000); }
-		if (!report) return;
-
-		mon.reportCount++;
-		if (mon.once) { stopMonitor(mon.name); }
-
-		pi.sendMessage(
-			{
-				customType: "irc:incoming",
-				content: `[Monitor:${mon.name} (${mon.from})] ${body}`,
-				details: {
-					id: `mon_${mon.name}_${Date.now()}`,
-					from: mon.from,
-					to: mon.to,
-					message: body,
-					monitor: mon.name,
-					code: run.code,
-					stopped: mon.once,
-				},
-				display: true,
-			},
-			{
-				deliverAs: mon.urgent ? "steer" : "aside",
-				triggerTurn: true,
-			},
-		);
-	};
-
-	const currentSec = spec.intervalSec ?? MONITOR_BASE_SEC;
-	const mon: ActiveMonitor = { ...spec, timer: 0, currentSec, runCount: 0, reportCount: 0 };
-	mon.timer = setTimeout(tick, currentSec * 1000);
-	activeMonitors.set(spec.name, mon);
-	return mon;
+function getSessionIdentity(sessionId: string): SessionIdentity {
+	// A session without an id of its own still gets a stable identity, distinct per process and cwd.
+	const key = sessionId || `${process.pid}:${process.cwd()}`;
+	const color = SESSION_PALETTE[hashString(key, IDENTITY_SEEDS.color) % SESSION_PALETTE.length];
+	const codename = CODENAMES[hashString(key, IDENTITY_SEEDS.codename) % CODENAMES.length];
+	const sigil = SIGILS[hashString(key, IDENTITY_SEEDS.sigil) % SIGILS.length];
+	return { color, codename, sigil };
 }
 
 /* -------------------------------------------------------------------------- */
@@ -597,20 +401,22 @@ function extractToolPayload(event: { toolName: string; result: unknown }): unkno
 }
 
 function structuredResult(result: unknown): StructuredText {
-	if (typeof result === "string") {
-		const search = formatSearchOutput(result);
+	const useToon = isTweakEnabled("tool-results-toon");
+	// Tool output is untrusted: strip escape hatches before anything parses or measures it.
+	const text = typeof result === "string" ? sanitizeTerminalText(result) : result;
+	if (typeof text === "string") {
+		const search = formatSearchOutput(text);
 		if (search !== undefined) return { text: search, format: "text" };
 	}
-	if (typeof result === "string" && isFileExcerpt(result)) {
-		return { text: formatFileExcerpt(result), format: "text" };
+	if (typeof text === "string" && isFileExcerpt(text)) {
+		return { text: formatFileExcerpt(text, useToon), format: "text" };
 	}
-	const target = decodeNestedJson(result);
-	const useToon = isTweakEnabled("tool-results-toon");
+	const target = decodeNestedJson(text);
 
 	if (target !== null && typeof target === "object") {
-		if (useToon && TOON_ENCODER) {
+		if (useToon) {
 			try {
-				return formatJsonOutput(target);
+				return formatJsonOutput(target, useToon);
 			} catch {
 				// Fall through
 			}
@@ -622,33 +428,38 @@ function structuredResult(result: unknown): StructuredText {
 		}
 	}
 
-	if (typeof result === "string") {
-		if (useToon && TOON_ENCODER) {
-			const timedJson = formatJsonWithFooter(result);
+	if (typeof text === "string") {
+		if (useToon) {
+			const timedJson = formatJsonWithFooter(text, useToon);
 			if (timedJson) return timedJson;
 		}
-		if (!isLikelyCode(result) && (result.trim().startsWith("---") || /^(?:[a-zA-Z0-9_-]+:\s.*|[ \t]*-\s.*)$/m.test(result))) {
-			try {
-				const parsedYaml = parseYaml(result);
-				if (parsedYaml !== null && typeof parsedYaml === "object") {
-					if (useToon && TOON_ENCODER) {
-						try {
-							return formatJsonOutput(decodeNestedJson(parsedYaml));
-						} catch {}
-					}
-					return { text: prettifyYaml(result), format: "yaml" };
+		const yaml = isLikelyCode(text) ? undefined : parseYamlDocument(text);
+		if (yaml !== undefined) {
+			if (useToon) {
+				try {
+					return formatJsonOutput(decodeNestedJson(yaml), useToon);
+				} catch (error) {
+					// Only a parse-level failure falls back to the YAML text; a formatter bug
+					// must not pass for "not structured".
+					if (!(error instanceof SyntaxError)) throw error;
 				}
-			} catch {
-				// Preserve malformed or ambiguous text verbatim.
 			}
+			return { text: prettifyYaml(text), format: "yaml" };
 		}
 
 		// Output that reads as code keeps syntax colour but is never rewritten: real outlines
 		// come from the tree-sitter read/edit cards, not from guessing at command output.
-		if (isLikelyCode(result)) return { text: result, format: "code" };
+		if (isLikelyCode(text)) return { text, format: "code" };
 	}
 
-	return { text: String(result), format: "text" };
+	return { text: typeof text === "string" ? text : String(text), format: "text" };
+}
+
+// Labels the TUI prints raw: a model-controlled tool intent and the session name both reach
+// the widget and window title, so escapes must go and a runaway name must not fill the bar.
+function sanitizeLabel(text: string, max = 120): string {
+	const clean = sanitizeTerminalText(text);
+	return clean.length > max ? `${clean.slice(0, max - 1)}…` : clean;
 }
 
 // Joined text blocks of a tool result: the same view the native card and the model start from.
@@ -789,10 +600,23 @@ function structureToolResult(details: ToolCardDetails | undefined): StructuredTe
 	const result = details?.result;
 	const references = referenceLocations(result);
 	const markdownText = markdownOutput(result);
+	const base = details?.cwd ?? process.cwd();
 	const structured: StructuredText = references ? {
 		text: references.locations.map(location => {
-			const path = location.path.startsWith("~/") ? resolve(homedir(), location.path.slice(2)) : resolve(details?.cwd ?? process.cwd(), location.path);
-			return fileHyperlink(path, `${location.path}:${location.line}:${location.column}`, { line: location.line });
+			const path = location.path.startsWith("~/") ? resolve(homedir(), location.path.slice(2)) : resolve(base, location.path);
+			const label = `${location.path}:${location.line}:${location.column}`;
+			// Link only a file the user can actually open: a path the model invented, or one
+			// outside the workspace and home, must not become an OSC 8 link.
+			const home = homedir();
+			let linkable = !/[\x00-\x1f\x7f]/.test(path) && (path.startsWith(`${base}${sep}`) || path.startsWith(`${home}${sep}`));
+			if (linkable) {
+				try {
+					linkable = statSync(path).isFile();
+				} catch {
+					linkable = false;
+				}
+			}
+			return linkable ? fileHyperlink(path, label, { line: location.line }) : label;
 		}).concat(references.incomplete ? ["…"] : []).join("\n"),
 		format: "links",
 	} : markdownText !== undefined ? { text: markdownText, format: "markdown" } : structuredResult(result);
@@ -839,18 +663,24 @@ function toolMessageRenderer(message: ToolMessage, options: RendererOptions, the
 			// Diagnostics sit below the tree and stay visible: the heading and the first few messages.
 			const diagnosticsAt = structured.format === "edit-outline" ? rawLines.findIndex(line => /^ ! Diagnostics/.test(line)) : -1;
 			const tree = diagnosticsAt >= 0 ? renderedContent.slice(0, diagnosticsAt) : renderedContent;
-			let selected = structured.format === "edit-outline"
-				? tree.filter((_, index) => !/^\s{3,}[+−→] /.test(rawLines[index]))
-				: tree;
+			let selected: string[] = [
+				...(structured.format === "edit-outline"
+					? tree.filter((_, index) => !/^\s{3,}[+−→] /.test(rawLines[index]))
+					: tree),
+			];
 			if (selected.length > limit) {
 				if (structured.format === "outline" || structured.format === "edit-outline") {
 					// Outline rows are a list: the last row carries no summary, so count the rest.
 					const shown = Math.max(1, limit - 1);
 					selected = [...selected.slice(0, shown), theme.fg("muted", `… ${selected.length - shown} more`)];
+				} else if (limit <= 1) {
+					// One row is all the space there is, so the first content line carries the
+					// omission mark itself instead of the card showing nothing but `…`.
+					selected = [`${renderedContent[0]} ${theme.fg("muted", "…")}`];
 				} else {
 					const omission = theme.fg("muted", "…");
 					selected = limit < 3
-						? [...renderedContent.slice(0, limit - 1), omission]
+						? [...renderedContent.slice(0, limit - 1), theme.fg("muted", `… ${renderedContent.length - (limit - 1)} more`)]
 						: [...renderedContent.slice(0, limit - 2), omission, renderedContent[renderedContent.length - 1]];
 				}
 			}
@@ -1266,8 +1096,9 @@ function carriesDiagnostics(details: unknown): boolean {
 }
 
 // The hydemods view of one settled result, or undefined when the native renderer should draw it:
-// takeover off, still streaming, plain text hydemods cannot improve, or a JSON document OMP
-// already shows as a tree. Failures get the same card in error colour rather than a different one.
+// takeover off, still streaming, plain text hydemods cannot improve, a JSON document OMP already
+// shows as a tree, or a payload past the size cap. Failures get the same card in error colour
+// rather than a different one.
 function hydemodsResultComponent(toolName: string, result: { content: unknown; details?: unknown; isError?: boolean }, options: { expanded: boolean; isPartial: boolean }, theme: Theme, args: unknown, takeover: CardTakeover) {
 	if (!takeover.active() || options.isPartial) return undefined;
 	const outline = toolName === "read" ? readOutlineStructured(result, args) : toolName === "edit" ? editOutlineStructured(result) : undefined;
@@ -1278,8 +1109,13 @@ function hydemodsResultComponent(toolName: string, result: { content: unknown; d
 	}
 	// An edit that cannot be outlined is better shown as OMP's diff than as a file excerpt.
 	if (toolName === "edit") return undefined;
-	if (nativeRendersJsonTree(toolName, args, toolResultText(result.content))) return undefined;
+	const resultText = toolResultText(result.content);
+	if (nativeRendersJsonTree(toolName, args, resultText)) return undefined;
+	// Huge results keep the native card: hydemods would re-parse, colour and Markdown-render
+	// the whole payload on every repaint, and the native card already limits what it draws.
+	if (resultText !== undefined && cappedRenderPayload(resultText) === undefined) return undefined;
 	const payload = notebookPayload(toolName, args, result.isError) ?? extractToolPayload({ toolName, result });
+	if (cappedRenderPayload(payload) === undefined) return undefined;
 	const details: ToolCardDetails = { toolName, result: payload, isError: result.isError, cwd: process.cwd() };
 	const structured = structureToolResult(details);
 	// Plain shell text still carries a Wall-time footer worth lifting into a heading.
@@ -1339,7 +1175,6 @@ function panelComponent(theme: ThemeLike, done: (result: undefined) => void, dis
 	const groups: Record<TweakCategory, readonly Tweak[]> = {
 		Workflow: TWEAKS.filter((tweak) => tweak.category === "Workflow"),
 		Interface: TWEAKS.filter((tweak) => tweak.category === "Interface"),
-		"Quality of life": TWEAKS.filter((tweak) => tweak.category === "Quality of life"),
 	};
 	const selectable: Array<Tweak | typeof COLLAPSED_LINES_ROW> = CATEGORIES.flatMap((category) =>
 		category === "Interface" ? [...groups[category], COLLAPSED_LINES_ROW] : [...groups[category]]);
@@ -1365,18 +1200,14 @@ function panelComponent(theme: ThemeLike, done: (result: undefined) => void, dis
 		const lines: string[] = [
 			theme.fg("accent", theme.bold("HYDEMODS")),
 			theme.fg("muted", "A visual home for small, composable session tweaks"),
-			theme.fg("muted", "Saved to settings.yaml; expansion uses the native manual toggle"),
+			theme.fg("muted", "Toggles persist globally in settings.yaml, not per session"),
+			theme.fg("muted", "Expansion uses the native manual toggle"),
 			"",
 		];
 
 		for (const category of CATEGORIES) {
 			const tweaks = groups[category];
 			lines.push(theme.fg("accent", theme.bold(category)));
-			if (tweaks.length === 0) {
-				lines.push(theme.fg("muted", "  No tweaks yet"));
-				lines.push("");
-				continue;
-			}
 			for (const tweak of tweaks) {
 				const selected = selectable[selectedIndex] === tweak;
 				const marker = selected ? theme.fg("accent", "❯") : " ";
@@ -1485,24 +1316,27 @@ export default function hydemods(pi: ExtensionAPI): void {
 	const z = pi.zod;
 	const display: ToolDisplayState = { collapsedLines: readSetting(collapsedLinesSetting), cardsOn: true };
 	const repaintToolCards = (ctx: ExtensionContext) => {
+		// ExtensionUIContext exposes no repaint call, and no other extension-visible setter
+		// invalidates drawn tool blocks; the interactive host's setToolsExpanded ends in
+		// ui.requestRender(true), so re-setting the current value is the supported way to repaint
+		// them. Needed when a toggle changes which renderer applies: with the takeover off,
+		// hydemodsResultComponent falls back to the host renderer on the next paint.
 		if (ctx.hasUI) ctx.ui.setToolsExpanded(ctx.ui.getToolsExpanded());
 	};
 	let lastCtx: ExtensionContext | undefined;
-	const restoreToolDisplay = (_event: unknown, ctx: ExtensionContext) => {
+	const restoreToolDisplay = (ctx: ExtensionContext) => {
 		lastCtx = ctx;
 		display.collapsedLines = readSetting(collapsedLinesSetting);
 		repaintToolCards(ctx);
 	};
-	pi.on("session_start", restoreToolDisplay);
-	pi.on("session_switch", restoreToolDisplay);
-	pi.on("session_branch", restoreToolDisplay);
-	pi.on("session_tree", restoreToolDisplay);
 	watchSetting(collapsedLinesSetting, value => {
 		display.collapsedLines = value;
 		if (lastCtx) repaintToolCards(lastCtx);
 	});
 	let promptManager: MCPManager | undefined;
 	let releasePromptRepair: (() => void) | undefined;
+	// Idempotent, and re-run on the first tool call of every turn: a manager created or replaced
+	// after session_start is picked up without waiting for the next session event.
 	const syncPromptRepair = () => {
 		const manager = isTweakEnabled("mcp-prompt-commands") ? MCPManager.instance() : undefined;
 		if (manager === promptManager) return;
@@ -1510,8 +1344,6 @@ export default function hydemods(pi: ExtensionAPI): void {
 		promptManager = manager;
 		releasePromptRepair = manager ? installMcpPromptRepair(manager) : undefined;
 	};
-	pi.on("session_start", syncPromptRepair);
-	pi.on("session_switch", syncPromptRepair);
 	pi.on("session_shutdown", () => { releasePromptRepair?.(); releasePromptRepair = undefined; promptManager = undefined; });
 
 	// hydemods draws inside OMP's tool card (never beside it). One native card per call; Ctrl+O
@@ -1584,7 +1416,7 @@ export default function hydemods(pi: ExtensionAPI): void {
 			"hydemods:last-prompt",
 			(_tui, theme) => ({
 				render(width: number): readonly string[] {
-					const body = truncateToWidth(preview, Math.max(1, width - 2), "…");
+					const body = truncateToWidth(preview, Math.max(1, width - 2), Ellipsis.Unicode);
 					return [`${theme.fg("muted", "❯ ")}${theme.fg("dim", body)}`];
 				},
 				invalidate() {},
@@ -1611,87 +1443,144 @@ export default function hydemods(pi: ExtensionAPI): void {
 		return "";
 	};
 
-	// Session naming is owned by the harness title generator (tiny model, online
-	// fallback). It only runs while the session is unnamed, so this extension
-	// never sets a name itself.
+	// The harness title generator names sessions (tiny model, online fallback) and /rename sets
+	// the name directly; this extension only publishes that name alongside the session identity.
 	// Intent of the tool call in flight (the `i` argument); cleared when the turn ends.
 	let currentIntent = "";
+	// Session-scoped: computed on session start/switch and after /rename, never per tool call.
+	let sessionIdentity: SessionIdentity | undefined;
 
-	const refreshSessionIdentity = async (ctx: ExtensionContext) => {
-		if (!isTweakEnabled("session-identity")) {
-			if (ctx.hasUI) {
-				ctx.ui.setStatus("hydemods:identity", undefined);
-				ctx.ui.setWidget("hydemods:identity", undefined);
-			}
-			return;
-		}
-
-		const sessionId = ctx.sessionManager.getSessionId();
-		const identity = getSessionIdentity(sessionId);
-
-		const badge = `${identity.color.ansi}${identity.sigil} [${identity.codename}]\x1b[0m`;
-
-		if (ctx.hasUI) {
-			ctx.ui.setStatus("hydemods:identity", badge);
-			const activity = currentIntent ? `\x1b[1m${currentIntent}\x1b[0m` : "\x1b[2midle\x1b[0m";
-			ctx.ui.setWidget("hydemods:identity", [` ${badge} ${activity}`], { placement: "aboveEditor" });
-			ctx.ui.setTitle(`${identity.sigil} [${identity.codename}] ${pi.getSessionName() || "Session"}`);
-		}
+	// Only the activity line changes per tool call; the badge, status, and window title belong to
+	// the session and are written by refreshSessionIdentity.
+	const paintIdentity = (ctx: ExtensionContext) => {
+		if (!ctx.hasUI || !sessionIdentity) return;
+		const { color, sigil, codename } = sessionIdentity;
+		const badge = `${color.ansi}${sigil} [${codename}]\x1b[0m`;
+		const activity = currentIntent ? `\x1b[1m${sanitizeLabel(currentIntent)}\x1b[0m` : "\x1b[2midle\x1b[0m";
+		ctx.ui.setWidget("hydemods:identity", [` ${badge} ${activity}`], { placement: "aboveEditor" });
 	};
 
-	pi.on("tool_execution_start", async (event, ctx) => {
+	const refreshSessionIdentity = (ctx: ExtensionContext) => {
+		sessionIdentity = isTweakEnabled("session-identity") ? getSessionIdentity(ctx.sessionManager.getSessionId()) : undefined;
+		if (!ctx.hasUI) return;
+		if (!sessionIdentity) {
+			ctx.ui.setStatus("hydemods:identity", undefined);
+			ctx.ui.setWidget("hydemods:identity", undefined);
+			// An empty title releases the extension's claim, so the host's own title returns.
+			ctx.ui.setTitle("");
+			return;
+		}
+		const { color, sigil, codename } = sessionIdentity;
+		ctx.ui.setStatus("hydemods:identity", `${color.ansi}${sigil} [${codename}]\x1b[0m`);
+		paintIdentity(ctx);
+		ctx.ui.setTitle(`${sigil} [${codename}] ${sanitizeLabel(pi.getSessionName() || "Session")}`);
+	};
+
+	// One handler per session event, each running the per-feature session work in a fixed order.
+	const onSession = (_event: unknown, ctx: ExtensionContext) => {
+		restoreToolDisplay(ctx);
+		syncPromptRepair();
+		lastPrompt = latestUserPrompt(ctx);
+		refreshLastPromptDrawer(ctx);
+		refreshSessionIdentity(ctx);
+		// Monitors belong to the session that started them; a switch, branch, or new session stops the rest.
+		stopMonitorsForOtherSessions(ctx.sessionManager.getSessionId());
+	};
+	pi.on("session_start", onSession);
+	pi.on("session_switch", onSession);
+	pi.on("session_branch", onSession);
+	pi.on("session_tree", onSession);
+
+	pi.on("tool_execution_start", (event, ctx) => {
 		const args = event.args as { i?: unknown } | undefined;
 		const intent = event.intent || (typeof args?.i === "string" ? args.i : "");
 		currentIntent = intent.trim() || event.toolName;
-		await refreshSessionIdentity(ctx);
+		syncPromptRepair();
+		paintIdentity(ctx);
 	});
 
-	pi.on("session_start", async (_event, ctx) => {
-		lastPrompt = latestUserPrompt(ctx);
-		refreshLastPromptDrawer(ctx);
-		await refreshSessionIdentity(ctx);
-	});
-
-	pi.on("session_switch", async (_event, ctx) => {
-		lastPrompt = latestUserPrompt(ctx);
-		refreshLastPromptDrawer(ctx);
-		await refreshSessionIdentity(ctx);
-	});
-
-	pi.on("before_agent_start", async (event, ctx) => {
+	pi.on("before_agent_start", (event, ctx) => {
 		const prompt = typeof event.prompt === "string" ? event.prompt : "";
 		if (prompt.trim().length > 0) {
 			lastPrompt = prompt;
 			refreshLastPromptDrawer(ctx);
 		}
-		await refreshSessionIdentity(ctx);
 	});
 
-	pi.on("turn_end", async (_event, ctx) => {
+	pi.on("turn_end", (_event, ctx) => {
 		currentIntent = "";
-		await refreshSessionIdentity(ctx);
+		paintIdentity(ctx);
 	});
 
 	/* ----------------------------- Monitor Tool ----------------------------- */
 
+	const sessionIdOf = (ctx: ExtensionContext): string => ctx.sessionManager.getSessionId();
+
+	// A message can only land in the session that sends it, so the only valid recipients are
+	// this session and "*". Keeping the label honest beats implying cross-session routing.
+	const resolveRecipient = (to: string | undefined, ctx: ExtensionContext): { ok: true; to: string } | { ok: false; error: string } => {
+		const sessionId = sessionIdOf(ctx);
+		const codename = getSessionIdentity(sessionId).codename;
+		const value = (to ?? "*").trim() || "*";
+		if (value === "*" || value === sessionId || value === codename) return { ok: true, to: value };
+		return { ok: false, error: `"${value}" is not this session; messages stay in the session that sends them (use "${codename}" or "*").` };
+	};
+
+	const monitorDeps: MonitorDeps = {
+		exec: async (command) => {
+			const result = await pi.exec("sh", ["-c", command], { timeout: 15_000 });
+			return { stdout: result.stdout ?? "", stderr: result.stderr ?? "", code: result.code };
+		},
+		deliver: (delivery: MonitorDelivery) => {
+			pi.sendMessage(
+				{ customType: "irc:incoming", content: delivery.content, details: delivery.details, display: true },
+				{ deliverAs: delivery.deliverAs, triggerTurn: delivery.triggerTurn },
+			);
+		},
+		setTimer: (callback, ms) => setTimeout(callback, ms),
+		clearTimer: (timer) => clearTimeout(timer),
+	};
+
+	// Turning the tweak off stops monitors that are already running, not just new tool calls.
+	const ircMonitorTweak = TWEAKS.find((tweak) => tweak.name === "session-irc-monitor");
+	if (ircMonitorTweak) watchSetting(ircMonitorTweak.setting, (enabled) => { if (!enabled) stopAllMonitors(); });
+
 	pi.registerTool({
 		name: "monitor",
 		label: "Monitor",
-		description: "Run a shell command on an interval and report back only when a condition holds. Same engine as the /monitor command. `when` gates the report; `message` is a template over {output} {stdout} {stderr} {code} {name} {command} {run} {time} {match} {1}..{n} {prev}. `once` stops the monitor after its first report. Also sends direct IRC messages with action 'send'.",
+		description: "Run a shell command on an interval and report back only when a condition holds. Same engine as the /monitor command. Reports are labelled monitor:<name> and stay in this session. `when` gates the report; `message` is a template over {output} {stdout} {stderr} {code} {name} {command} {run} {time} {match} {1}..{n} {prev}, and the default template wraps the raw output in a ```text fence. A monitor stops itself after 120 runs or 20 reports. `wake` starts one agent turn per report; without it a report is an aside and starts no turn. `once` stops the monitor after its first report. Action 'send' posts a note into this session.",
 		parameters: z.object({
-			action: z.enum(["start", "stop", "list", "send"]).describe("'start' a monitor, 'stop' one by name, 'list' active monitors, or 'send' a direct IRC message"),
+			action: z.enum(["start", "stop", "list", "send"]).describe("'start' a monitor, 'stop' one by name, 'list' active monitors, or 'send' a note into this session"),
 			name: z.string().optional().describe("Monitor name (required for start/stop)"),
-			command: z.string().optional().describe("Shell command run each interval via sh -c"),
-			interval_sec: z.number().optional().describe("Fixed seconds between runs (minimum 2). Omit for adaptive: 5s, doubling while quiet up to 120s, reset on any change or report."),
+			command: z.string().optional().describe("Shell command run each interval via sh -c (required for start; an empty command is rejected)"),
+			interval_sec: z.number().optional().describe("Fixed whole seconds between runs (minimum 2). Omit for adaptive: 5s, doubling while quiet up to 120s, reset on any change or report."),
 			when: z.enum(MONITOR_WHEN as [MonitorWhen, ...MonitorWhen[]]).optional().describe("Report condition: output (stdout non-empty, default) | changed (output differs from last run) | match (pattern matches output) | exit_zero | exit_nonzero | always"),
-			pattern: z.string().optional().describe("Regex tested against output; required for when=match; capture groups fill {1}..{n} and named groups"),
-			message: z.string().optional().describe("Report template. Default '{output}'. For 'send', the message body."),
+			pattern: z.string().optional().describe("Regex tested against output (max 256 characters); required for when=match; capture groups fill {1}..{n} and named groups"),
+			message: z.string().optional().describe("Report template over {output} {stdout} {stderr} {code} {name} {command} {run} {time} {match} {1}..{n} {prev}; the default fences the raw output. For 'send', the message body."),
 			once: z.boolean().optional().describe("Stop the monitor after its first report"),
-			to: z.string().optional().describe("Recipient agent/session (default 'Main')"),
-			from: z.string().optional().describe("Sender identity (default 'System')"),
-			urgent: z.boolean().optional().describe("Deliver as an interrupting steer instead of an aside"),
+			to: z.string().optional().describe("Recipient label; only this session or '*' is accepted (default '*')"),
+			urgent: z.boolean().optional().describe("Deliver as an interrupting steer instead of an aside (still starts no turn unless wake is set)"),
+			wake: z.boolean().optional().describe("Start a new agent turn for each report (default false: the report is an aside and starts no turn)"),
 		}),
-		async execute(_toolCallId, params, _signal, onUpdate, ctx) {
+		async execute(
+			_toolCallId,
+			params: {
+				action: "start" | "stop" | "list" | "send";
+				name?: string;
+				command?: string;
+				interval_sec?: number;
+				when?: MonitorWhen;
+				pattern?: string;
+				message?: string;
+				once?: boolean;
+				to?: string;
+				urgent?: boolean;
+				wake?: boolean;
+			},
+			_signal,
+			onUpdate,
+			ctx,
+		) {
 			if (!isTweakEnabled("session-irc-monitor")) {
 				return {
 					content: [{ type: "text", text: "Error: 'session-irc-monitor' tweak is currently disabled in Hydemods." }],
@@ -1699,32 +1588,36 @@ export default function hydemods(pi: ExtensionAPI): void {
 				};
 			}
 
-			const to = params.to || "Main";
-			const from = params.from || "System";
+			const sessionId = sessionIdOf(ctx);
+			const identity = getSessionIdentity(sessionId);
 
 			if (params.action === "send") {
 				if (!params.message) {
-					return { content: [{ type: "text", text: "Error: 'message' is required when action is 'send'." }] };
+					return { content: [{ type: "text", text: "Error: 'message' is required when action is 'send'." }], details: { error: "message_required" } };
 				}
-				onUpdate?.({ content: [{ type: "text", text: `Sending IRC message from ${from} to ${to}...` }] });
+				const recipient = resolveRecipient(params.to, ctx);
+				if (!recipient.ok) {
+					return { content: [{ type: "text", text: `Error: ${recipient.error}` }], details: { error: "bad_recipient" } };
+				}
+				onUpdate?.({ content: [{ type: "text", text: "Posting message into this session..." }] });
 				pi.sendMessage(
 					{
 						customType: "irc:incoming",
-						content: `[IRC: ${from} → ${to}]\n${params.message}`,
-						details: { id: `mon_${Date.now()}`, from, to, message: params.message },
+						content: `[IRC:${identity.codename}] ${params.message}`,
+						details: { id: `mon_${identity.codename}_${Date.now()}`, from: identity.codename, to: recipient.to, message: params.message },
 						display: true,
 					},
-					{ deliverAs: params.urgent ? "steer" : "aside", triggerTurn: true },
+					{ deliverAs: "aside", triggerTurn: false },
 				);
-				ctx.ui.notify(`IRC message sent from ${from} to ${to}`, "info");
+				if (ctx.hasUI) ctx.ui.notify(`Message posted into this session (${identity.codename}).`, "info");
 				return {
-					content: [{ type: "text", text: `Delivered IRC message from "${from}" to "${to}".` }],
-					details: { to, from, message: params.message },
+					content: [{ type: "text", text: `Posted the message into this session as "${identity.codename}"; IRC does not deliver to other sessions.` }],
+					details: { to: recipient.to, from: identity.codename, message: params.message },
 				};
 			}
 
 			if (params.action === "list") {
-				const list = listMonitors();
+				const list = listMonitors(sessionId);
 				return {
 					content: [{ type: "text", text: list.length === 0 ? "No active monitors." : JSON.stringify(list, null, 2) }],
 					details: { monitors: list },
@@ -1735,10 +1628,10 @@ export default function hydemods(pi: ExtensionAPI): void {
 				if (!params.name) {
 					return { content: [{ type: "text", text: "Error: 'name' is required to stop a monitor." }] };
 				}
-				if (!stopMonitor(params.name)) {
+				if (!stopMonitor(sessionId, params.name)) {
 					return { content: [{ type: "text", text: `No active monitor named "${params.name}".` }] };
 				}
-				ctx.ui.notify(`Monitor "${params.name}" stopped.`, "info");
+				if (ctx.hasUI) ctx.ui.notify(`Monitor "${params.name}" stopped.`, "info");
 				return { content: [{ type: "text", text: `Monitor "${params.name}" stopped.` }], details: { stopped: params.name } };
 			}
 
@@ -1746,31 +1639,33 @@ export default function hydemods(pi: ExtensionAPI): void {
 				if (!params.name) {
 					return { content: [{ type: "text", text: "Error: 'name' is required to start a monitor." }] };
 				}
-				const when = params.when ?? (params.pattern ? "match" : "output");
-				if (when === "match" && !params.pattern) {
-					return { content: [{ type: "text", text: "Error: when=match requires 'pattern'." }] };
-				}
-				if (params.pattern) {
-					try { new RegExp(params.pattern); } catch (err) {
-						return { content: [{ type: "text", text: `Error: invalid pattern: ${err instanceof Error ? err.message : String(err)}` }] };
-					}
+				const recipient = resolveRecipient(params.to, ctx);
+				if (!recipient.ok) {
+					return { content: [{ type: "text", text: `Error: ${recipient.error}` }], details: { error: "bad_recipient" } };
 				}
 				const spec: MonitorSpec = {
 					name: params.name,
-					to,
-					from,
-					intervalSec: params.interval_sec === undefined ? undefined : Math.max(2, params.interval_sec),
-					command: params.command,
+					to: recipient.to,
+					intervalSec: params.interval_sec,
+					command: params.command ?? "",
 					message: params.message,
-					when,
+					when: params.when ?? (params.pattern ? "match" : "output"),
 					pattern: params.pattern,
 					once: params.once ?? false,
 					urgent: params.urgent ?? false,
+					wake: params.wake ?? false,
 				};
-				startMonitor(pi, spec);
-				const summary = `Monitor "${spec.name}" ${spec.intervalSec === undefined ? "adaptive cadence (5s, backing off)" : `every ${spec.intervalSec}s`}, reports when=${spec.when}${spec.pattern ? ` /${spec.pattern}/` : ""}${spec.once ? ", once" : ""}, to ${to}.`;
-				ctx.ui.notify(summary, "info");
-				return { content: [{ type: "text", text: summary }], details: { ...spec } };
+				const invalid = validateMonitorSpec(spec);
+				if (invalid) {
+					return { content: [{ type: "text", text: `Error: ${invalid}` }], details: { error: "invalid_spec" } };
+				}
+				const started = startMonitor(sessionId, spec, monitorDeps);
+				if (!started.ok) {
+					return { content: [{ type: "text", text: `Error: ${started.error}` }], details: { error: "limit_reached" } };
+				}
+				const summary = `${started.replaced ? `Replaced existing monitor "${spec.name}" — ` : ""}Monitor "${spec.name}" ${spec.intervalSec === undefined ? "adaptive cadence (5s, backing off)" : `every ${spec.intervalSec}s`}, reports when=${spec.when}${spec.pattern ? ` /${spec.pattern}/` : ""}${spec.once ? ", once" : ""}${spec.wake ? ", waking a turn per report" : ", no turn per report"}.`;
+				if (ctx.hasUI) ctx.ui.notify(summary, "info");
+				return { content: [{ type: "text", text: summary }], details: { ...spec, replaced: started.replaced } };
 			}
 
 			return { content: [{ type: "text", text: `Unknown action "${params.action}".` }] };
@@ -1780,50 +1675,52 @@ export default function hydemods(pi: ExtensionAPI): void {
 	/* ------------------------------ Commands -------------------------------- */
 
 	pi.registerCommand("irc", {
-		description: "Send an IRC message to an agent/session (Usage: /irc <to> <message>)",
+		description: "Post a message into the current session (Usage: /irc <to> <message>, where <to> is this session's codename or '*'). IRC does not deliver to other sessions.",
 		handler: async (args, ctx) => {
+			if (!isTweakEnabled("session-irc-monitor")) {
+				ctx.ui.notify("Error: 'session-irc-monitor' is disabled in /hydemods.", "warning");
+				return;
+			}
 			const parts = args.trim().split(/\s+/);
 			if (parts.length < 2) {
-				ctx.ui.notify("Usage: /irc <to> <message>", "warning");
+				ctx.ui.notify("Usage: /irc <to> <message>, where <to> is this session's codename or '*'.", "warning");
 				return;
 			}
 			const to = parts[0];
 			const message = parts.slice(1).join(" ");
+			const recipient = resolveRecipient(to, ctx);
+			if (!recipient.ok) {
+				ctx.ui.notify(recipient.error, "warning");
+				return;
+			}
 			const identity = getSessionIdentity(ctx.sessionManager.getSessionId());
 
 			pi.sendMessage(
 				{
 					customType: "irc:incoming",
-					content: `[IRC: ${identity.codename} → ${to}]\n${message}`,
+					content: `[IRC:${identity.codename}] ${message}`,
 					details: {
+						id: `mon_${identity.codename}_${Date.now()}`,
 						from: identity.codename,
-						to,
+						to: recipient.to,
 						message,
 					},
 					display: true,
 				},
-				{ deliverAs: "aside", triggerTurn: true },
+				{ deliverAs: "aside", triggerTurn: false },
 			);
-			ctx.ui.notify(`Message sent to ${to}`, "info");
+			ctx.ui.notify(`Message posted into this session (${identity.codename}).`, "info");
 		},
 	});
 
-	// Splits `key=value key="quoted value" -- command` into options and the command tail.
-	function parseMonitorArgs(input: string): { options: Record<string, string>; command?: string } {
-		const split = input.indexOf(" -- ");
-		const head = split === -1 ? input : input.slice(0, split);
-		const command = split === -1 ? undefined : input.slice(split + 4).trim() || undefined;
-		const options: Record<string, string> = {};
-		const re = /(\w+)=(?:"((?:\\.|[^"\\])*)"|'([^']*)'|(\S+))/g;
-		for (const m of head.matchAll(re)) {
-			options[m[1]] = (m[2] ?? m[3] ?? m[4] ?? "").replace(/\\"/g, '"');
-		}
-		return { options, command };
-	}
-
 	pi.registerCommand("monitor", {
-		description: 'Background monitors. Usage: /monitor [list] | stop <name> | start <name> [every=<sec>] [when=output|changed|match|exit_zero|exit_nonzero|always] [match=<regex>] [once] [urgent] [msg="template with {output} {code} {1}…"] -- <shell command>. Without every=, cadence is adaptive: 5s, backing off to 120s while quiet.',
+		description: 'Background monitors for this session. Usage: /monitor [list] | stop <name> | start <name> [every=<sec>] [when=output|changed|match|exit_zero|exit_nonzero|always] [match=<regex>] [once] [urgent] [wake] [msg="template with {output} {code} {1}…"] -- <shell command>. Without every=, cadence is adaptive: 5s, backing off to 120s while quiet. A monitor stops after 120 runs or 20 reports; wake starts a turn per report (default: no turn).',
 		handler: async (args, ctx) => {
+			if (!isTweakEnabled("session-irc-monitor")) {
+				ctx.ui.notify("Error: 'session-irc-monitor' is disabled in /hydemods.", "warning");
+				return;
+			}
+			const sessionId = ctx.sessionManager.getSessionId();
 			const trimmed = args.trim();
 			const sub = trimmed.split(/\s+/)[0] || "list";
 
@@ -1833,57 +1730,33 @@ export default function hydemods(pi: ExtensionAPI): void {
 					ctx.ui.notify("Usage: /monitor stop <name>", "warning");
 					return;
 				}
-				const stopped = stopMonitor(target);
+				const stopped = stopMonitor(sessionId, target);
 				ctx.ui.notify(stopped ? `Monitor "${target}" stopped` : `No active monitor named "${target}"`, stopped ? "info" : "warning");
 				return;
 			}
 
 			if (sub === "start") {
-				const rest = trimmed.slice("start".length).trim();
-				const name = rest.split(/\s+/)[0];
-				if (!name || name.includes("=") || name === "--") {
-					ctx.ui.notify("Usage: /monitor start <name> [every=<sec>] [when=…] [match=…] [once] [urgent] [msg=\"…\"] -- <command>", "warning");
+				const parsed = parseMonitorArgs(trimmed.slice("start".length).trim());
+				if ("error" in parsed) {
+					ctx.ui.notify(parsed.error, "warning");
 					return;
 				}
-				const optionText = rest.slice(name.length);
-				const { options, command } = parseMonitorArgs(optionText);
-				const head = optionText.includes(" -- ") ? optionText.slice(0, optionText.indexOf(" -- ")) : optionText;
-				const flags = new Set(head.split(/\s+/));
-				const pattern = options.match;
-				const whenRaw = options.when ?? (pattern ? "match" : "output");
-				const when = MONITOR_WHEN.find((w) => w === whenRaw);
-				if (!when) {
-					ctx.ui.notify(`Unknown when=${whenRaw}. Use one of: ${MONITOR_WHEN.join(", ")}`, "warning");
+				const recipient = resolveRecipient(parsed.spec.to, ctx);
+				if (!recipient.ok) {
+					ctx.ui.notify(recipient.error, "warning");
 					return;
 				}
-				if (when === "match" && !pattern) {
-					ctx.ui.notify("when=match needs match=<regex>", "warning");
+				const spec: MonitorSpec = { ...parsed.spec, to: recipient.to };
+				const started = startMonitor(sessionId, spec, monitorDeps);
+				if (!started.ok) {
+					ctx.ui.notify(started.error, "warning");
 					return;
 				}
-				if (pattern) {
-					try { new RegExp(pattern); } catch (err) {
-						ctx.ui.notify(`Invalid match regex: ${err instanceof Error ? err.message : String(err)}`, "warning");
-						return;
-					}
-				}
-				const spec: MonitorSpec = {
-					name,
-					to: options.to || "Main",
-					from: options.from || "System",
-					intervalSec: options.every === undefined ? undefined : Math.max(2, Number(options.every) || MONITOR_BASE_SEC),
-					command,
-					message: options.msg ?? options.message,
-					when,
-					pattern,
-					once: flags.has("once") || options.once === "true",
-					urgent: flags.has("urgent") || options.urgent === "true",
-				};
-				startMonitor(pi, spec);
-				ctx.ui.notify(`Monitor "${name}" ${spec.intervalSec === undefined ? "adaptive cadence" : `every ${spec.intervalSec}s`}, when=${when}${pattern ? ` /${pattern}/` : ""}${spec.once ? ", once" : ""}`, "info");
+				ctx.ui.notify(`${started.replaced ? `Replaced existing monitor "${spec.name}" — ` : ""}Monitor "${spec.name}" ${spec.intervalSec === undefined ? "adaptive cadence" : `every ${spec.intervalSec}s`}, when=${spec.when}${spec.pattern ? ` /${spec.pattern}/` : ""}${spec.once ? ", once" : ""}${spec.wake ? ", waking a turn per report" : ", no turn per report"}`, "info");
 				return;
 			}
 
-			const list = listMonitors();
+			const list = listMonitors(sessionId);
 			if (list.length === 0) {
 				ctx.ui.notify("No active monitors.", "info");
 				return;
@@ -1901,90 +1774,89 @@ export default function hydemods(pi: ExtensionAPI): void {
 				return;
 			}
 			await pi.setSessionName(name);
-			await refreshSessionIdentity(ctx);
+			refreshSessionIdentity(ctx);
 			ctx.ui.notify(`Session renamed to "${name}"`, "info");
 		},
 	});
 
 	pi.registerCommand("heartbeat", {
-		description: "Prompt the agent to establish intrinsic goals and explore the codebase (Usage: /heartbeat [optional topic])",
+		description: "Send one self-directed exploration prompt (Usage: /heartbeat [optional topic])",
 		handler: async (args, ctx) => {
 			if (!isTweakEnabled("heartbeat-command")) {
 				ctx.ui.notify("Error: 'heartbeat-command' is disabled in /hydemods.", "warning");
 				return;
 			}
 
-			const focus = args.trim();
+			// The topic is interpolated into a prompt, so drop control characters and backticks and cap it.
+			const focus = args.replace(/[\u0000-\u001f\u007f`]/g, " ").replace(/\s+/g, " ").trim().slice(0, 200);
 			const focusText = focus
-				? `Focus your curiosity on this domain: "${focus}".`
+				? `Focus on this area if it helps: ${focus}`
 				: "Survey recent commits, project structure, open notes, and code that catches your attention.";
 
 			const prompt = [
-				"💓 [Autonomous Heartbeat Cycle]",
+				"Heartbeat: one exploration pass, then stop.",
 				focusText,
 				"",
-				"Instructions:",
-				"1. Review the current state of the workspace.",
-				"2. Formulate 1 to 3 explicit intrinsic goals you want to explore.",
-				"3. Perform a read-only investigation using discovery tools (read, grep, glob).",
-				"4. Share your findings and observations concisely (following ASD-STE100 principles). If you discover actionable improvements, propose them before mutating files.",
+				"1. Look at the current state of the workspace.",
+				"2. Write down 1 to 3 things you want to understand better.",
+				"3. Investigate them with read, grep, and glob only. This pass does not edit files.",
+				"4. Report what you found briefly. Propose any change you would make; do not apply it.",
 			].join("\n");
 
-			pi.sendUserMessage(prompt, { deliverAs: "steer" });
-			ctx.ui.notify(focus ? `Heartbeat pulse: ${focus}` : "Autonomous heartbeat dispatched", "info");
+			pi.sendUserMessage(prompt, { deliverAs: "followUp" });
+			ctx.ui.notify(focus ? `Heartbeat prompt dispatched for: ${focus}` : "Heartbeat prompt dispatched", "info");
 		},
 	});
 
 	pi.registerCommand("retro", {
-		description: "Trigger a structured session retrospective (Usage: /retro)",
+		description: "Send one session-retrospective prompt and save the insight to the wiki (Usage: /retro)",
 		handler: async (_args, ctx) => {
 			if (!isTweakEnabled("session-retro-command")) {
 				ctx.ui.notify("Error: 'session-retro-command' is disabled in /hydemods.", "warning");
 				return;
 			}
 
+			// /retro only sees what is still in context; it must persist the insight or it is lost.
 			const prompt = [
-				"🧭 [Session Retrospective]",
-				"Conduct a structured retrospective of the work completed in this session:",
-				"1. What goals were established and what was achieved?",
-				"2. What technical friction or unexpected obstacles occurred, and how were they resolved?",
-				"3. What durable insights, conventions, or architectural decisions should be remembered?",
-				"Format the response clearly with headers, bullet points, and ASD-STE100 principles.",
+				"Session retrospective. Work from what is still visible in this conversation, and say so if it is incomplete.",
+				"1. Which goals were set, and which were finished?",
+				"2. Which obstacles appeared, and how were they resolved?",
+				"3. Which durable insight, convention, or decision should be kept?",
+				"",
+				"When the summary is ready, save the durable insight with the wiki_retro tool (xd://wiki_retro) so it survives this session.",
 			].join("\n");
 
-			pi.sendUserMessage(prompt, { deliverAs: "steer" });
-			ctx.ui.notify("Retrospective cycle dispatched", "info");
+			pi.sendUserMessage(prompt, { deliverAs: "followUp" });
+			ctx.ui.notify("Retrospective prompt dispatched", "info");
 		},
 	});
 
 	pi.on("session_shutdown", () => {
-		for (const monitor of activeMonitors.values()) {
-			clearInterval(monitor.timer);
-		}
-		activeMonitors.clear();
+		stopAllMonitors();
 	});
 
 	pi.registerCommand("hydemods", {
 		description: "Open the tweak panel or set collapsed-lines N (default 5, saved to settings)",
 		handler: async (args, ctx) => {
-			if (!ctx.hasUI) return;
 			const [command, value, ...extra] = args.trim().split(/\s+/);
 			if (command) {
 				if (command === "collapsed-lines" && value === undefined) {
-					ctx.ui.notify(`Collapsed line limit: ${display.collapsedLines}; default: ${DEFAULT_COLLAPSED_LINES}`, "info");
+					if (ctx.hasUI) ctx.ui.notify(`Collapsed line limit: ${display.collapsedLines}; default: ${DEFAULT_COLLAPSED_LINES}`, "info");
 					return;
 				}
 				const next = Number(value);
 				if (command !== "collapsed-lines" || !value || !/^\d+$/.test(value) || extra.length || !Number.isInteger(next) || next < 1) {
-					ctx.ui.notify("Use /hydemods collapsed-lines N, where N is a positive whole number.", "warning");
+					if (ctx.hasUI) ctx.ui.notify("Use /hydemods collapsed-lines N, where N is a positive whole number.", "warning");
 					return;
 				}
 				collapsedLinesSetting.set(settings, next);
 				display.collapsedLines = next;
 				repaintToolCards(ctx);
-				ctx.ui.notify(`Collapsed line limit set to ${next}; saved to settings.`, "info");
+				if (ctx.hasUI) ctx.ui.notify(`Collapsed line limit set to ${next}; saved to settings.`, "info");
 				return;
 			}
+			// Setting collapsed-lines works headless; only opening the panel needs the UI.
+			if (!ctx.hasUI) return;
 			await ctx.ui.custom(
 				(_tui, theme, keybindings, done) => {
 					const component = panelComponent(
@@ -1994,6 +1866,7 @@ export default function hydemods(pi: ExtensionAPI): void {
 						() => {
 							syncPromptRepair();
 							refreshSessionIdentity(ctx);
+							refreshLastPromptDrawer(ctx);
 						},
 					);
 					return {

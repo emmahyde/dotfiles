@@ -10,9 +10,9 @@ All of these tweaks start enabled and can be toggled from the panel:
 - **Map tool results to TOON** — encodes structured JSON/YAML tool results as TOON before display.
 - **Session identity & colors** — gives each session a persistent codename, sigil, and ANSI accent color.
 - **Last prompt drawer** — shows a truncated preview of the latest prompt above the editor.
-- **IRC comms & System Monitor** — enables session communication and deterministic background monitors over the IRC bus.
-- **Autonomous `/heartbeat` exploration** — adds `/heartbeat` for self-directed exploration and goal-setting.
-- **Interactive `/retro` summary** — adds `/retro` for a structured session retrospective.
+- **Session monitors & notes** — adds `/monitor` and the `monitor` tool (capped background shell checks that report into the current session) and `/irc` notes for the current session.
+- **Heartbeat prompt** — adds `/heartbeat`, one self-directed exploration prompt.
+- **Session retro prompt** — adds `/retro`, one retrospective prompt that saves the insight through the wiki tool.
 
 ## Install and use in OMP
 
@@ -41,6 +41,11 @@ This package uses Bun and has no build step. From the repository root:
 ```sh
 bun install
 bun run test
+bun run typecheck
 ```
+
+`bun run typecheck` links the running OMP's `@oh-my-pi/*` types (found via `omp` on `PATH`, as the
+tests do) into `node_modules` and runs `tsc --noEmit`; `bun run test` skips itself with a clear
+message when `omp` is not on `PATH`.
 
 The extension imports OMP runtime modules, so load it from an OMP installation to exercise it end to end. Edit `index.ts` directly, then restart OMP (or reload the extension in your development workflow) to try changes.
