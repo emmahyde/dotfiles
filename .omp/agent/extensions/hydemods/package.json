@@ -1,7 +1,7 @@
 {
   "name": "hydemods",
   "version": "1.0.0",
-  "description": "Hyde's OMP interface and workflow tweaks, including MCP prompt command repair.",
+  "description": "Hyde's OMP interface tweaks.",
   "type": "module",
   "main": "./index.ts",
   "scripts": {
