@@ -11,13 +11,14 @@ for the token alphabet in every reply; never for decoration.
 ### Syntax
 
 ```text
-$\textcolor{#4ade80}{\texttt{42 blocks, 0 errors}}$              text colour only
+$\textcolor{#4ade80}{42 blocks, 0 errors}$              text colour only
 $\colorbox{#a3e635}{\textcolor{#1a2e05}{\textbf{ DONE }}}$        filled chip
 $\fcolorbox{#facc15}{#1c1917}{\textcolor{#facc15}{\textbf{ ~ }}}$  outlined chip: border, fill, text
 ```
 
 Chip label: `\textbf`, UPPERCASE, one space of padding each side, two words at most. Counts,
-paths, and linter messages: `\texttt`.
+paths, and linter messages: code spans or plain text. `\texttt` does not render in the OMP chat
+renderer; it prints literally both bare and inside `$…$` (verified 2026-10-04). Do not use it.
 
 ### Contrast rule
 
