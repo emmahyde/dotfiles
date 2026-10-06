@@ -1,0 +1,44 @@
+<svg class="art-diagram-narrow" aria-hidden="true" focusable="false" id="perf-loop-mobile" width="331.5" height="404.5" viewBox="14.5 80 331.5 404.5" xmlns="http://www.w3.org/2000/svg"><style>#perf-loop-mobile text{font-family:'Anthropic Sans','Anthropic Sans Fallback','Anthropic Sans Fallback Roboto',system-ui,sans-serif}</style>
+<rect x="32.5" y="127.5" width="312" height="224" fill="none" stroke-width="1" stroke-dasharray="4 4" style="stroke:var(--viz-muted)"/>
+<text x="332" y="146" text-anchor="end" font-size="13" style="fill:var(--ink-2)">Claude</text>
+<text x="66" y="93.5" font-size="13" font-weight="600" style="fill:var(--ink)">Open a thread</text>
+<text x="66" y="111" font-size="13" style="fill:var(--viz-muted)">a slow stretch, a recording</text>
+<text x="66" y="169.5" font-size="13" font-weight="600" style="fill:var(--ink)">Build a benchmark</text>
+<text x="66" y="187" font-size="13" style="fill:var(--viz-muted)">trace it, reproduce in the lab</text>
+<text x="66" y="221.5" font-size="13" font-weight="600" style="fill:var(--ink)">Pull request</text>
+<text x="66" y="239" font-size="13" style="fill:var(--viz-muted)">several, sized for review</text>
+<text x="66" y="273.5" font-size="13" font-weight="600" style="fill:var(--ink)">Deploy</text>
+<text x="66" y="291" font-size="13" style="fill:var(--viz-muted)">behind a flag</text>
+<text x="66" y="325.5" font-size="13" font-weight="600" style="fill:var(--ink)">Read the field</text>
+<text x="66" y="343" font-size="13" style="fill:var(--viz-muted)">real users, by build and platform</text>
+<path d="M50 98 L50 156" fill="none" stroke-width="1" stroke-linejoin="round" style="stroke:var(--viz-muted)"/>
+<path d="M46.5 152 L50 156 L53.5 152" fill="none" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" style="stroke:var(--viz-muted)"/>
+<path d="M50 174 L50 208" fill="none" stroke-width="1" stroke-linejoin="round" style="stroke:var(--viz-muted)"/>
+<path d="M46.5 204 L50 208 L53.5 204" fill="none" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" style="stroke:var(--viz-muted)"/>
+<path d="M50 226 L50 260" fill="none" stroke-width="1" stroke-linejoin="round" style="stroke:var(--viz-muted)"/>
+<path d="M46.5 256 L50 260 L53.5 256" fill="none" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" style="stroke:var(--viz-muted)"/>
+<path d="M50 278 L50 312" fill="none" stroke-width="1" stroke-linejoin="round" style="stroke:var(--viz-muted)"/>
+<path d="M46.5 308 L50 312 L53.5 308" fill="none" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" style="stroke:var(--viz-muted)"/>
+<path d="M50 330 L50 384" fill="none" stroke-width="1" stroke-linejoin="round" style="stroke:var(--viz-muted)"/>
+<path d="M46.5 380 L50 384 L53.5 380" fill="none" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" style="stroke:var(--viz-muted)"/>
+<path d="M50 367 L200 367 L200 384" fill="none" stroke-width="1" stroke-linejoin="round" style="stroke:var(--viz-muted)"/>
+<path d="M196.5 380 L200 384 L203.5 380" fill="none" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" style="stroke:var(--viz-muted)"/>
+<text x="66" y="397.5" font-size="13" font-weight="600" style="fill:var(--ink)">It got faster</text>
+<text x="66" y="415" font-size="13" style="fill:var(--viz-muted)">ratchet the</text>
+<text x="66" y="431" font-size="13" style="fill:var(--viz-muted)">benchmark down</text>
+<text x="216" y="397.5" font-size="13" font-weight="600" style="fill:var(--viz-m1)">It didn’t</text>
+<text x="216" y="415" font-size="13" style="fill:var(--viz-muted)">turn the flag off,</text>
+<text x="216" y="431" font-size="13" style="fill:var(--viz-muted)">iterate</text>
+<path d="M200 401 L200 483" fill="none" stroke-width="1" stroke-linejoin="round" style="stroke:var(--viz-muted)"/>
+<path d="M50 401 L50 483" fill="none" stroke-width="1" stroke-linejoin="round" style="stroke:var(--viz-muted)"/>
+<path d="M200 483 L16 483 L16 165 L41 165" fill="none" stroke-width="1" stroke-linejoin="round" style="stroke:var(--viz-muted)"/>
+<path d="M37 161.5 L41 165 L37 168.5" fill="none" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" style="stroke:var(--viz-muted)"/>
+<text x="137" y="476" text-anchor="middle" font-size="13" style="fill:var(--ink-2)">next slow spot</text>
+<circle cx="50" cy="89" r="5.5" stroke-width="2" style="fill:var(--viz-m1);stroke:var(--bg)"/>
+<circle cx="50" cy="165" r="5.5" stroke-width="2" style="fill:var(--viz-m1);stroke:var(--bg)"/>
+<circle cx="50" cy="217" r="5.5" stroke-width="2" style="fill:var(--viz-m1);stroke:var(--bg)"/>
+<circle cx="50" cy="269" r="5.5" stroke-width="2" style="fill:var(--viz-m1);stroke:var(--bg)"/>
+<circle cx="50" cy="321" r="5.5" stroke-width="2" style="fill:var(--viz-m1);stroke:var(--bg)"/>
+<circle cx="50" cy="393" r="5.5" stroke-width="2" style="fill:var(--fig-focal);stroke:var(--bg)"/>
+<circle cx="200" cy="393" r="5.5" stroke-width="2" style="fill:var(--viz-b9);stroke:var(--bg)"/>
+</svg>

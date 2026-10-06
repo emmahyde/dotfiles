@@ -1,0 +1,111 @@
+<svg class="art-diagram-wide" aria-hidden="true" focusable="false" id="perf-journeys" width="651.5" height="679" viewBox="33.5 90.5 651.5 679" xmlns="http://www.w3.org/2000/svg"><style>#perf-journeys text{font-family:'Anthropic Sans','Anthropic Sans Fallback','Anthropic Sans Fallback Roboto',system-ui,sans-serif}#perf-journeys .tnum{font-variant-numeric:tabular-nums}#perf-journeys .mo{font-family:'Anthropic Mono','Anthropic Mono Fallback',ui-monospace,monospace}#perf-journeys .up{text-transform:uppercase;letter-spacing:.02em}</style>
+<text x="36" y="104" font-size="12" style="fill:var(--ink)"><tspan class="mo up" font-size="13" font-weight="500" style="fill:var(--ink)">Launching the app</tspan></text>
+<rect x="36.5" y="116.5" width="155" height="119.25" fill="none" stroke-width="1" style="stroke:var(--line-soft)"/>
+<text x="48" y="138" font-size="15" font-weight="500" style="fill:var(--ink)">claude.ai</text>
+<text x="48" y="154" font-size="12" style="fill:var(--viz-muted)">web &#8201;·&#8201; fresh load</text>
+<text class="tnum" x="48" y="191.25" font-size="12" style="fill:var(--ink)"><tspan font-size="26" font-weight="600" style="fill:var(--ink)">5.6x</tspan><tspan dx="5" font-size="12" style="fill:var(--viz-muted)">faster</tspan></text>
+<rect x="48" y="200.25" width="88" height="4" style="fill:var(--viz-b9)"/>
+<rect x="48" y="206.25" width="15.69" height="4" style="fill:var(--fig-focal)"/>
+<text class="tnum" x="180" y="209.75" text-anchor="end" font-size="13" style="fill:var(--viz-m1)">−82%</text>
+<text class="tnum" x="48" y="225.25" font-size="12" style="fill:var(--ink-2)">3,085 → <tspan font-weight="600" style="fill:var(--ink)">550</tspan> ms</text>
+<rect x="200.5" y="116.5" width="155" height="119.25" fill="none" stroke-width="1" style="stroke:var(--line-soft)"/>
+<text x="212" y="138" font-size="15" font-weight="500" style="fill:var(--ink)">Desktop app</text>
+<text x="212" y="154" font-size="12" style="fill:var(--viz-muted)">cold start</text>
+<text class="tnum" x="212" y="191.25" font-size="12" style="fill:var(--ink)"><tspan font-size="26" font-weight="600" style="fill:var(--ink)">1.9x</tspan><tspan dx="5" font-size="12" style="fill:var(--viz-muted)">faster</tspan></text>
+<rect x="212" y="200.25" width="88" height="4" style="fill:var(--viz-b9)"/>
+<rect x="212" y="206.25" width="46.41" height="4" style="fill:var(--fig-focal)"/>
+<text class="tnum" x="344" y="209.75" text-anchor="end" font-size="13" style="fill:var(--viz-m1)">−47%</text>
+<text class="tnum" x="212" y="225.25" font-size="12" style="fill:var(--ink-2)">6,310 → <tspan font-weight="600" style="fill:var(--ink)">3,328</tspan> ms</text>
+<text x="36" y="270.25" font-size="12" style="fill:var(--ink)"><tspan class="mo up" font-size="13" font-weight="500" style="fill:var(--ink)">Starting a conversation</tspan></text>
+<rect x="36.5" y="282.75" width="155" height="119.25" fill="none" stroke-width="1" style="stroke:var(--line-soft)"/>
+<text x="48" y="304.25" font-size="15" font-weight="500" style="fill:var(--ink)">Chat</text>
+<text x="48" y="320.25" font-size="12" style="fill:var(--viz-muted)">web</text>
+<text class="tnum" x="48" y="357.5" font-size="12" style="fill:var(--ink)"><tspan font-size="26" font-weight="600" style="fill:var(--ink)">1.5x</tspan><tspan dx="5" font-size="12" style="fill:var(--viz-muted)">faster</tspan></text>
+<rect x="48" y="366.5" width="88" height="4" style="fill:var(--viz-b9)"/>
+<rect x="48" y="372.5" width="57.75" height="4" style="fill:var(--fig-focal)"/>
+<text class="tnum" x="180" y="376" text-anchor="end" font-size="13" style="fill:var(--viz-m1)">−34%</text>
+<text class="tnum" x="48" y="391.5" font-size="12" style="fill:var(--ink-2)">416 → <tspan font-weight="600" style="fill:var(--ink)">273</tspan> ms</text>
+<rect x="200.5" y="282.75" width="155" height="119.25" fill="none" stroke-width="1" style="stroke:var(--line-soft)"/>
+<text x="212" y="304.25" font-size="15" font-weight="500" style="fill:var(--ink)">Chat</text>
+<text x="212" y="320.25" font-size="12" style="fill:var(--viz-muted)">desktop</text>
+<text class="tnum" x="212" y="357.5" font-size="12" style="fill:var(--ink)"><tspan font-size="26" font-weight="600" style="fill:var(--ink)">2.1x</tspan><tspan dx="5" font-size="12" style="fill:var(--viz-muted)">faster</tspan></text>
+<rect x="212" y="366.5" width="88" height="4" style="fill:var(--viz-b9)"/>
+<rect x="212" y="372.5" width="42.85" height="4" style="fill:var(--fig-focal)"/>
+<text class="tnum" x="344" y="376" text-anchor="end" font-size="13" style="fill:var(--viz-m1)">−51%</text>
+<text class="tnum" x="212" y="391.5" font-size="12" style="fill:var(--ink-2)">460 → <tspan font-weight="600" style="fill:var(--ink)">224</tspan> ms</text>
+<rect x="364.5" y="282.75" width="155" height="119.25" fill="none" stroke-width="1" style="stroke:var(--line-soft)"/>
+<text x="376" y="304.25" font-size="15" font-weight="500" style="fill:var(--ink)">Claude Code</text>
+<text x="376" y="320.25" font-size="12" style="fill:var(--viz-muted)">desktop</text>
+<text class="tnum" x="376" y="357.5" font-size="12" style="fill:var(--ink)"><tspan font-size="26" font-weight="600" style="fill:var(--ink)">2.4x</tspan><tspan dx="5" font-size="12" style="fill:var(--viz-muted)">faster</tspan></text>
+<rect x="376" y="366.5" width="88" height="4" style="fill:var(--viz-b9)"/>
+<rect x="376" y="372.5" width="36.48" height="4" style="fill:var(--fig-focal)"/>
+<text class="tnum" x="508" y="376" text-anchor="end" font-size="13" style="fill:var(--viz-m1)">−59%</text>
+<text class="tnum" x="376" y="391.5" font-size="12" style="fill:var(--ink-2)">837 → <tspan font-weight="600" style="fill:var(--ink)">347</tspan> ms</text>
+<text x="36" y="436.5" font-size="12" style="fill:var(--ink)"><tspan class="mo up" font-size="13" font-weight="500" style="fill:var(--ink)">Loading a conversation</tspan></text>
+<rect x="36.5" y="449" width="155" height="119.25" fill="none" stroke-width="1" style="stroke:var(--line-soft)"/>
+<text x="48" y="470.5" font-size="15" font-weight="500" style="fill:var(--ink)">Chat</text>
+<text x="48" y="486.5" font-size="12" style="fill:var(--viz-muted)">web</text>
+<text class="tnum" x="48" y="523.75" font-size="12" style="fill:var(--ink)"><tspan font-size="26" font-weight="600" style="fill:var(--ink)">2.4x</tspan><tspan dx="5" font-size="12" style="fill:var(--viz-muted)">faster</tspan></text>
+<rect x="48" y="532.75" width="88" height="4" style="fill:var(--viz-b9)"/>
+<rect x="48" y="538.75" width="36.51" height="4" style="fill:var(--fig-focal)"/>
+<text class="tnum" x="180" y="542.25" text-anchor="end" font-size="13" style="fill:var(--viz-m1)">−59%</text>
+<text class="tnum" x="48" y="557.75" font-size="12" style="fill:var(--ink-2)">1,557 → <tspan font-weight="600" style="fill:var(--ink)">646</tspan> ms</text>
+<rect x="200.5" y="449" width="155" height="119.25" fill="none" stroke-width="1" style="stroke:var(--line-soft)"/>
+<text x="212" y="470.5" font-size="15" font-weight="500" style="fill:var(--ink)">Chat</text>
+<text x="212" y="486.5" font-size="12" style="fill:var(--viz-muted)">desktop</text>
+<text class="tnum" x="212" y="523.75" font-size="12" style="fill:var(--ink)"><tspan font-size="26" font-weight="600" style="fill:var(--ink)">2.8x</tspan><tspan dx="5" font-size="12" style="fill:var(--viz-muted)">faster</tspan></text>
+<rect x="212" y="532.75" width="88" height="4" style="fill:var(--viz-b9)"/>
+<rect x="212" y="538.75" width="31.74" height="4" style="fill:var(--fig-focal)"/>
+<text class="tnum" x="344" y="542.25" text-anchor="end" font-size="13" style="fill:var(--viz-m1)">−64%</text>
+<text class="tnum" x="212" y="557.75" font-size="12" style="fill:var(--ink-2)">1,353 → <tspan font-weight="600" style="fill:var(--ink)">488</tspan> ms</text>
+<rect x="364.5" y="449" width="155" height="119.25" fill="none" stroke-width="1" style="stroke:var(--line-soft)"/>
+<text x="376" y="470.5" font-size="15" font-weight="500" style="fill:var(--ink)">Claude Cowork</text>
+<text x="376" y="486.5" font-size="12" style="fill:var(--viz-muted)">desktop &#8201;·&#8201; cloud</text>
+<text class="tnum" x="376" y="523.75" font-size="12" style="fill:var(--ink)"><tspan font-size="26" font-weight="600" style="fill:var(--ink)">3.5x</tspan><tspan dx="5" font-size="12" style="fill:var(--viz-muted)">faster</tspan></text>
+<rect x="376" y="532.75" width="88" height="4" style="fill:var(--viz-b9)"/>
+<rect x="376" y="538.75" width="24.97" height="4" style="fill:var(--fig-focal)"/>
+<text class="tnum" x="508" y="542.25" text-anchor="end" font-size="13" style="fill:var(--viz-m1)">−72%</text>
+<text class="tnum" x="376" y="557.75" font-size="12" style="fill:var(--ink-2)">2,566 → <tspan font-weight="600" style="fill:var(--ink)">728</tspan> ms</text>
+<rect x="528.5" y="449" width="155" height="119.25" fill="none" stroke-width="1" style="stroke:var(--line-soft)"/>
+<text x="540" y="470.5" font-size="15" font-weight="500" style="fill:var(--ink)">Claude Code</text>
+<text x="540" y="486.5" font-size="12" style="fill:var(--viz-muted)">desktop</text>
+<text class="tnum" x="540" y="523.75" font-size="12" style="fill:var(--ink)"><tspan font-size="26" font-weight="600" style="fill:var(--ink)">2.1x</tspan><tspan dx="5" font-size="12" style="fill:var(--viz-muted)">faster</tspan></text>
+<rect x="540" y="532.75" width="88" height="4" style="fill:var(--viz-b9)"/>
+<rect x="540" y="538.75" width="42.3" height="4" style="fill:var(--fig-focal)"/>
+<text class="tnum" x="672" y="542.25" text-anchor="end" font-size="13" style="fill:var(--viz-m1)">−52%</text>
+<text class="tnum" x="540" y="557.75" font-size="12" style="fill:var(--ink-2)">545 → <tspan font-weight="600" style="fill:var(--ink)">262</tspan> ms</text>
+<text x="36" y="602.75" font-size="12" style="fill:var(--ink)"><tspan class="mo up" font-size="13" font-weight="500" style="fill:var(--ink)">Sending a message</tspan><tspan dx="10" font-size="12" style="fill:var(--viz-muted)">client-side share</tspan></text>
+<rect x="36.5" y="615.25" width="155" height="119.25" fill="none" stroke-width="1" style="stroke:var(--line-soft)"/>
+<text x="48" y="636.75" font-size="15" font-weight="500" style="fill:var(--ink)">Chat</text>
+<text x="48" y="652.75" font-size="12" style="fill:var(--viz-muted)">web</text>
+<text class="tnum" x="48" y="690" font-size="12" style="fill:var(--ink)"><tspan font-size="26" font-weight="600" style="fill:var(--ink)">3.1x</tspan><tspan dx="5" font-size="12" style="fill:var(--viz-muted)">faster</tspan></text>
+<rect x="48" y="699" width="88" height="4" style="fill:var(--viz-b9)"/>
+<rect x="48" y="705" width="28.84" height="4" style="fill:var(--fig-focal)"/>
+<text class="tnum" x="180" y="708.5" text-anchor="end" font-size="13" style="fill:var(--viz-m1)">−67%</text>
+<text class="tnum" x="48" y="724" font-size="12" style="fill:var(--ink-2)">180 → <tspan font-weight="600" style="fill:var(--ink)">59</tspan> ms</text>
+<rect x="200.5" y="615.25" width="155" height="119.25" fill="none" stroke-width="1" style="stroke:var(--line-soft)"/>
+<text x="212" y="636.75" font-size="15" font-weight="500" style="fill:var(--ink)">Chat</text>
+<text x="212" y="652.75" font-size="12" style="fill:var(--viz-muted)">desktop</text>
+<text class="tnum" x="212" y="690" font-size="12" style="fill:var(--ink)"><tspan font-size="26" font-weight="600" style="fill:var(--ink)">2.2x</tspan><tspan dx="5" font-size="12" style="fill:var(--viz-muted)">faster</tspan></text>
+<rect x="212" y="699" width="88" height="4" style="fill:var(--viz-b9)"/>
+<rect x="212" y="705" width="40.23" height="4" style="fill:var(--fig-focal)"/>
+<text class="tnum" x="344" y="708.5" text-anchor="end" font-size="13" style="fill:var(--viz-m1)">−54%</text>
+<text class="tnum" x="212" y="724" font-size="12" style="fill:var(--ink-2)">140 → <tspan font-weight="600" style="fill:var(--ink)">64</tspan> ms</text>
+<rect x="364.5" y="615.25" width="155" height="119.25" fill="none" stroke-width="1" style="stroke:var(--line-soft)"/>
+<text x="376" y="636.75" font-size="15" font-weight="500" style="fill:var(--ink)">Claude Cowork</text>
+<text x="376" y="652.75" font-size="12" style="fill:var(--viz-muted)">desktop &#8201;·&#8201; cloud</text>
+<text class="tnum" x="376" y="690" font-size="12" style="fill:var(--ink)"><tspan font-size="26" font-weight="600" style="fill:var(--ink)">19x</tspan><tspan dx="5" font-size="12" style="fill:var(--viz-muted)">faster</tspan></text>
+<rect x="376" y="699" width="88" height="4" style="fill:var(--viz-b9)"/>
+<rect x="376" y="705" width="4.55" height="4" style="fill:var(--fig-focal)"/>
+<text class="tnum" x="508" y="708.5" text-anchor="end" font-size="13" style="fill:var(--viz-m1)">−95%</text>
+<text class="tnum" x="376" y="724" font-size="12" style="fill:var(--ink-2)">928 → <tspan font-weight="600" style="fill:var(--ink)">48</tspan> ms</text>
+<rect x="528.5" y="615.25" width="155" height="119.25" fill="none" stroke-width="1" style="stroke:var(--line-soft)"/>
+<text x="540" y="636.75" font-size="15" font-weight="500" style="fill:var(--ink)">Claude Code</text>
+<text x="540" y="652.75" font-size="12" style="fill:var(--viz-muted)">desktop</text>
+<text class="tnum" x="540" y="690" font-size="12" style="fill:var(--ink)"><tspan font-size="26" font-weight="600" style="fill:var(--ink)">4.8x</tspan><tspan dx="5" font-size="12" style="fill:var(--viz-muted)">faster</tspan></text>
+<rect x="540" y="699" width="88" height="4" style="fill:var(--viz-b9)"/>
+<rect x="540" y="705" width="18.3" height="4" style="fill:var(--fig-focal)"/>
+<text class="tnum" x="672" y="708.5" text-anchor="end" font-size="13" style="fill:var(--viz-m1)">−79%</text>
+<text class="tnum" x="540" y="724" font-size="12" style="fill:var(--ink-2)">250 → <tspan font-weight="600" style="fill:var(--ink)">52</tspan> ms</text>
+<text x="36" y="765" font-size="12" style="fill:var(--viz-muted)">Thirteen measurements across four journeys, before and after: 3.1x faster on average (geometric mean).</text>
+</svg>

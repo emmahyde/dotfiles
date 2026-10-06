@@ -1,0 +1,84 @@
+<svg class="art-diagram-narrow" aria-hidden="true" focusable="false" id="eval-four-elements-mobile" width="323" height="570" viewBox="0 0 323 570" xmlns="http://www.w3.org/2000/svg"><title>Score against tokens spent</title><style>svg{--bg:#faf9f5;--ink:#141413;--ink-2:#4c4b45;--line:#14141338;--line-soft:#1414131c;--accent:#c15f3c;--viz-b9:#8e8c87;--viz-m1:#3d3d3a;--viz-muted:#65645e;--fig-focal:var(--accent);background:var(--bg)}</style><style>#eval-four-elements-mobile text{font-family:'Anthropic Sans','Anthropic Sans Fallback','Anthropic Sans Fallback Roboto',system-ui,sans-serif}#eval-four-elements-mobile .tnum{font-variant-numeric:tabular-nums}</style>
+<line x1="28.0" x2="307.0" y1="96.0" y2="96.0" stroke-width="1" stroke-dasharray="3 4" stroke-linecap="round" style="stroke:var(--line)"/>
+<text x="28.0" y="90.0" font-size="14" style="fill:var(--viz-muted)">Perfect score</text>
+<line x1="28.0" x2="307.0" y1="402" y2="402" stroke-width="1" style="stroke:var(--line)"/>
+<g font-size="14" style="fill:var(--viz-muted)">
+<line x1="54.6" x2="54.6" y1="402" y2="407" stroke-width="1" style="stroke:var(--line)"/>
+<text x="54.6" y="422" text-anchor="middle">low</text>
+<line x1="146.5" x2="146.5" y1="402" y2="407" stroke-width="1" style="stroke:var(--line)"/>
+<text x="146.5" y="422" text-anchor="middle">medium</text>
+<line x1="238.5" x2="238.5" y1="402" y2="407" stroke-width="1" style="stroke:var(--line)"/>
+<text x="238.5" y="422" text-anchor="middle">high</text>
+</g>
+<text x="167.5" y="453.5" text-anchor="middle" font-size="14" style="fill:var(--viz-muted)">Action tokens per attempt, log scale</text>
+<text transform="translate(10.5 249.0) rotate(-90)" text-anchor="middle" font-size="14" style="fill:var(--viz-muted)">Score</text>
+<line x1="62.7" x2="285.5" y1="203.9" y2="203.9" stroke-width="1" stroke-dasharray="3 4" stroke-linecap="round" style="stroke:var(--line)"/>
+<line x1="246.7" x2="285.5" y1="145.7" y2="145.7" stroke-width="1" stroke-dasharray="3 4" stroke-linecap="round" style="stroke:var(--line)"/>
+<g class="series">
+<path d="M54.6 203.9 L146.5 162.7 L238.5 145.7" fill="none" stroke-width="1" stroke-linejoin="round" stroke-linecap="round" style="stroke:var(--fig-focal)"/>
+<path d="M51.5 195.9 L57.6 195.9 M54.6 195.9 L54.6 211.9 M51.5 211.9 L57.6 211.9" fill="none" stroke-width="1" style="stroke:var(--fig-focal)"/>
+<circle cx="54.6" cy="203.9" r="4.5" stroke-width="1" style="fill:var(--fig-focal);stroke:var(--bg)"/>
+<path d="M143.5 154.7 L149.6 154.7 M146.5 154.7 L146.5 170.7 M143.5 170.7 L149.6 170.7" fill="none" stroke-width="1" style="stroke:var(--fig-focal)"/>
+<circle cx="146.5" cy="162.7" r="4.5" stroke-width="1" style="fill:var(--fig-focal);stroke:var(--bg)"/>
+<path d="M235.5 137.7 L241.6 137.7 M238.5 137.7 L238.5 153.7 M235.5 153.7 L241.6 153.7" fill="none" stroke-width="1" style="stroke:var(--fig-focal)"/>
+<circle cx="238.5" cy="145.7" r="4.5" stroke-width="1" style="fill:var(--fig-focal);stroke:var(--bg)"/>
+</g>
+<g class="series">
+<path d="M54.6 294.8 L146.5 262.1 L238.5 247.9" fill="none" stroke-width="1" stroke-linejoin="round" stroke-linecap="round" style="stroke:var(--viz-m1)"/>
+<path d="M51.5 286.8 L57.6 286.8 M54.6 286.8 L54.6 302.8 M51.5 302.8 L57.6 302.8" fill="none" stroke-width="1" style="stroke:var(--viz-m1)"/>
+<circle cx="54.6" cy="294.8" r="4.5" stroke-width="1" style="fill:var(--viz-m1);stroke:var(--bg)"/>
+<path d="M143.5 254.1 L149.6 254.1 M146.5 254.1 L146.5 270.1 M143.5 270.1 L149.6 270.1" fill="none" stroke-width="1" style="stroke:var(--viz-m1)"/>
+<circle cx="146.5" cy="262.1" r="4.5" stroke-width="1" style="fill:var(--viz-m1);stroke:var(--bg)"/>
+<path d="M235.5 239.9 L241.6 239.9 M238.5 239.9 L238.5 255.9 M235.5 255.9 L241.6 255.9" fill="none" stroke-width="1" style="stroke:var(--viz-m1)"/>
+<circle cx="238.5" cy="247.9" r="4.5" stroke-width="1" style="fill:var(--viz-m1);stroke:var(--bg)"/>
+</g>
+<g class="series">
+<path d="M54.6 360.1 L146.5 334.6 L238.5 323.2" fill="none" stroke-width="1" stroke-dasharray="5 3" stroke-linejoin="round" stroke-linecap="round" style="stroke:var(--viz-muted)"/>
+<path d="M51.5 352.1 L57.6 352.1 M54.6 352.1 L54.6 368.1 M51.5 368.1 L57.6 368.1" fill="none" stroke-width="1" style="stroke:var(--viz-muted)"/>
+<circle cx="54.6" cy="360.1" r="4.5" stroke-width="1" style="fill:var(--viz-muted);stroke:var(--bg)"/>
+<path d="M143.5 326.6 L149.6 326.6 M146.5 326.6 L146.5 342.6 M143.5 342.6 L149.6 342.6" fill="none" stroke-width="1" style="stroke:var(--viz-muted)"/>
+<circle cx="146.5" cy="334.6" r="4.5" stroke-width="1" style="fill:var(--viz-muted);stroke:var(--bg)"/>
+<path d="M235.5 315.2 L241.6 315.2 M238.5 315.2 L238.5 331.2 M235.5 331.2 L241.6 331.2" fill="none" stroke-width="1" style="stroke:var(--viz-muted)"/>
+<circle cx="238.5" cy="323.2" r="4.5" stroke-width="1" style="fill:var(--viz-muted);stroke:var(--bg)"/>
+</g>
+<path d="M0.5 13 L24.5 13" fill="none" stroke-width="1" style="stroke:var(--fig-focal)"/>
+<circle cx="12.5" cy="13" r="4.5" stroke-width="1" style="fill:var(--fig-focal);stroke:var(--bg)"/>
+<text x="34.5" y="18" font-size="14" font-weight="500" style="fill:var(--ink)">Frontier model</text>
+<path d="M0.5 35 L24.5 35" fill="none" stroke-width="1" style="stroke:var(--viz-m1)"/>
+<circle cx="12.5" cy="35" r="4.5" stroke-width="1" style="fill:var(--viz-m1);stroke:var(--bg)"/>
+<text x="34.5" y="40" font-size="14" font-weight="500" style="fill:var(--ink)">Mid-size model</text>
+<path d="M0.5 57 L24.5 57" fill="none" stroke-width="1" stroke-dasharray="5 3" style="stroke:var(--viz-muted)"/>
+<circle cx="12.5" cy="57" r="4.5" stroke-width="1" style="fill:var(--viz-muted);stroke:var(--bg)"/>
+<text x="34.5" y="62" font-size="14" font-weight="500" style="fill:var(--ink)">Smaller model</text>
+<line x1="197.6" x2="197.6" y1="165.3" y2="316.2" stroke-width="1" style="stroke:var(--viz-muted)"/>
+<path d="M194.1 170.3 L197.6 165.3 L201.2 170.3" fill="none" stroke-width="1" stroke-linejoin="round" stroke-linecap="round" style="stroke:var(--viz-muted)"/>
+<path d="M194.1 311.2 L197.6 316.2 L201.2 311.2" fill="none" stroke-width="1" stroke-linejoin="round" stroke-linecap="round" style="stroke:var(--viz-muted)"/>
+<circle cx="215.0" cy="227.7" r="9.5" stroke-width="1" style="fill:var(--bg);stroke:var(--viz-m1)"/>
+<text x="215.0" y="232.2" text-anchor="middle" font-size="13" font-weight="500" style="fill:var(--viz-m1)">1</text>
+<line x1="275.3" x2="275.3" y1="148.7" y2="200.9" stroke-width="1" style="stroke:var(--viz-muted)"/>
+<path d="M271.7 153.7 L275.3 148.7 L278.9 153.7" fill="none" stroke-width="1" stroke-linejoin="round" stroke-linecap="round" style="stroke:var(--viz-muted)"/>
+<path d="M271.7 195.9 L275.3 200.9 L278.9 195.9" fill="none" stroke-width="1" stroke-linejoin="round" stroke-linecap="round" style="stroke:var(--viz-muted)"/>
+<circle cx="295.8" cy="174.8" r="9.5" stroke-width="1" style="fill:var(--bg);stroke:var(--viz-m1)"/>
+<text x="295.8" y="179.3" text-anchor="middle" font-size="13" font-weight="500" style="fill:var(--viz-m1)">2</text>
+<line x1="275.3" x2="275.3" y1="99.0" y2="142.7" stroke-width="1" style="stroke:var(--viz-muted)"/>
+<path d="M271.7 104.0 L275.3 99.0 L278.9 104.0" fill="none" stroke-width="1" stroke-linejoin="round" stroke-linecap="round" style="stroke:var(--viz-muted)"/>
+<path d="M271.7 137.7 L275.3 142.7 L278.9 137.7" fill="none" stroke-width="1" stroke-linejoin="round" stroke-linecap="round" style="stroke:var(--viz-muted)"/>
+<circle cx="295.8" cy="120.9" r="9.5" stroke-width="1" style="fill:var(--bg);stroke:var(--viz-m1)"/>
+<text x="295.8" y="125.4" text-anchor="middle" font-size="13" font-weight="500" style="fill:var(--viz-m1)">3</text>
+<line x1="238.5" x2="238.5" y1="335.2" y2="372.0" stroke-width="1" style="stroke:var(--viz-muted)"/>
+<path d="M235.0 340.2 L238.5 335.2 L242.1 340.2" fill="none" stroke-width="1" stroke-linejoin="round" stroke-linecap="round" style="stroke:var(--viz-muted)"/>
+<circle cx="238.5" cy="384.0" r="9.5" stroke-width="1" style="fill:var(--bg);stroke:var(--viz-m1)"/>
+<text x="238.5" y="388.5" text-anchor="middle" font-size="13" font-weight="500" style="fill:var(--viz-m1)">4</text>
+<circle cx="10.5" cy="477.0" r="9.5" stroke-width="1" style="fill:var(--bg);stroke:var(--viz-m1)"/>
+<text x="10.5" y="481.5" text-anchor="middle" font-size="13" font-weight="500" style="fill:var(--viz-m1)">1</text>
+<text x="27.5" y="482" font-size="14" style="fill:var(--viz-m1)">A more capable model scores higher</text>
+<circle cx="10.5" cy="503.0" r="9.5" stroke-width="1" style="fill:var(--bg);stroke:var(--viz-m1)"/>
+<text x="10.5" y="507.5" text-anchor="middle" font-size="13" font-weight="500" style="fill:var(--viz-m1)">2</text>
+<text x="27.5" y="508" font-size="14" style="fill:var(--viz-m1)">More effort scores higher</text>
+<circle cx="10.5" cy="529.0" r="9.5" stroke-width="1" style="fill:var(--bg);stroke:var(--viz-m1)"/>
+<text x="10.5" y="533.5" text-anchor="middle" font-size="13" font-weight="500" style="fill:var(--viz-m1)">3</text>
+<text x="27.5" y="534" font-size="14" style="fill:var(--viz-m1)">Headroom below a perfect score</text>
+<circle cx="10.5" cy="555.0" r="9.5" stroke-width="1" style="fill:var(--bg);stroke:var(--viz-m1)"/>
+<text x="10.5" y="559.5" text-anchor="middle" font-size="13" font-weight="500" style="fill:var(--viz-m1)">4</text>
+<text x="27.5" y="560" font-size="14" style="fill:var(--viz-m1)">Low run-to-run variance</text>
+</svg>

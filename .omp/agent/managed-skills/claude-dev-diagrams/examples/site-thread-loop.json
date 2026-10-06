@@ -1,0 +1,571 @@
+{
+ "theme": "site",
+ "id": "thread-loop",
+ "size": [
+  720,
+  360
+ ],
+ "alt": "One thread in the loop: open a thread, then Claude builds a benchmark, opens pull requests, deploys behind a flag and reads the field. If it got faster, ratchet the benchmark down; if not, turn the flag off and iterate. Either way, move to the next slow spot.",
+ "caption": "Someone opens a thread; Claude takes it from there",
+ "groups": [
+  {
+   "id": "claude",
+   "x": 150,
+   "y": 88,
+   "w": 534,
+   "h": 123,
+   "tone": "frame-dashed"
+  }
+ ],
+ "edges": [
+  {
+   "from": [
+    50,
+    190
+   ],
+   "to": [
+    159,
+    190
+   ]
+  },
+  {
+   "from": [
+    177,
+    190
+   ],
+   "to": [
+    286,
+    190
+   ]
+  },
+  {
+   "from": [
+    304,
+    190
+   ],
+   "to": [
+    413,
+    190
+   ]
+  },
+  {
+   "from": [
+    431,
+    190
+   ],
+   "to": [
+    540,
+    190
+   ]
+  },
+  {
+   "from": [
+    549,
+    198
+   ],
+   "to": [
+    549,
+    257
+   ]
+  },
+  {
+   "from": [
+    549,
+    236
+   ],
+   "via": [
+    [
+     422,
+     236
+    ]
+   ],
+   "to": [
+    422,
+    257
+   ]
+  },
+  {
+   "from": [
+    422,
+    274
+   ],
+   "to": [
+    422,
+    328
+   ],
+   "head": "none"
+  },
+  {
+   "from": [
+    549,
+    274
+   ],
+   "via": [
+    [
+     549,
+     328
+    ],
+    [
+     168,
+     328
+    ]
+   ],
+   "to": [
+    168,
+    199
+   ],
+   "label": "next slow spot",
+   "label_at": [
+    295,
+    321
+   ],
+   "label_anchor": "middle"
+  }
+ ],
+ "dots": [
+  {
+   "x": 41,
+   "y": 190,
+   "r": 5.5,
+   "ring": 2,
+   "color": "m1"
+  },
+  {
+   "x": 168,
+   "y": 190,
+   "r": 5.5,
+   "ring": 2,
+   "color": "m1"
+  },
+  {
+   "x": 295,
+   "y": 190,
+   "r": 5.5,
+   "ring": 2,
+   "color": "m1"
+  },
+  {
+   "x": 422,
+   "y": 190,
+   "r": 5.5,
+   "ring": 2,
+   "color": "m1"
+  },
+  {
+   "x": 549,
+   "y": 190,
+   "r": 5.5,
+   "ring": 2,
+   "color": "m1"
+  },
+  {
+   "x": 549,
+   "y": 266,
+   "r": 5.5,
+   "ring": 2,
+   "color": "accent"
+  },
+  {
+   "x": 422,
+   "y": 266,
+   "r": 5.5,
+   "ring": 2,
+   "color": "b9"
+  }
+ ],
+ "texts": [
+  {
+   "x": 164,
+   "y": 108,
+   "text": "Claude",
+   "style": "label"
+  },
+  {
+   "x": 36,
+   "y": 132,
+   "text": "Open a thread",
+   "style": "head"
+  },
+  {
+   "x": 36,
+   "y": 149,
+   "text": [
+    "a slow stretch,",
+    "a recording"
+   ],
+   "style": "note"
+  },
+  {
+   "x": 163,
+   "y": 132,
+   "text": "Build a benchmark",
+   "style": "head"
+  },
+  {
+   "x": 163,
+   "y": 149,
+   "text": [
+    "trace it, reproduce",
+    "in the lab"
+   ],
+   "style": "note"
+  },
+  {
+   "x": 290,
+   "y": 132,
+   "text": "Pull request",
+   "style": "head"
+  },
+  {
+   "x": 290,
+   "y": 149,
+   "text": [
+    "several, sized",
+    "for review"
+   ],
+   "style": "note"
+  },
+  {
+   "x": 417,
+   "y": 132,
+   "text": "Deploy",
+   "style": "head"
+  },
+  {
+   "x": 417,
+   "y": 149,
+   "text": [
+    "behind a flag"
+   ],
+   "style": "note"
+  },
+  {
+   "x": 544,
+   "y": 132,
+   "text": "Read the field",
+   "style": "head"
+  },
+  {
+   "x": 544,
+   "y": 149,
+   "text": [
+    "real users, by build",
+    "and platform"
+   ],
+   "style": "note"
+  },
+  {
+   "x": 563,
+   "y": 270.5,
+   "text": "It got faster",
+   "style": "head"
+  },
+  {
+   "x": 563,
+   "y": 287,
+   "text": [
+    "ratchet the",
+    "benchmark down"
+   ],
+   "style": "note"
+  },
+  {
+   "x": 436,
+   "y": 270.5,
+   "text": "It didn’t",
+   "style": "head",
+   "color": "m1"
+  },
+  {
+   "x": 436,
+   "y": 287,
+   "text": [
+    "turn the flag off,",
+    "iterate"
+   ],
+   "style": "note"
+  }
+ ],
+ "narrow": {
+  "size": [
+   360,
+   500
+  ],
+  "groups": [
+   {
+    "id": "claude",
+    "x": 32,
+    "y": 127,
+    "w": 313,
+    "h": 225
+   }
+  ],
+  "edges": [
+   {
+    "from": [
+     50,
+     98
+    ],
+    "to": [
+     50,
+     156
+    ]
+   },
+   {
+    "from": [
+     50,
+     174
+    ],
+    "to": [
+     50,
+     208
+    ]
+   },
+   {
+    "from": [
+     50,
+     226
+    ],
+    "to": [
+     50,
+     260
+    ]
+   },
+   {
+    "from": [
+     50,
+     278
+    ],
+    "to": [
+     50,
+     312
+    ]
+   },
+   {
+    "from": [
+     50,
+     330
+    ],
+    "to": [
+     50,
+     384
+    ]
+   },
+   {
+    "from": [
+     50,
+     367
+    ],
+    "via": [
+     [
+      200,
+      367
+     ]
+    ],
+    "to": [
+     200,
+     384
+    ]
+   },
+   {
+    "from": [
+     200,
+     401
+    ],
+    "to": [
+     200,
+     483
+    ],
+    "head": "none"
+   },
+   {
+    "from": [
+     50,
+     401
+    ],
+    "to": [
+     50,
+     483
+    ],
+    "head": "none"
+   },
+   {
+    "from": [
+     200,
+     483
+    ],
+    "via": [
+     [
+      16,
+      483
+     ],
+     [
+      16,
+      165
+     ]
+    ],
+    "to": [
+     41,
+     165
+    ],
+    "label": "next slow spot",
+    "label_at": [
+     137,
+     476
+    ],
+    "label_anchor": "middle"
+   }
+  ],
+  "dots": [
+   {
+    "x": 50,
+    "y": 89,
+    "r": 5.5,
+    "ring": 2,
+    "color": "m1"
+   },
+   {
+    "x": 50,
+    "y": 165,
+    "r": 5.5,
+    "ring": 2,
+    "color": "m1"
+   },
+   {
+    "x": 50,
+    "y": 217,
+    "r": 5.5,
+    "ring": 2,
+    "color": "m1"
+   },
+   {
+    "x": 50,
+    "y": 269,
+    "r": 5.5,
+    "ring": 2,
+    "color": "m1"
+   },
+   {
+    "x": 50,
+    "y": 321,
+    "r": 5.5,
+    "ring": 2,
+    "color": "m1"
+   },
+   {
+    "x": 50,
+    "y": 393,
+    "r": 5.5,
+    "ring": 2,
+    "color": "accent"
+   },
+   {
+    "x": 200,
+    "y": 393,
+    "r": 5.5,
+    "ring": 2,
+    "color": "b9"
+   }
+  ],
+  "texts": [
+   {
+    "x": 332,
+    "y": 146,
+    "text": "Claude",
+    "style": "label",
+    "anchor": "end"
+   },
+   {
+    "x": 66,
+    "y": 93.5,
+    "text": "Open a thread",
+    "style": "head"
+   },
+   {
+    "x": 66,
+    "y": 111,
+    "text": "a slow stretch, a recording",
+    "style": "note"
+   },
+   {
+    "x": 66,
+    "y": 169.5,
+    "text": "Build a benchmark",
+    "style": "head"
+   },
+   {
+    "x": 66,
+    "y": 187,
+    "text": "trace it, reproduce in the lab",
+    "style": "note"
+   },
+   {
+    "x": 66,
+    "y": 221.5,
+    "text": "Pull request",
+    "style": "head"
+   },
+   {
+    "x": 66,
+    "y": 239,
+    "text": "several, sized for review",
+    "style": "note"
+   },
+   {
+    "x": 66,
+    "y": 273.5,
+    "text": "Deploy",
+    "style": "head"
+   },
+   {
+    "x": 66,
+    "y": 291,
+    "text": "behind a flag",
+    "style": "note"
+   },
+   {
+    "x": 66,
+    "y": 325.5,
+    "text": "Read the field",
+    "style": "head"
+   },
+   {
+    "x": 66,
+    "y": 343,
+    "text": "real users, by build and platform",
+    "style": "note"
+   },
+   {
+    "x": 66,
+    "y": 397.5,
+    "text": "It got faster",
+    "style": "head"
+   },
+   {
+    "x": 66,
+    "y": 415,
+    "text": [
+     "ratchet the",
+     "benchmark down"
+    ],
+    "style": "note"
+   },
+   {
+    "x": 216,
+    "y": 397.5,
+    "text": "It didn’t",
+    "style": "head",
+    "color": "m1"
+   },
+   {
+    "x": 216,
+    "y": 415,
+    "text": [
+     "turn the flag off,",
+     "iterate"
+    ],
+    "style": "note"
+   }
+  ]
+ }
+}

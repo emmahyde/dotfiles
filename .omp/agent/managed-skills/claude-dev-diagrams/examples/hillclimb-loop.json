@@ -1,0 +1,45 @@
+{
+  "theme": "paper",
+  "size": [1200, 660],
+  "alt": "Hill-climbing loop: the surface feeds a fixed model and harness, the eval scores train and test splits, the analyzer reads train failures and proposes one diff per round.",
+  "groups": [
+    {"id": "eval", "x": 568, "y": 104, "w": 364, "h": 180, "tone": "outline", "label": "Eval"}
+  ],
+  "nodes": [
+    {"id": "surface", "x": 80, "y": 119, "w": 200, "h": 150, "tone": "teal", "label": "Surface",
+     "title": "The thing we edit", "body": "(e.g. a prompt)"},
+    {"id": "app", "x": 330, "y": 119, "w": 190, "h": 150, "tone": "lavender", "label": "Application",
+     "body": "model + harness, held fixed", "valign": "bottom"},
+    {"id": "test", "x": 580, "y": 119, "w": 164, "h": 150, "tone": "blue",
+     "title": "Test split", "body": "held out: never shown to the analyzer", "foot": "scored every round"},
+    {"id": "train", "x": 756, "y": 119, "w": 162, "h": 150, "tone": "taupe", "title": "Train split",
+     "items": [{"text": "case 1 — pass", "mark": "dot-gray"},
+               {"text": "case 2 — fail", "mark": "dot-red"},
+               {"text": "case 3 — fail", "mark": "dot-red"}]},
+    {"id": "keep", "x": 975, "y": 98, "w": 160, "h": 64, "pad_y": 7, "tone": "taupe", "label": "Decision",
+     "title": "train ↑ test ↑", "body": "keep the diff"},
+    {"id": "overfit", "x": 975, "y": 172, "w": 160, "h": 64, "pad_y": 7, "tone": "outline",
+     "title": "train ↑ test flat", "body": "overfit — revert"},
+    {"id": "regress", "x": 975, "y": 246, "w": 160, "h": 64, "pad_y": 7, "tone": "outline",
+     "title": "either ↓", "body": "regression — revert"},
+    {"id": "analyzer", "x": 430, "y": 440, "w": 330, "h": 120, "tone": "lavender", "label": "Analyzer",
+     "title": "Reads train failures, forms a hypothesis", "note": "test split stays unseen"}
+  ],
+  "edges": [
+    {"from": "surface", "to": "app"},
+    {"from": "eval", "to": "overfit"},
+    {"from": "eval:bottom@0.74", "to": "analyzer:right", "label": "train-split traces + scores", "sub": "(focuses on failures)"},
+    {"from": "analyzer:left", "to": "surface:bottom", "label": "proposed diff", "sub": "one change per round", "label_at": [196, 373]}
+  ],
+  "shapes": [
+    {"type": "circle", "cx": 376, "cy": 176, "r": 15, "stroke": "ink", "stroke-width": 2},
+    {"type": "circle", "cx": 425, "cy": 176, "r": 15, "stroke": "ink", "stroke-width": 2},
+    {"type": "circle", "cx": 474, "cy": 176, "r": 15, "stroke": "ink", "stroke-width": 2},
+    {"type": "line", "x1": 391, "y1": 176, "x2": 410, "y2": 176, "stroke": "ink", "stroke-width": 2},
+    {"type": "line", "x1": 440, "y1": 176, "x2": 459, "y2": 176, "stroke": "ink", "stroke-width": 2}
+  ],
+  "texts": [
+    {"x": 545, "y": 200, "text": "+", "style": "label", "anchor": "middle"},
+    {"x": 819, "y": 310, "text": ["pre-flight: baseline × N reps", "sets the noise floor"], "style": "caption", "anchor": "end"}
+  ]
+}
