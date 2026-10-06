@@ -1,0 +1,9 @@
+<svg viewBox="0 0 640 250" role="img" aria-labelledby="title desc" data-intent-version="v1" xmlns="http://www.w3.org/2000/svg">
+<title id="title">Focused context</title><desc id="desc">An interactive diagram with a details drawer.</desc>
+<defs><marker id="mex-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 8 4 0 8Z" fill="#546e7a"/></marker></defs>
+<style>.mex-node{cursor:pointer}.mex-edge{fill:none;stroke:#546e7a;stroke-width:2}.drawer{display:none;fill:#fff3e0;stroke:#ef6c00}.drawer.open{display:block}</style>
+<path id="e-route" class="mex-edge" d="M180 120H420" marker-end="url(#mex-arrow)"/>
+<g id="n-context" class="mex-node" data-node-id="context"><rect x="40" y="85" width="140" height="70" rx="8" fill="#e3f2fd" stroke="#1565c0"/><text x="110" y="125" text-anchor="middle">Context</text></g>
+<rect id="n-result" x="420" y="85" width="150" height="70" rx="8" fill="#e8f5e9" stroke="#2e7d32"/><text x="495" y="125" text-anchor="middle">Focused prompt</text>
+<g id="mex-detail" class="drawer" data-detail-for="n-context"><rect x="40" y="180" width="270" height="42" rx="6"/><text x="55" y="206">source: docs/context.md</text></g>
+</svg>

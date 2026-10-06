@@ -28,6 +28,10 @@ PagerDuty/Atlassian blameless-postmortem doctrine: blame framing measurably degr
 
 orchestrator.dev best-practices: review memory before starting, write after finishing — not continuous mid-task reflection. Matches Reflexion's own design (reflect after a completed trial). Reflexion (arXiv 2303.11366) is also the ceiling evidence that reflection with real signal works at all: HumanEval pass@1 80%→91%, +22pp AlfWorld — but it caps working memory at ~3 reflections and its authors flag self-evaluation as the weak point (hard rule 5; see also ChemCrow's unreliable self-assessment in expert domains, via Lilian Weng's survey).
 
+## Gather-by-retrieval (workflow step 1)
+
+Honest Lying's decisive arm was programmatic extraction of the real failure signal — the 0%→86% correct-cause gain came from grounding, not better prose. Applying that only to the template while gathering stayed recall-based left the front door open: at a session boundary the context is a compaction summary, and a recall "sweep" generates plausible pseudo-quotes that pass hard rule 1's letter. Hence step 1 pulls from docs/STATE.md git history (event-time verbatim capture under SESSION.md S3) and a DuckDB projection over the session JSONL — measured on this machine: a 119 MB transcript profiled in 0.4 s via `read_ndjson_auto`, where raw grep returns whole lines embedding file dumps and screenshots. The haiku delegation tier mirrors search-conversations' grep→structured-extraction→synthesis tiering.
+
 ## Known limits of this evidence
 
 No source directly studies end-of-session retrospection for coding agents; the design bridges three adjacent literatures (in-task reflection RL, persisted-skill lifecycle benchmarks, coding-agent memory tooling) plus human postmortem practice. Ratchet and Honest Lying are 2026 preprints without independent replication. One survey in the corpus (arXiv 2603.07670) was unreadable due to PDF extraction failure and is uncited. Confidence: medium-high.

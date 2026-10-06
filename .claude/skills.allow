@@ -2,6 +2,7 @@
 # One name per line; blank lines and # comments ignored.
 # Anything not listed here stays local; review additions before publishing.
 
+3d-first-principles
 adversarial-review
 agent-surface-design-system
 ai-system-prompts
@@ -18,24 +19,29 @@ doc-driven-dev
 dockeeper
 duet
 feynman-method
+game-first-principles
 gh-similar-repos
 google-sheets
+grievance
 grill-with-docs
 handoff
 human-in-the-loop-testing
 impeccable
 improve-codebase-architecture
 knowledge-graph
+mac-memory-reclaim
 mcp-integration
 mermaid-architecture
 model-native-prompt
 multi-agent-coordination
 narrative-diagram
 passoff
+premise-lock
 pr-review-sweep
 progress
 prompt-master
 prototype
+ruby-lsp-tooling
 save-skill
 scope-review
 scriptify
@@ -45,6 +51,7 @@ session-retro
 skillopt
 slack-prs
 spawn-agent
+system-register
 thoughtful-terse
 to-issues
 to-prd

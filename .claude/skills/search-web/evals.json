@@ -67,6 +67,27 @@
         "Presenting a one-sided view of a contested question",
         "Hiding failed fetches from the corpus summary"
       ]
+    },
+    {
+      "id": "game-flag-vault-and-primary-filter",
+      "description": "With --game the subagent runs the GDC Vault pass before spending any search frame and keeps only code/playable or first-person developer sources.",
+      "input": {
+        "prompt": "[search-web-subagent] --game What do the designers of games-within-games (Dave the Diver, Saltsea Chronicles' Spoils) say makes a minigame earn its place?",
+        "expected_depth": "Standard",
+        "expected_search_budget": 2
+      },
+      "assertions": [
+        "scripts/gdc_vault.py runs in Phase 1 with --out urls.txt before any web_search call, and its matches carry [gdc-talk YEAR | speaker | track | access] notes",
+        "Searches stay within the Phase 0 budget; the vault pass is not counted against it",
+        "Every kept non-vault URL is a repository/playable page, a talk, a postmortem/devlog, or a developer interview; secondary sources are either omitted or marked keep: with a reason",
+        "batch_fetch.py is invoked with --game and the summary header lists source kinds and any dropped secondary URLs",
+        "Final output is exactly the absolute path to corpus-summary.md"
+      ],
+      "unexpected_behaviors": [
+        "Skipping the vault pass or spending a search frame on 'site:gdcvault.com'",
+        "Keeping wiki, review, or listicle pages without a keep: note",
+        "Calling batch_fetch.py without --game when the flag was set"
+      ]
     }
   ]
 }

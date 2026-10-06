@@ -1,7 +1,7 @@
 {
   "eval_id": 0,
   "eval_name": "real-sector-no-archetype",
-  "prompt": "Run /audit-arch on the Sector repo ($HOME/projects/sector), no archetype argument. Big-picture structural findings only.",
+  "prompt": "Run /audit-arch on the Sector repo (~/projects/sector), no archetype argument. Big-picture structural findings only.",
   "assertions": [
     "discovers-ethos-signal: The report's scope line derives the fitness bar/ethos from Sector's own docs (e.g. docs/design/WORLD_SIM_ETHOS.md or equivalent declared-intent docs found in-repo) rather than inventing one — the auditor was NOT told the doc exists",
     "no-unsignaled-dimensions: No finding is justified by a quality dimension Sector's docs/args never signaled (e.g. multiplayer, horizontal scaling, multi-tenancy); each finding names the dimension it judges and its signal",

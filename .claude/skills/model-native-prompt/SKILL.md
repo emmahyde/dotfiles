@@ -15,7 +15,7 @@ Two failure modes, equally bad: a generically good prompt with the model's name 
 ## Hard rules
 
 1. **Resolve the target model before writing anything.** If the user named one, use it. If they named a topic and no model, ask once — offer the two or three profiles that actually fit the topic, with a one-line reason each. Never default silently.
-2. **Read the profile.** `references/claude-models.md` for the Claude family, `references/deleg8-models.md` for kimi/k3, deepseek-v4-{pro,flash}, zai/glm-5.2, gpt-5.6-{luna,terra,sol}. Never write a shaped prompt from memory of a model's traits.
+2. **Read the profile.** `references/claude-models.md` for the Claude family, `references/deleg8-models.md` for google-antigravity/gemini-3.7-flash, zai/glm-5.3{,-flash,→5.2}, deepseek-v4-{pro,flash}, gpt-5.6-{luna,terra,sol}, kimi/k3. Never write a shaped prompt from memory of a model's traits.
 3. **Never add Chain-of-Thought to a reasoning-native model.** Every model profiled here is reasoning-native. No "think step by step", no numbered reasoning procedures, no "first… then… finally…", no self-verification checklists. It degrades output measurably.
 4. **Never over-prescribe to Fable 5 or Mythos 5.** State goal, constraints, and the reason the work matters. Do not enumerate steps. Prompts written for earlier models reduce its quality.
 5. **Delete verification instructions from Opus 5 prompts.** It self-verifies; asking produces narration, not correctness.
@@ -79,14 +79,15 @@ Exactly three parts, in this order, nothing else:
 | Thinking always-on, CoT rejected | Fable 5, Mythos 5 | Goal + constraints + *why*. No procedure. No verification section |
 | Thinking on by default, self-verifying | Opus 5 | State the scope boundary and a subagent cap. Delete verification asks. Ask for terse output explicitly if you want it |
 | Deep-only gear (min effort `high`) | deepseek-v4-{pro,flash}, glm-5.2 | Frame the task as genuinely hard; don't hedge or simplify. Never ask for a quick take |
-| Full effort ladder incl. low/medium | Fable 5, Mythos 5, Opus 5, Sonnet 5, gpt-5.6-luna | Offer an effort sweep in the dispatch line; write the prompt so a low rung still produces something usable |
-| Effort mandatory | kimi/k3 | Name the intended depth in the prompt preamble so re-runs stay aligned |
+| Full effort ladder incl. low/medium | Fable 5, Mythos 5, Opus 5, Sonnet 5, gpt-5.6-*, gemini-3.7-flash | Offer an effort sweep in the dispatch line; write the prompt so a low rung still produces something usable |
+| Effort mandatory | kimi/k3, glm-5.3{,-flash}, gemini-3.7-flash | Name the intended depth in the prompt preamble so re-runs stay aligned. GLM 5.3 silently defaults to `max` |
 | Huge output ceiling (384K) | deepseek-v4-{pro,flash} | Ask for the whole artifact, explicitly and by size. Put fixed preamble first so cache reads pay off |
-| Tight output ceiling (32K) | kimi/k3 | Dense spec or outline + one worked section. Never one monolith |
-| Anthropic-messages API | glm-5.2 | Claude-shaped prompt transfers directly — system framing, sectioning, tool blocks all land |
+| Tight output ceiling (64K) | gemini-3.7-flash | Dense spec or outline + one worked section. Never one monolith |
+| Anthropic-messages API | glm-5.3, glm-5.3-flash, glm-5.2 | Claude-shaped prompt transfers directly — system framing, sectioning, tool blocks all land |
 | Responses API, literal instruction-following | gpt-5.6-* | Objective + explicit acceptance criteria. Mark soft preferences as soft or they become hard requirements. Skip "you are a world-class…" |
-| Text-only | deepseek-*, glm-5.2 | No image, screenshot, or attachment references |
-| Image-capable | k3, gpt-5.6-*, Claude family | Reference visual input when the topic has any |
+| Zero marginal cost, sweep-friendly | gemini-3.7-flash (antigravity route), k3 | Fan out and iterate freely; spend the saved budget on more cases, not longer prompts |
+| Text-only | deepseek-*, glm-5.3, glm-5.2 | No image, screenshot, or attachment references |
+| Image-capable | k3, gpt-5.6-*, gemini-3.7-flash, glm-5.3-flash, Claude family | Reference visual input when the topic has any |
 | Benefits from a memory surface | Fable 5 | Name a scratch `.md` path in the prompt for it to write into |
 | Scarce context (200K) | Haiku 4.5 | Don't paste a corpus. Bounded, fully specified work only |
 
@@ -137,5 +138,5 @@ Rationale would read:
 ## References
 
 - `references/claude-models.md` — Fable 5, Mythos 5, Opus 5, Sonnet 5, Haiku 4.5: API hard edges, behavioral quirks, Agent-tool aliases.
-- `references/deleg8-models.md` — kimi/k3, deepseek-v4-pro, deepseek-v4-flash, zai/glm-5.2, gpt-5.6-{luna,terra,sol}: capability rows, shaping rules, dispatch pairs, and how to refresh from the local inventory.
+- `references/deleg8-models.md` — google-antigravity/gemini-3.7-flash, zai/glm-5.3, glm-5.3-flash, glm-5.2, deepseek-v4-pro, deepseek-v4-flash, gpt-5.6-{luna,terra,sol}, kimi/k3: capability rows, shaping rules, dispatch pairs, and how to refresh from the local inventory.
 - `references/dispatch.md` — exact Agent-tool and `mcp__deleg8__spawn` call shapes, and the offer format.

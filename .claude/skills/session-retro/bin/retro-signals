@@ -1,0 +1,211 @@
+#!/usr/bin/env python3
+"""Extract retro signal classes from Claude Code transcript JSONL, bounded.
+
+Classes: correction (user pushback), error (tracebacks/nonzero exits),
+interrupt (mid-turn user interrupts), post-interrupt (first real user message
+after an interrupt — corrections live here that phrase-regex misses),
+repeat-cmd (same Bash command 2+ times).
+Scanning happens inside DuckDB so multi-hundred-MB transcripts never enter
+the caller's context; output is capped rows of truncated TSV.
+
+Usage:
+  retro-signals [--since ISO8601] [--cap N] [--truncate N] [--json] FILE.jsonl [FILE2...]
+  retro-signals --self-test
+"""
+
+import argparse
+import json
+import os
+import shutil
+import subprocess
+import sys
+import tempfile
+
+MAX_OBJ = 33554432  # transcript lines embed whole file dumps and screenshots
+
+
+def sql_quote(s):
+    return "'" + s.replace("'", "''") + "'"
+
+
+def build_sql(paths, since, cap, trunc):
+    src = "[" + ", ".join(sql_quote(p) for p in paths) + "]"
+    since_clause = f"AND timestamp >= {sql_quote(since)}" if since else ""
+
+    def excerpt(expr):
+        return f"left(regexp_replace({expr}, '\\\\n|\\n|\\t', ' ', 'g'), {trunc})"
+
+    return f"""
+WITH t AS (
+  SELECT type, timestamp AS ts,
+         coalesce(message::VARCHAR, '') AS msg,
+         coalesce(toolUseResult::VARCHAR, '') AS res,
+         coalesce(json_extract_string(message, '$.content'), message::VARCHAR, '') AS body
+  FROM read_ndjson({src}, columns={{'type': 'VARCHAR', 'timestamp': 'VARCHAR', 'message': 'JSON', 'toolUseResult': 'JSON'}}, ignore_errors=true, maximum_object_size={MAX_OBJ})
+  WHERE type IN ('user', 'assistant', 'system') {since_clause}
+),
+u AS (
+  SELECT ts, body,
+         msg LIKE '%Request interrupted%' AS is_int,
+         msg LIKE '%local-command-caveat%' OR msg LIKE '%teammate-message%' AS is_noise
+  FROM t
+  WHERE type = 'user' AND msg NOT LIKE '%tool_result%'
+    AND body NOT LIKE 'This session is being continued%'
+)
+SELECT * FROM (
+  SELECT 'correction' AS class, ts, {excerpt("body")} AS excerpt FROM t
+  WHERE type = 'user' AND msg NOT LIKE '%tool_result%'
+    AND body NOT LIKE 'This session is being continued%'
+    AND msg NOT LIKE '%local-command-caveat%' AND msg NOT LIKE '%teammate-message%'
+    AND regexp_matches(body, $re$(?i)(don't|do not\\b|\\bstop\\b|actually|please (fix|add|never|do)|\\bwrong\\b|not what i|in future|going forward|fix for future)$re$)
+  LIMIT {cap})
+UNION ALL
+SELECT * FROM (
+  SELECT 'error', ts, {excerpt("(res || ' ' || msg)")} FROM t
+  WHERE regexp_matches(res || msg, $re$(?i)(traceback \\(most recent|error:|exit code [1-9]|"is_error":\\s*true|command failed|fatal:)$re$)
+  LIMIT {cap})
+UNION ALL
+SELECT * FROM (
+  SELECT 'interrupt', ts, {excerpt("body")} FROM t
+  WHERE type = 'user' AND msg LIKE '%Request interrupted%'
+  LIMIT {cap})
+UNION ALL
+SELECT * FROM (
+  SELECT 'post-interrupt', ts, {excerpt("body")} FROM
+    (SELECT ts, body, is_int, is_noise, lag(is_int) OVER (ORDER BY ts) AS prev_int FROM u)
+  WHERE prev_int AND NOT is_int AND NOT is_noise
+  LIMIT {cap})
+UNION ALL
+SELECT * FROM (
+  SELECT 'repeat-cmd', min(ts), left(cmd, {trunc}) || ' (x' || count(*) || ')' FROM
+    (SELECT ts, regexp_extract(msg, '"command":"([^"]+)', 1) AS cmd FROM t
+     WHERE type = 'assistant' AND msg LIKE '%"name":"Bash"%')
+  WHERE cmd <> '' GROUP BY cmd HAVING count(*) >= 2
+  ORDER BY count(*) DESC LIMIT {cap})
+ORDER BY class, ts
+"""
+
+
+def run(paths, since, cap, trunc):
+    duckdb = shutil.which("duckdb")
+    if not duckdb:
+        sys.exit("duckdb not on PATH (brew install duckdb)")
+    proc = subprocess.run(
+        [duckdb, "-json", "-c", build_sql(paths, since, cap, trunc)],
+        capture_output=True,
+        text=True,
+    )
+    if proc.returncode != 0:
+        sys.exit(f"duckdb failed: {proc.stderr.strip()[:500]}")
+    return json.loads(proc.stdout) if proc.stdout.strip() else []
+
+
+def self_test():
+    fixture = [
+        {
+            "type": "user",
+            "timestamp": "2026-01-01T00:00:01Z",
+            "message": {
+                "role": "user",
+                "content": "please fix the parser, that's wrong",
+            },
+        },
+        {
+            "type": "user",
+            "timestamp": "2026-01-01T00:00:02Z",
+            "message": {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "tool_result",
+                        "is_error": True,
+                        "content": "Traceback (most recent call last): boom",
+                    }
+                ],
+            },
+        },
+        {
+            "type": "assistant",
+            "timestamp": "2026-01-01T00:00:03Z",
+            "message": {
+                "content": [
+                    {
+                        "type": "tool_use",
+                        "name": "Bash",
+                        "input": {"command": "pytest -x"},
+                    }
+                ]
+            },
+        },
+        {
+            "type": "assistant",
+            "timestamp": "2026-01-01T00:00:04Z",
+            "message": {
+                "content": [
+                    {
+                        "type": "tool_use",
+                        "name": "Bash",
+                        "input": {"command": "pytest -x"},
+                    }
+                ]
+            },
+        },
+        {
+            "type": "user",
+            "timestamp": "2026-01-01T00:00:05Z",
+            "message": {"role": "user", "content": "[Request interrupted by user]"},
+        },
+        {
+            "type": "user",
+            "timestamp": "2026-01-01T00:00:06Z",
+            "message": {
+                "role": "user",
+                "content": "you are forgetting the ref pairs again",
+            },
+        },
+        {"type": "attachment", "timestamp": "2026-01-01T00:00:07Z"},
+    ]
+    with tempfile.NamedTemporaryFile("w", suffix=".jsonl", delete=False) as f:
+        for line in fixture:
+            f.write(json.dumps(line) + "\n")
+        path = f.name
+    try:
+        rows = run([path], None, 40, 200)
+        classes = {r["class"] for r in rows}
+        assert "correction" in classes, rows
+        assert "error" in classes, rows
+        assert "interrupt" in classes, rows
+        post = [r for r in rows if r["class"] == "post-interrupt"]
+        assert len(post) == 1 and "forgetting" in post[0]["excerpt"], rows
+        repeats = [r for r in rows if r["class"] == "repeat-cmd"]
+        assert len(repeats) == 1 and "(x2)" in repeats[0]["excerpt"], rows
+        assert all(len(r["excerpt"]) <= 200 for r in rows), rows
+        print(f"self-test pass: {len(rows)} rows, classes {sorted(classes)}")
+    finally:
+        os.unlink(path)
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("paths", nargs="*")
+    ap.add_argument("--since")
+    ap.add_argument("--cap", type=int, default=40)
+    ap.add_argument("--truncate", type=int, default=200)
+    ap.add_argument("--json", action="store_true")
+    ap.add_argument("--self-test", action="store_true")
+    args = ap.parse_args()
+    if args.self_test:
+        self_test()
+        return
+    if not args.paths:
+        ap.error("no transcript paths given")
+    rows = run(args.paths, args.since, args.cap, args.truncate)
+    if args.json:
+        json.dump(rows, sys.stdout, indent=1)
+    else:
+        for r in rows:
+            print(f"{r['class']}\t{r['ts']}\t{r['excerpt']}")
+
+
+if __name__ == "__main__":
+    main()

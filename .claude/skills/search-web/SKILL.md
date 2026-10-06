@@ -53,6 +53,16 @@ report the result.
 Running Phases 0-3 in the main conversation is a process failure.
 Dispatching is not optional.
 
+## Flags
+
+Flags lead the request: `/search-web --game <question>`. The dispatcher copies
+them into the subagent prompt next to the marker: `[search-web-subagent] --game`.
+
+- `--game` — game-development research. Adds a direct GDC Vault pass in Phase 1
+  (no search frame spent) and restricts the corpus to sources with code or
+  playable examples, or first-person developer and designer accounts. Details
+  under each phase.
+
 ## The pipeline
 
 Execute these phases in order. Do not loop back to an earlier phase to "just
@@ -88,6 +98,37 @@ Rules:
 - Stop searching the moment the budget is spent. Proceed to Phase 2 even if the
   corpus feels imperfect.
 
+**With `--game`**, run the vault pass first; it costs no search frame:
+
+```bash
+scripts/gdc_vault.py --query "<term>" --query "<term>" --years 2008-2026 --out urls.txt
+```
+
+It crawls the vault's per-event listings (cached 30 days under
+`~/.cache/search-web/gdc-vault/`), matches terms against title, speaker,
+company, and track, fetches only the matching session pages, and appends
+`url<TAB>[gdc-talk YEAR | speaker (company) | track | free|members] title — abstract`
+lines to `urls.txt`. Use one term per concept, two or three terms, and a game
+title when you have one; `--all` requires every term. Listings cut titles at
+70 characters, so a game named late in a title can hide; when the run prints
+a "truncated title(s)" note for your year range, rerun once with
+`--resolve-titles` (one request per truncated session, persisted to the cache).
+Members-only sessions still earn a place: the abstract and speaker are
+evidence, and the GDC YouTube channel often carries the same talk free. Then
+spend the normal search budget on the rest of the corpus with these selection
+rules in place of the general ones:
+
+- Keep a URL only if it is (a) code or a playable example: a repository, an
+  itch.io or Shadertoy page, a demo; or (b) a first-person developer or designer
+  account: a conference talk, a postmortem, a studio devlog, a developer
+  interview that quotes the maker at length.
+- Drop wikis, reviews, listicles, forum threads, and press summaries. If one is
+  the only route to a maker's words, keep it with a note starting `keep:` and
+  say why. `batch_fetch.py --game` drops unmarked secondary hosts and lists
+  them in the summary header.
+- Start each note with its kind when the host does not make it obvious:
+  `talk:`, `code:`, `postmortem:`, `devlog:`, `interview:`.
+
 Write the kept URLs to a file, one per line, optional `<TAB>note`:
 
 ```
@@ -120,6 +161,9 @@ otherwise. The script creates the directory (and parents) if absent.
 ```bash
 scripts/batch_fetch.py --urls urls.txt --out <work_dir> --topic "<question>"
 ```
+
+Add `--game` when the flag is set; the summary header then records each page's
+source kind and any dropped secondary URLs.
 
 The script (uv-managed; deps install on first run) fetches concurrently,
 extracts main-content markdown with **trafilatura**, falls back to the
