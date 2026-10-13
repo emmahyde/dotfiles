@@ -1,0 +1,18 @@
+#!/bin/sh
+# loops   open-loop inventory: dirty trees, stashes, unpushed commits across ~/projects, parked items, open contract
+# ponytail: scans ~/projects/*/ only; worktrees under ~/.omp/wt are not counted. Add them when they bite.
+total=0
+for d in "$HOME"/projects/*/; do
+  [ -d "$d.git" ] || continue
+  u=$(git -C "$d" status --porcelain 2>/dev/null | wc -l | tr -d ' ')
+  s=$(git -C "$d" stash list 2>/dev/null | wc -l | tr -d ' ')
+  p=$(git -C "$d" rev-list --count '@{u}..HEAD' 2>/dev/null); p=${p:-0}
+  [ "$u" = 0 ] && [ "$s" = 0 ] && [ "$p" = 0 ] && continue
+  printf '%-26s dirty=%-4s stash=%-2s unpushed=%s\n' "$(basename "$d")" "$u" "$s" "$p"
+  [ "$u" -gt 0 ] && total=$((total+1)); total=$((total+s)); [ "$p" -gt 0 ] && total=$((total+1))
+done
+n=$(grep -c '^- ' "$HOME/park.md" 2>/dev/null); n=${n:-0}; total=$((total+n))
+c=none; [ -s "$HOME/.now" ] && { c=open; total=$((total+1)); }
+echo "parked=$n contract=$c"
+echo "$total" > "$HOME/.loops"
+echo "total: $total"

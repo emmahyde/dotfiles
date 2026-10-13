@@ -1,0 +1,8 @@
+#!/bin/sh
+# park "tangent"   capture a tangent to ~/park.md and keep going
+# park             list parked items
+P="$HOME/park.md"
+if [ -z "${1-}" ]; then if [ -s "$P" ]; then cat "$P"; else echo "nothing parked"; fi; exit 0; fi
+printf -- '- %s [%s] %s\n' "$(date '+%Y-%m-%d %H:%M')" "$(basename "$(git rev-parse --show-toplevel 2>/dev/null || pwd)")" "$*" >> "$P"
+n=$(grep -c '^- ' "$P")
+echo "parked ($n open). back to: $(sed -n 's/^deliverable: //p' "$HOME/.now" 2>/dev/null)"

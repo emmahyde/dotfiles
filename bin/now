@@ -1,0 +1,42 @@
+#!/bin/sh
+# now [90m|2h] "deliverable" ["done when"]   set the session contract (~/.now) and a stop-time notification
+# now                                       print the contract
+# now --hook                                print for the Claude SessionStart hook
+F="$HOME/.now"; L="$HOME/log.md"
+case "${1-}" in
+  --hook)
+    if [ -s "$F" ]; then
+      echo "SESSION CONTRACT (~/.now)"; cat "$F"
+      stop=$(sed -n 's/^stop: //p' "$F")
+      stop_s=$(date -j -f '%Y-%m-%d %H:%M' "$stop" +%s 2>/dev/null || echo 0)
+      [ "$stop_s" -lt "$(date +%s)" ] && echo "STOP TIME PASSED. Run: fin done|parked|swapped, then set a new contract."
+    else
+      echo "NO CONTRACT. Before engineering, run: now 90m \"deliverable\" \"done when\""
+    fi
+    [ -f "$HOME/.loops" ] && echo "open loops at last fin: $(cat "$HOME/.loops")"
+    n=$(grep -c '^- ' "$HOME/park.md" 2>/dev/null); n=${n:-0}
+    [ "$n" -gt 0 ] && echo "parked: $n (~/park.md)"
+    exit 0 ;;
+  "") if [ -s "$F" ]; then cat "$F"; else echo "no contract"; fi; exit 0 ;;
+esac
+dur=90m
+case "$1" in *[0-9]m|*[0-9]h) dur=$1; shift ;; esac
+[ -n "${1-}" ] || { echo "usage: now [90m|2h] \"deliverable\" [\"done when\"]" >&2; exit 1; }
+n=${dur%?}; case "$dur" in *h) secs=$((n*3600)) ;; *) secs=$((n*60)) ;; esac
+deliv=$(printf '%s' "$1" | tr -d '"\\')
+done_when=$(printf '%s' "${2:-$deliv, committed}" | tr -d '"\\')
+proj=$(basename "$(git rev-parse --show-toplevel 2>/dev/null || pwd)")
+if [ -s "$F" ]; then
+  old=$(sed -n 's/^timer: //p' "$F"); [ -n "$old" ] && kill "$old" 2>/dev/null
+  printf -- '- %s [%s] swapped: %s\n' "$(date '+%Y-%m-%d %H:%M')" "$(sed -n 's/^project: //p' "$F")" "$(sed -n 's/^deliverable: //p' "$F")" >> "$L"
+fi
+nohup sh -c "sleep $secs; osascript -e 'display notification \"$deliv\" with title \"now: stop. fin or renew.\" sound name \"Glass\"'" >/dev/null 2>&1 &
+cat > "$F" <<CONTRACT
+project: $proj
+deliverable: $deliv
+done_when: $done_when
+started: $(date '+%Y-%m-%d %H:%M')
+stop: $(date -v+${secs}S '+%Y-%m-%d %H:%M')
+timer: $!
+CONTRACT
+cat "$F"
