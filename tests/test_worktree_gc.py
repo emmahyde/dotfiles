@@ -152,6 +152,34 @@ class WorktreeCleanupTest(unittest.TestCase):
         self.assertEqual((tree / "source").read_text(), "unique uncommitted work\n")
         self.assertTrue((tree / "Cargo.toml").exists())
 
+    def test_build_cleanup_preserves_tracked_output_paths(self):
+        for directory, manifest in (("target", "Cargo.toml"), ("node_modules", "package.json")):
+            with self.subTest(directory=directory):
+                tree = self.tree(f"tracked-{directory}")
+                (tree / manifest).write_text("{}\n")
+                output = tree / directory
+                output.mkdir()
+                (output / "source").write_text("tracked source, not a cache\n")
+                self.git(tree, "add", "-f", f"{directory}/source")
+                self.git(tree, "commit", "-m", "test: preserve tracked output path")
+                report = self.cleanup_report("--no-worktrees", "--builds", "--apply")
+                self.assertEqual(self.row(report, output)["action"], "KEEP")
+                self.assertEqual((output / "source").read_text(), "tracked source, not a cache\n")
+
+    def test_build_cleanup_preserves_nested_repository(self):
+        tree = self.tree()
+        (tree / "Cargo.toml").write_text("[package]\nname = 'example'\n")
+        nested = tree / "target/nested"
+        nested.mkdir(parents=True)
+        self.git(nested, "init")
+        (nested / "source").write_text("unique nested work\n")
+        report = self.cleanup_report("--no-worktrees", "--builds", "--apply")
+        self.assertEqual(self.row(report, tree / "target")["action"], "KEEP")
+        self.assertEqual((nested / "source").read_text(), "unique nested work\n")
+        worktree_report = self.cleanup_report("--apply")
+        self.assertEqual(self.row(worktree_report, tree)["action"], "KEEP")
+        self.assertEqual((nested / "source").read_text(), "unique nested work\n")
+
     def test_cache_preview_apply_and_symlink_preservation(self):
         cache = self.root / "cache"
         cache.mkdir()

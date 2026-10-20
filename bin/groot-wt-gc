@@ -142,6 +142,9 @@ def safety(repo, entry, base, roots, days, opened):
         ignored = os.fsdecode(field[3:]).rstrip("/")
         if ignored.split("/", 1)[0] not in GENERATED:
             return f"protected ignored file: {ignored}"
+        protection = protected_build(path / ignored.split("/", 1)[0])
+        if protection:
+            return protection
     if git(repo, "stash", "list"):
         return "repository has stashed work"
     head = git(path, "rev-parse", "HEAD").strip()
@@ -194,6 +197,22 @@ def build_roots(roots):
                 yield path / "target"
             if "package.json" in files:
                 yield path / "node_modules"
+
+
+def protected_build(path):
+    if path.is_symlink() or not path.exists():
+        return None
+    if git(path.parent, "ls-files", "-z", "--", path.name):
+        return "build directory contains tracked files"
+
+    def unreadable(error):
+        raise error
+
+    for directory, dirs, files in os.walk(path, followlinks=False, onerror=unreadable):
+        if ".git" in dirs or ".git" in files or ("HEAD" in files and "objects" in dirs):
+            return "build directory contains a nested Git repository"
+        dirs[:] = [d for d in dirs if not (Path(directory) / d).is_symlink()]
+    return None
 
 
 def prune_colima(apply):
@@ -288,8 +307,8 @@ def main():
                     had_errors = True
     if not args.no_caches or args.builds:
         caches = [] if args.no_caches else list(args.cache_root if args.cache_root is not None else cache_roots(home))
-        if args.builds:
-            caches.extend(build_roots(roots))
+        builds = set(build_roots(roots)) if args.builds else set()
+        caches.extend(sorted(builds))
         seen = set()
         for raw in caches:
             path = Path(os.path.abspath(raw.expanduser()))
@@ -305,6 +324,11 @@ def main():
                     raise RuntimeError("Cache root contains a protected discovery root")
                 if path.is_dir() and (path / ".git").exists():
                     raise RuntimeError("Cache root is a Git checkout")
+                if path in builds:
+                    protection = protected_build(path)
+                    if protection:
+                        rows.append({"kind": "cache", "path": str(path), "action": "KEEP", "reason": protection})
+                        continue
                 rows.append(clean_cache(path, args.apply, opened))
             except (OSError, RuntimeError, subprocess.TimeoutExpired) as exc:
                 rows.append({"kind": "cache", "path": str(path), "action": "ERROR", "reason": str(exc)})

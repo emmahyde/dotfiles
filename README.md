@@ -62,8 +62,9 @@ need to be fetched again. `--cache-root PATH` replaces the default cache list.
 `--no-caches` disables this category.
 
 `--builds` clears Cargo `target` and JavaScript `node_modules` directories, even
-in dirty checkouts. It preserves source files. Do not store unique work in these
-generated directories. Symlinks are not followed.
+in dirty checkouts. It retains directories with tracked files or nested Git
+repositories. Do not store unique untracked work in generated directories.
+Symlinks are not followed.
 
 `--colima` prunes unused images and build cache in each Colima Docker context.
 It does not delete containers, volumes, VM disks, or database files. Runtime
