@@ -1,0 +1,79 @@
+<svg class="art-diagram-wide" aria-hidden="true" focusable="false" id="eval-hillclimb-rounds" width="634" height="485.6" viewBox="0 0 634 485.6" xmlns="http://www.w3.org/2000/svg"><title>The claude-api skill eval</title><style>svg{--bg:#faf9f5;--ink:#141413;--ink-2:#4c4b45;--line:#14141338;--line-soft:#1414131c;--accent:#c15f3c;--viz-b9:#8e8c87;--viz-m1:#3d3d3a;--viz-muted:#65645e;--fig-focal:var(--accent);background:var(--bg)}</style><style>#eval-hillclimb-rounds text{font-family:'Anthropic Sans','Anthropic Sans Fallback','Anthropic Sans Fallback Roboto',system-ui,sans-serif}#eval-hillclimb-rounds .tnum{font-variant-numeric:tabular-nums}</style>
+<g class="phases">
+<rect x="59.3" y="10" width="300.1" height="330.0" fill-opacity="0.5" style="fill:var(--line-soft)"/>
+<rect x="442.3" y="10" width="175.7" height="330.0" fill-opacity="0.5" style="fill:var(--line-soft)"/>
+</g>
+<g class="tnum" font-size="12" style="fill:var(--viz-muted)">
+<line x1="59.3" x2="618.0" y1="308.8" y2="308.8" stroke-width="1" style="stroke:var(--line-soft)"/>
+<text x="53.3" y="313.0" text-anchor="end">65%</text>
+<line x1="59.3" x2="618.0" y1="255.9" y2="255.9" stroke-width="1" style="stroke:var(--line-soft)"/>
+<text x="53.3" y="260.1" text-anchor="end">70%</text>
+<line x1="59.3" x2="618.0" y1="202.9" y2="202.9" stroke-width="1" style="stroke:var(--line-soft)"/>
+<text x="53.3" y="207.1" text-anchor="end">75%</text>
+<line x1="59.3" x2="618.0" y1="149.9" y2="149.9" stroke-width="1" style="stroke:var(--line-soft)"/>
+<text x="53.3" y="154.1" text-anchor="end">80%</text>
+<line x1="59.3" x2="618.0" y1="97.0" y2="97.0" stroke-width="1" style="stroke:var(--line-soft)"/>
+<text x="53.3" y="101.2" text-anchor="end">85%</text>
+<line x1="59.3" x2="618.0" y1="44.0" y2="44.0" stroke-width="1" style="stroke:var(--line-soft)"/>
+<text x="53.3" y="48.2" text-anchor="end">90%</text>
+</g>
+<line x1="59.3" x2="618.0" y1="340" y2="340" stroke-width="1" style="stroke:var(--line)"/>
+<g class="tnum" font-size="12" style="fill:var(--viz-muted)">
+<line x1="89.9" x2="89.9" y1="340" y2="345" stroke-width="1" style="stroke:var(--line)"/>
+<text x="89.9" y="360" text-anchor="middle">0</text>
+<line x1="214.3" x2="214.3" y1="340" y2="345" stroke-width="1" style="stroke:var(--line)"/>
+<text x="214.3" y="360" text-anchor="middle">6</text>
+<line x1="276.4" x2="276.4" y1="340" y2="345" stroke-width="1" style="stroke:var(--line)"/>
+<text x="276.4" y="360" text-anchor="middle">9</text>
+<line x1="317.9" x2="317.9" y1="340" y2="345" stroke-width="1" style="stroke:var(--line)"/>
+<text x="317.9" y="360" text-anchor="middle">11</text>
+<line x1="359.4" x2="359.4" y1="340" y2="345" stroke-width="1" style="stroke:var(--line)"/>
+<text x="359.4" y="360" text-anchor="middle">13</text>
+<line x1="442.3" x2="442.3" y1="340" y2="345" stroke-width="1" style="stroke:var(--line)"/>
+<text x="442.3" y="360" text-anchor="middle">17</text>
+<line x1="545.9" x2="545.9" y1="340" y2="345" stroke-width="1" style="stroke:var(--line)"/>
+<text x="545.9" y="360" text-anchor="middle">22</text>
+<line x1="587.4" x2="587.4" y1="340" y2="345" stroke-width="1" style="stroke:var(--line)"/>
+<text x="587.4" y="360" text-anchor="middle">24</text>
+</g>
+<text x="338.7" y="389.5" text-anchor="middle" font-size="13" style="fill:var(--viz-muted)">Hillclimbing round (0 is the baseline)</text>
+<text transform="translate(9.5 192.0) rotate(-90)" text-anchor="middle" font-size="13" style="fill:var(--viz-muted)">Pass rate</text>
+<line x1="359.4" x2="359.4" y1="10" y2="340" stroke-width="1" stroke-dasharray="3 4" stroke-linecap="round" style="stroke:var(--line)"/>
+<line x1="442.3" x2="442.3" y1="10" y2="340" stroke-width="1" stroke-dasharray="3 4" stroke-linecap="round" style="stroke:var(--line)"/>
+<circle cx="209.3" cy="18.0" r="8.5" stroke-width="1" style="fill:var(--bg);stroke:var(--viz-m1)"/>
+<text x="209.3" y="22.0" text-anchor="middle" font-size="11" font-weight="500" style="fill:var(--viz-m1)">1</text>
+<circle cx="400.9" cy="18.0" r="8.5" stroke-width="1" style="fill:var(--bg);stroke:var(--viz-m1)"/>
+<text x="400.9" y="22.0" text-anchor="middle" font-size="11" font-weight="500" style="fill:var(--viz-m1)">2</text>
+<circle cx="530.2" cy="18.0" r="8.5" stroke-width="1" style="fill:var(--bg);stroke:var(--viz-m1)"/>
+<text x="530.2" y="22.0" text-anchor="middle" font-size="11" font-weight="500" style="fill:var(--viz-m1)">3</text>
+<g class="series">
+<path d="M89.9 297.2 L214.3 210.3 L276.4 213.5 L317.9 176.4 L359.4 179.6 L442.3 148.9 L545.9 107.6 L587.4 66.2" fill="none" stroke-width="1" stroke-linejoin="round" stroke-linecap="round" style="stroke:var(--fig-focal)"/>
+<circle cx="89.9" cy="297.2" r="4.5" stroke-width="1" style="fill:var(--fig-focal);stroke:var(--bg)"/>
+<circle cx="214.3" cy="210.3" r="4.5" stroke-width="1" style="fill:var(--fig-focal);stroke:var(--bg)"/>
+<circle cx="276.4" cy="213.5" r="4.5" stroke-width="1" style="fill:var(--fig-focal);stroke:var(--bg)"/>
+<circle cx="317.9" cy="176.4" r="4.5" stroke-width="1" style="fill:var(--fig-focal);stroke:var(--bg)"/>
+<circle cx="359.4" cy="179.6" r="4.5" stroke-width="1" style="fill:var(--fig-focal);stroke:var(--bg)"/>
+<circle cx="442.3" cy="148.9" r="4.5" stroke-width="1" style="fill:var(--fig-focal);stroke:var(--bg)"/>
+<circle cx="545.9" cy="107.6" r="4.5" stroke-width="1" style="fill:var(--fig-focal);stroke:var(--bg)"/>
+<circle cx="587.4" cy="66.2" r="4.5" stroke-width="1" style="fill:var(--fig-focal);stroke:var(--bg)"/>
+</g>
+<g class="tnum" font-size="12" stroke-width="3" stroke-linejoin="round" paint-order="stroke" style="fill:var(--viz-m1);stroke:var(--bg)">
+<text x="98.1" y="313.2" text-anchor="start">66.1%</text>
+<text x="214.3" y="200.3" text-anchor="middle">74.3%</text>
+<text x="276.4" y="203.5" text-anchor="middle">74.0%</text>
+<text x="317.9" y="166.4" text-anchor="middle">77.5%</text>
+<text x="359.4" y="169.6" text-anchor="middle">77.2%</text>
+<text x="442.3" y="138.9" text-anchor="middle">80.1%</text>
+<text x="539.8" y="99.6" text-anchor="end">84.0%</text>
+</g>
+<text class="mname" x="587.4" y="55.2" text-anchor="middle" font-size="14" font-weight="500" stroke-width="3" stroke-linejoin="round" paint-order="stroke" style="fill:var(--ink);stroke:var(--bg)">87.9%</text>
+<circle cx="9.5" cy="418.6" r="8.5" stroke-width="1" style="fill:var(--bg);stroke:var(--viz-m1)"/>
+<text x="9.5" y="422.6" text-anchor="middle" font-size="11" font-weight="500" style="fill:var(--viz-m1)">1</text>
+<text x="26.5" y="423.6" font-size="12" style="fill:var(--viz-m1)">Adding missing sections and type tables</text>
+<circle cx="9.5" cy="444.6" r="8.5" stroke-width="1" style="fill:var(--bg);stroke:var(--viz-m1)"/>
+<text x="9.5" y="448.6" text-anchor="middle" font-size="11" font-weight="500" style="fill:var(--viz-m1)">2</text>
+<text x="26.5" y="449.6" font-size="12" style="fill:var(--viz-m1)">Fixing how the skill tells Claude to write code</text>
+<circle cx="9.5" cy="470.6" r="8.5" stroke-width="1" style="fill:var(--bg);stroke:var(--viz-m1)"/>
+<text x="9.5" y="474.6" text-anchor="middle" font-size="11" font-weight="500" style="fill:var(--viz-m1)">3</text>
+<text x="26.5" y="475.6" font-size="12" style="fill:var(--viz-m1)">Fixing graders, plus more skill edits</text>
+</svg>

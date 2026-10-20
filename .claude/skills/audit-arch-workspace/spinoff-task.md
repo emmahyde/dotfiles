@@ -4,7 +4,7 @@ Two phases, strict order. You are both the test subject (Phase 1) and the grader
 
 ## Phase 1 — run the audit (blind)
 
-Invoke the `audit-arch` skill (`~/.claude/skills/audit-arch/SKILL.md`) against the Sector repo at `$HOME/projects/sector`, with NO archetype argument. Follow the skill exactly as written — its step order, prohibitions, and output template. Judge fitness scope from what you find in the repo yourself.
+Invoke the `audit-arch` skill (`~/.claude/skills/audit-arch/SKILL.md`) against the Sector repo at `~/projects/sector`, with NO archetype argument. Follow the skill exactly as written — its step order, prohibitions, and output template. Judge fitness scope from what you find in the repo yourself.
 
 Write the complete audit report to:
 `~/.claude/skills/audit-arch-workspace/iteration-2/eval-0-real-sector-no-archetype/with_skill/run-1/outputs/report.md`
@@ -20,7 +20,7 @@ Only after report.md exists:
 3. No baseline run this iteration (iteration-1 established the baseline delta; iteration-2 tests real-repo viability only). Note this in eval_feedback.
 4. Aggregate + viewer:
    ```
-   cd $HOME/.claude/plugins/cache/claude-plugins-official/skill-creator/unknown/skills/skill-creator
+   cd ~/.claude/plugins/cache/claude-plugins-official/skill-creator/unknown/skills/skill-creator
    python3 -m scripts.aggregate_benchmark ~/.claude/skills/audit-arch-workspace/iteration-2 --skill-name audit-arch
    nohup python3 eval-viewer/generate_review.py ~/.claude/skills/audit-arch-workspace/iteration-2 --skill-name audit-arch --benchmark ~/.claude/skills/audit-arch-workspace/iteration-2/benchmark.json --previous-workspace ~/.claude/skills/audit-arch-workspace/iteration-1 > ~/.claude/skills/audit-arch-workspace/viewer2.log 2>&1 &
    ```

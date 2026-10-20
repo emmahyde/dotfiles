@@ -1,0 +1,5 @@
+<svg viewBox="0 0 640 250" role="img" aria-labelledby="title desc" xmlns="http://www.w3.org/2000/svg">
+<title id="title">Unsafe diagram</title><desc id="desc">This fixture must be rejected by the optimization contract.</desc>
+<script>alert('xss')</script>
+<g id="n-context" class="mex-node" data-node-id="context" onclick="alert('xss')"><rect x="40" y="85" width="140" height="70" rx="8"/><text x="110" y="125" text-anchor="middle">Context</text></g>
+</svg>

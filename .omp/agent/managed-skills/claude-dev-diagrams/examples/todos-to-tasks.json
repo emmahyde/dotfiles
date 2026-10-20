@@ -1,0 +1,32 @@
+{
+  "theme": "sage",
+  "size": [1200, 600],
+  "title": "From todos to tasks",
+  "alt": "From todos to tasks: a single agent's flat checklist becomes a dependency graph of tasks shared by several agents.",
+  "groups": [
+    {"id": "todos", "x": 66, "y": 135, "w": 422, "h": 405, "tone": "frame", "label": "Todos"},
+    {"id": "tasks", "x": 700, "y": 135, "w": 423, "h": 405, "tone": "frame-sage", "label": "Tasks"}
+  ],
+  "nodes": [
+    {"id": "single", "x": 101, "y": 163, "w": 352, "h": 49, "tone": "neutral", "title": "Single Agent"},
+    {"id": "t-setup", "x": 136, "y": 241, "w": 282, "h": 42, "pad_y": 10, "tone": "green", "align": "left", "items": [{"text": "Set up project", "mark": "check"}]},
+    {"id": "t-tests", "x": 136, "y": 294, "w": 282, "h": 42, "pad_y": 10, "tone": "green", "align": "left", "items": [{"text": "Write tests", "mark": "check"}]},
+    {"id": "t-impl", "x": 136, "y": 347, "w": 282, "h": 42, "pad_y": 10, "tone": "yellow", "align": "left", "items": [{"text": "Implement feature", "mark": "box"}]},
+    {"id": "t-deploy", "x": 136, "y": 400, "w": 282, "h": 42, "pad_y": 10, "tone": "yellow", "align": "left", "items": [{"text": "Deploy", "mark": "box"}]},
+    {"id": "agent-a", "x": 735, "y": 163, "w": 158, "h": 49, "tone": "green", "title": "Agent A"},
+    {"id": "agent-b", "x": 929, "y": 163, "w": 158, "h": 49, "tone": "green", "title": "Agent B"},
+    {"id": "task1", "x": 744, "y": 249, "w": 137, "h": 49, "tone": "sage-soft", "body": "Task 1 ✓"},
+    {"id": "task2", "x": 937, "y": 249, "w": 141, "h": 49, "tone": "sage-soft", "body": "Task 2 ✓"},
+    {"id": "task3", "x": 841, "y": 347, "w": 141, "h": 49, "tone": "yellow", "body": "Task 3 •"},
+    {"id": "task4", "x": 841, "y": 440, "w": 141, "h": 49, "tone": "ghost", "body": "Task 4"}
+  ],
+  "edges": [
+    {"from": "todos", "to": "tasks", "color": "sage", "width": 3, "label": "models", "label_color": "sage"},
+    {"from": "task1:bottom", "to": "task3:top@0.25", "ortho": false},
+    {"from": "task2:bottom", "to": "task3:top@0.75", "ortho": false},
+    {"from": "task3", "to": "task4"}
+  ],
+  "texts": [
+    {"x": 585, "y": 372, "text": "improve", "style": "edge", "anchor": "middle", "color": "sage"}
+  ]
+}

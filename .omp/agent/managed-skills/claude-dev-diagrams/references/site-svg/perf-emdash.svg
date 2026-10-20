@@ -1,0 +1,28 @@
+<svg class="art-diagram-wide" aria-hidden="true" focusable="false" id="perf-emdash" width="651" height="376" viewBox="34.5 91.5 651 376" xmlns="http://www.w3.org/2000/svg"><title>Highlighting the first code block on a page</title><style>svg{--bg:#faf9f5;--ink:#141413;--ink-2:#4c4b45;--line:#14141338;--line-soft:#1414131c;--accent:#c15f3c;--viz-b9:#8e8c87;--viz-m1:#3d3d3a;--viz-muted:#65645e;--fig-focal:var(--accent);background:var(--bg)}</style><style>#perf-emdash text{font-family:'Anthropic Sans','Anthropic Sans Fallback','Anthropic Sans Fallback Roboto',system-ui,sans-serif}#perf-emdash .tnum{font-variant-numeric:tabular-nums}</style>
+<line x1="36" y1="372" x2="684" y2="372" stroke-width="1" style="stroke:var(--line)"/>
+<line x1="36" y1="307" x2="684" y2="307" stroke-width="1" style="stroke:var(--line-soft)"/>
+<text class="tnum" x="36" y="302" font-size="12" style="fill:var(--viz-muted)">250 ms</text>
+<line x1="36" y1="242" x2="684" y2="242" stroke-width="1" style="stroke:var(--line-soft)"/>
+<text class="tnum" x="36" y="237" font-size="12" style="fill:var(--viz-muted)">500 ms</text>
+<line x1="36" y1="177" x2="684" y2="177" stroke-width="1" style="stroke:var(--line-soft)"/>
+<text class="tnum" x="36" y="172" font-size="12" style="fill:var(--viz-muted)">750 ms</text>
+<line x1="36" y1="112" x2="684" y2="112" stroke-width="1" style="stroke:var(--line-soft)"/>
+<text class="tnum" x="36" y="107" font-size="12" style="fill:var(--viz-muted)">1 s</text>
+<path d="M248 372 V114 Q248 112 250 112 H286 Q288 112 288 114 V372 Z" style="fill:var(--viz-b9)"/>
+<text x="268" y="105" text-anchor="middle" font-size="13" font-weight="400" style="fill:var(--ink-2)">1.0 s</text>
+<text x="268" y="389" text-anchor="middle" font-size="12" style="fill:var(--viz-muted)">before</text>
+<path d="M296 372 V283 Q296 281 298 281 H334 Q336 281 336 283 V372 Z" style="fill:var(--fig-focal)"/>
+<text x="316" y="274" text-anchor="middle" font-size="13" font-weight="600" style="fill:var(--ink)">0.35 s</text>
+<text x="316" y="389" text-anchor="middle" font-size="12" style="fill:var(--viz-muted)">after</text>
+<text x="292" y="412" text-anchor="middle" font-size="13" style="fill:var(--viz-m1)">First TypeScript block</text>
+<text x="292" y="429" text-anchor="middle" font-size="13" style="fill:var(--viz-m1)">on a page</text>
+<path d="M432 372 V348 Q432 346 434 346 H470 Q472 346 472 348 V372 Z" style="fill:var(--viz-b9)"/>
+<text x="452" y="339" text-anchor="middle" font-size="13" font-weight="400" style="fill:var(--ink-2)">100 ms</text>
+<text x="452" y="389" text-anchor="middle" font-size="12" style="fill:var(--viz-muted)">before</text>
+<path d="M480 372 V363.6 Q480 361.6 482 361.6 H518 Q520 361.6 520 363.6 V372 Z" style="fill:var(--fig-focal)"/>
+<text x="500" y="354.6" text-anchor="middle" font-size="13" font-weight="600" style="fill:var(--ink)">40 ms</text>
+<text x="500" y="389" text-anchor="middle" font-size="12" style="fill:var(--viz-muted)">after</text>
+<text x="476" y="412" text-anchor="middle" font-size="13" style="fill:var(--viz-m1)">Each later pass</text>
+<text x="476" y="429" text-anchor="middle" font-size="13" style="fill:var(--viz-m1)">on that block</text>
+<text x="36" y="463" font-size="12" style="fill:var(--viz-muted)">4-vCPU container, headless Chrome, no CPU throttling; 2–3 runs per value; August 2026.</text>
+</svg>

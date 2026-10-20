@@ -1,0 +1,34 @@
+<svg class="art-diagram-wide" aria-hidden="true" focusable="false" id="mods-hook-chain" width="651" height="183" viewBox="35 28 651 183" xmlns="http://www.w3.org/2000/svg"><style>#mods-hook-chain text{font-family:'Anthropic Sans','Anthropic Sans Fallback','Anthropic Sans Fallback Roboto',system-ui,sans-serif}#mods-hook-chain .mono{font-family:'Anthropic Mono','Anthropic Mono Fallback',ui-monospace,'SF Mono',Menlo,monospace}</style>
+<text x="36" y="40" font-size="11" font-weight="500" letter-spacing="0.08em" class="mono" style="fill:var(--ink-2)">EVENT</text>
+<rect x="36.5" y="54.5" width="100" height="64" fill="none" stroke-width="1" style="stroke:var(--line)"/>
+<text x="86.5" y="82" text-anchor="middle" font-size="14" font-weight="500" class="mono" style="fill:var(--ink)">tool.call</text>
+<text x="86.5" y="102" text-anchor="middle" font-size="12" style="fill:var(--ink-2)">e = { command }</text>
+<rect x="200.5" y="54.5" width="124" height="64" fill="none" stroke-width="1" style="stroke:var(--fig-focal)"/>
+<text x="262.5" y="82" text-anchor="middle" font-size="15" font-weight="500" style="fill:var(--ink)">your hook</text>
+<text x="262.5" y="102" text-anchor="middle" font-size="12" style="fill:var(--ink-2)">($, e, next)</text>
+<rect x="388.5" y="54.5" width="120" height="64" fill="none" stroke-width="1" style="stroke:var(--line)"/>
+<text x="448.5" y="82" text-anchor="middle" font-size="15" font-weight="500" style="fill:var(--ink)">other plugins</text>
+<text x="448.5" y="102" text-anchor="middle" font-size="12" style="fill:var(--ink-2)">same shape</text>
+<rect x="572.5" y="54.5" width="112" height="64" fill="none" stroke-width="1" style="stroke:var(--viz-muted)"/>
+<text x="628.5" y="82" text-anchor="middle" font-size="15" font-weight="500" style="fill:var(--ink)">Claude Code</text>
+<text x="628.5" y="102" text-anchor="middle" font-size="12" style="fill:var(--ink-2)">runs the tool</text>
+<path d="M137 76.5 H199" fill="none" stroke-width="1" stroke-linejoin="round" style="stroke:var(--viz-muted)"/>
+<path d="M195 73 L199 76.5 L195 80" fill="none" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" style="stroke:var(--viz-muted)"/>
+<path d="M325 76.5 H387" fill="none" stroke-width="1" stroke-linejoin="round" style="stroke:var(--viz-muted)"/>
+<path d="M383 73 L387 76.5 L383 80" fill="none" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" style="stroke:var(--viz-muted)"/>
+<text x="356.5" y="68.5" text-anchor="middle" font-size="12" class="mono" style="fill:var(--ink-2)">next(e)</text>
+<path d="M387 100.5 H325" fill="none" stroke-width="1" stroke-dasharray="4 4" stroke-linejoin="round" style="stroke:var(--viz-muted)"/>
+<path d="M329 97 L325 100.5 L329 104" fill="none" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" style="stroke:var(--viz-muted)"/>
+<text x="356.5" y="136" text-anchor="middle" font-size="12" style="fill:var(--ink-2)">result</text>
+<path d="M509 76.5 H571" fill="none" stroke-width="1" stroke-linejoin="round" style="stroke:var(--viz-muted)"/>
+<path d="M567 73 L571 76.5 L567 80" fill="none" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" style="stroke:var(--viz-muted)"/>
+<text x="540.5" y="68.5" text-anchor="middle" font-size="12" class="mono" style="fill:var(--ink-2)">next(e)</text>
+<path d="M571 100.5 H509" fill="none" stroke-width="1" stroke-dasharray="4 4" stroke-linejoin="round" style="stroke:var(--viz-muted)"/>
+<path d="M513 97 L509 100.5 L513 104" fill="none" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" style="stroke:var(--viz-muted)"/>
+<text x="540.5" y="136" text-anchor="middle" font-size="12" style="fill:var(--ink-2)">result</text>
+<path d="M262.5 119 C262.5 189 86.5 189 86.5 124" fill="none" stroke-width="1" stroke-linejoin="round" style="stroke:var(--fig-focal)"/>
+<path d="M83 124 L86.5 120 L90 124" fill="none" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" style="stroke:var(--fig-focal)"/>
+<text x="174.5" y="207" text-anchor="middle" font-size="12" font-weight="500" class="mono" style="fill:var(--fig-focal)">answer: return { deny } without next</text>
+<text x="448.5" y="181" text-anchor="middle" font-size="12" style="fill:var(--ink-2)">observe: await next(e), then look</text>
+<text x="448.5" y="201" text-anchor="middle" font-size="12" style="fill:var(--ink-2)">rewrite: next({ ...e, command })</text>
+</svg>

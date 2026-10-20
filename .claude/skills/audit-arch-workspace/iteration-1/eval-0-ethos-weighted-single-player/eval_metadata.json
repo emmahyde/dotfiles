@@ -1,7 +1,7 @@
 {
   "eval_id": 0,
   "eval_name": "ethos-weighted-single-player",
-  "prompt": "Audit the architecture of the project at $HOME/.claude/skills/audit-arch-workspace/fixtures/aster. I want big-picture structural findings, not nitpicks.",
+  "prompt": "Audit the architecture of the project at ~/.claude/skills/audit-arch-workspace/fixtures/aster. I want big-picture structural findings, not nitpicks.",
   "assertions": [
     "finds-settings-poll-conflict: A headline finding identifies that hud.ts/audio.ts re-read settings from disk every tick and proposes an event/push/in-memory alternative",
     "finds-duplicated-gold-truth: A headline finding identifies the gold total existing in both Inventory.gold and save.ts recompute as a duplicated source of truth",

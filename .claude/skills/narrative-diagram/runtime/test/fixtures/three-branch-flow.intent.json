@@ -1,0 +1,25 @@
+{
+  "version": "diagram-intent/v1",
+  "kind": "flow",
+  "title": "Three-branch decision",
+  "description": "A decision fanning out to three handlers with distinct egress sides.",
+  "direction": "TB",
+  "nodes": [
+    { "id": "start", "kind": "event", "label": "Request arrives" },
+    { "id": "route", "kind": "decision", "label": "Route by region?" },
+    { "id": "west", "kind": "activity", "label": "West handler" },
+    { "id": "east", "kind": "activity", "label": "East handler" },
+    { "id": "central", "kind": "activity", "label": "Central handler" },
+    { "id": "done", "kind": "event", "label": "Handled" }
+  ],
+  "edges": [
+    { "id": "e-start-route", "from": { "node": "start" }, "to": { "node": "route" }, "relation": "flow" },
+    { "id": "e-route-west", "from": { "node": "route" }, "to": { "node": "west" }, "relation": "branch", "label": "west" },
+    { "id": "e-route-east", "from": { "node": "route" }, "to": { "node": "east" }, "relation": "branch", "label": "east" },
+    { "id": "e-route-central", "from": { "node": "route" }, "to": { "node": "central" }, "relation": "branch", "label": "central" },
+    { "id": "e-west-done", "from": { "node": "west" }, "to": { "node": "done" }, "relation": "flow" },
+    { "id": "e-east-done", "from": { "node": "east" }, "to": { "node": "done" }, "relation": "flow" },
+    { "id": "e-central-done", "from": { "node": "central" }, "to": { "node": "done" }, "relation": "flow" }
+  ],
+  "presentation": { "layout": { "source": "auto", "nodes": {} } }
+}

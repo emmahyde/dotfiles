@@ -1,0 +1,24 @@
+{
+  "version": "diagram-intent/v1",
+  "kind": "flow",
+  "title": "Focused-context request",
+  "description": "A request resolves its context and branches on availability.",
+  "direction": "TB",
+  "nodes": [
+    { "id": "request", "kind": "event", "label": "Request arrives" },
+    { "id": "resolve", "kind": "activity", "label": "Resolve context", "detail": { "summary": "Loads the owning context graph", "source": "docs/context.md" } },
+    { "id": "available", "kind": "decision", "label": "Context available?" },
+    { "id": "focused", "kind": "activity", "label": "Build focused prompt" },
+    { "id": "source", "kind": "external", "label": "Request source" },
+    { "id": "done", "kind": "event", "label": "Return result" }
+  ],
+  "edges": [
+    { "id": "e-request-resolve", "from": { "node": "request" }, "to": { "node": "resolve" }, "relation": "flow" },
+    { "id": "e-resolve-available", "from": { "node": "resolve" }, "to": { "node": "available" }, "relation": "flow" },
+    { "id": "e-available-focused", "from": { "node": "available" }, "to": { "node": "focused" }, "relation": "branch", "label": "yes" },
+    { "id": "e-available-source", "from": { "node": "available" }, "to": { "node": "source" }, "relation": "branch", "label": "no" },
+    { "id": "e-focused-done", "from": { "node": "focused" }, "to": { "node": "done" }, "relation": "flow" },
+    { "id": "e-source-done", "from": { "node": "source" }, "to": { "node": "done" }, "relation": "flow" }
+  ],
+  "presentation": { "layout": { "source": "auto", "nodes": {} } }
+}

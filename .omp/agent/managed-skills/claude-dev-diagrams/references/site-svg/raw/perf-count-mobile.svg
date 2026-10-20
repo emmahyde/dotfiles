@@ -1,0 +1,29 @@
+<svg class="art-diagram-narrow" aria-hidden="true" focusable="false" id="perf-count-mobile" width="323" height="487.5" viewBox="19.5 66 323 487.5" xmlns="http://www.w3.org/2000/svg"><style>#perf-count-mobile text{font-family:'Anthropic Sans','Anthropic Sans Fallback','Anthropic Sans Fallback Roboto',system-ui,sans-serif}#perf-count-mobile .tnum{font-variant-numeric:tabular-nums}#perf-count-mobile .mono{font-family:'Anthropic Mono','Anthropic Mono Fallback',ui-monospace,'SF Mono',Menlo,monospace}</style>
+<line x1="22" y1="67.5" x2="340" y2="67.5" stroke-width="1" style="stroke:var(--line)"/>
+<text x="22" y="97" font-size="17" font-weight="500" style="fill:var(--ink)">Message-tree assembly</text>
+<text class="tnum" x="340" y="98" text-anchor="end" font-size="12" style="fill:var(--ink)"><tspan font-size="24" font-weight="600" style="fill:var(--ink)">4.6x</tspan><tspan dx="4" font-size="13" style="fill:var(--viz-muted)">faster</tspan></text>
+<text x="22" y="116" font-size="13" style="fill:var(--viz-muted)">each message ID resolved</text>
+<text x="22" y="132" font-size="13" style="fill:var(--viz-muted)">once instead of three times</text>
+<text x="22" y="159" font-size="13" style="fill:var(--viz-m1)">CPU instructions</text>
+<rect x="22" y="167" width="268" height="10" style="fill:var(--viz-b9)"/>
+<rect x="22" y="183" width="139.36" height="10" style="fill:var(--fig-focal)"/>
+<text class="tnum" x="298" y="192.5" font-size="13" font-weight="600" style="fill:var(--ink)">−48%</text>
+<text x="22" y="223" font-size="13" style="fill:var(--viz-m1)">Wall-clock</text>
+<rect x="22" y="231" width="268" height="10" style="fill:var(--viz-b9)"/>
+<rect x="22" y="247" width="58.96" height="10" style="fill:var(--fig-focal)"/>
+<text class="tnum" x="298" y="256.5" font-size="13" font-weight="600" style="fill:var(--ink)">−78%</text>
+<line x1="22" y1="277.5" x2="340" y2="277.5" stroke-width="1" style="stroke:var(--line-soft)"/>
+<text x="22" y="307" font-size="17" font-weight="500" style="fill:var(--ink)">Status-line scanner</text>
+<text class="tnum" x="340" y="308" text-anchor="end" font-size="12" style="fill:var(--ink)"><tspan font-size="24" font-weight="600" style="fill:var(--ink)">1.8x</tspan><tspan dx="4" font-size="13" style="fill:var(--viz-muted)">faster</tspan></text>
+<text x="22" y="326" font-size="13" style="fill:var(--viz-muted)">cheap first-character check</text>
+<text x="22" y="342" font-size="13" style="fill:var(--viz-muted)">before the regex</text>
+<text x="22" y="370" font-size="13" style="fill:var(--viz-m1)">CPU instructions</text>
+<rect x="22" y="378" width="268" height="10" style="fill:var(--viz-b9)"/>
+<rect x="22" y="394" width="184.92" height="10" style="fill:var(--fig-focal)"/>
+<text class="tnum" x="298" y="403.5" font-size="13" font-weight="600" style="fill:var(--ink)">−31%</text>
+<text x="22" y="434" font-size="13" style="fill:var(--viz-m1)">Wall-clock</text>
+<rect x="22" y="442" width="268" height="10" style="fill:var(--viz-b9)"/>
+<rect x="22" y="458" width="150.08" height="10" style="fill:var(--fig-focal)"/>
+<text class="tnum" x="298" y="467.5" font-size="13" font-weight="600" style="fill:var(--ink)">−44%</text>
+<text x="22" y="498" font-size="13" style="fill:var(--viz-muted)"><tspan x="22">Two hot paths, instruction count against</tspan><tspan x="22" dy="17">wall-clock time. Counts under Valgrind with</tspan><tspan x="22" dy="17"><tspan class="mono">node --predictable</tspan>; timings on the same</tspan><tspan x="22" dy="17">benchmark under plain <tspan class="mono">node</tspan> with the JIT warm.</tspan></text>
+</svg>

@@ -19,6 +19,8 @@ EXCLUDES=(
   --glob='!bin/scan-leaks'
   --glob='!.claude/skills.redact.pl'
   --glob='!.claude/skills-sync.sh'
+  --glob='!.omp/agent/managed-skills.redact.pl'
+  --glob='!.omp/agent/managed-skills-sync.sh'
 )
 
 hits=$(rg -n --hidden --pcre2 -i "$PATTERN" "${EXCLUDES[@]}" "$REPO" 2>/dev/null || true)

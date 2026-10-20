@@ -1,0 +1,94 @@
+<svg class="art-diagram-narrow" aria-hidden="true" focusable="false" id="effort-curve-tb3-mobile" width="323" height="586" viewBox="20.5 91.5 323 586" xmlns="http://www.w3.org/2000/svg"><style>#effort-curve-tb3-mobile text{font-family:'Anthropic Sans','Anthropic Sans Fallback','Anthropic Sans Fallback Roboto',system-ui,sans-serif}#effort-curve-tb3-mobile .tnum{font-variant-numeric:tabular-nums}</style><g transform="translate(6 58)"><g class="tnum" font-size="14" style="fill:var(--viz-muted)">
+<text transform="translate(26.0 312.5) rotate(-90)" text-anchor="middle" font-size="14">Share of attempts that passed</text>
+<line x1="43.5" x2="300.0" y1="515.00" y2="515.00" stroke-width="1" style="stroke:var(--line-soft)"/>
+<text x="43.5" y="510.00">20%</text>
+<line x1="43.5" x2="300.0" y1="425.00" y2="425.00" stroke-width="1" style="stroke:var(--line-soft)"/>
+<text x="43.5" y="420.00">30%</text>
+<line x1="43.5" x2="300.0" y1="335.00" y2="335.00" stroke-width="1" style="stroke:var(--line-soft)"/>
+<text x="43.5" y="330.00">40%</text>
+<line x1="43.5" x2="300.0" y1="245.00" y2="245.00" stroke-width="1" style="stroke:var(--line-soft)"/>
+<text x="43.5" y="240.00">50%</text>
+<line x1="43.5" x2="300.0" y1="155.00" y2="155.00" stroke-width="1" style="stroke:var(--line-soft)"/>
+<text x="43.5" y="150.00">60%</text>
+<line x1="43.5" x2="300.0" y1="65.00" y2="65.00" stroke-width="1" style="stroke:var(--line-soft)"/>
+<text x="43.5" y="60.00">70%</text>
+</g>
+<line x1="43.5" x2="300.0" y1="560" y2="560" stroke-width="1" style="stroke:var(--line)"/>
+<g class="tnum" font-size="14" style="fill:var(--viz-muted)">
+<line x1="78.7" x2="78.7" y1="560" y2="565" stroke-width="1" style="stroke:var(--line)"/>
+<text x="78.7" y="580" text-anchor="middle">50k</text>
+<line x1="160.0" x2="160.0" y1="560" y2="565" stroke-width="1" style="stroke:var(--line)"/>
+<text x="160.0" y="580" text-anchor="middle">100k</text>
+<line x1="241.3" x2="241.3" y1="560" y2="565" stroke-width="1" style="stroke:var(--line)"/>
+<text x="241.3" y="580" text-anchor="middle">200k</text>
+<line x1="288.8" x2="288.8" y1="560" y2="565" stroke-width="1" style="stroke:var(--line)"/>
+<text x="288.8" y="580" text-anchor="middle">300k</text>
+<text x="171.8" y="611.5" text-anchor="middle" font-size="14">Median tokens per attempt, log scale</text>
+</g>
+<line class="note" x1="174.3" y1="166.0" x2="234.0" y2="171.9" stroke-width="1" stroke-dasharray="3 4" stroke-linecap="round" style="stroke:var(--line)"/>
+<g class="series">
+<path d="M102.0 491.6 L145.0 394.4 L172.3 365.6 L201.9 304.4 L222.2 304.4" fill="none" stroke-width="1" stroke-dasharray="1.5 3" stroke-linejoin="round" stroke-linecap="round" style="stroke:var(--viz-b9)"/>
+<circle cx="102.0" cy="491.6" r="4.5" stroke-width="1" style="fill:var(--viz-b9);stroke:var(--bg)"/>
+<circle cx="145.0" cy="394.4" r="4.5" stroke-width="1" style="fill:var(--viz-b9);stroke:var(--bg)"/>
+<circle cx="172.3" cy="365.6" r="4.5" stroke-width="1" style="fill:var(--viz-b9);stroke:var(--bg)"/>
+<circle cx="201.9" cy="304.4" r="4.5" stroke-width="1" style="fill:var(--viz-b9);stroke:var(--bg)"/>
+<circle cx="222.2" cy="304.4" r="4.5" stroke-width="1" style="fill:var(--viz-b9);stroke:var(--bg)"/>
+</g>
+<g class="series">
+<path d="M126.2 452.9 L177.4 355.7 L215.1 304.4 L242.5 272.9 L267.0 239.6" fill="none" stroke-width="1" stroke-dasharray="5 3" stroke-linejoin="round" stroke-linecap="round" style="stroke:var(--viz-muted)"/>
+<circle cx="126.2" cy="452.9" r="4.5" stroke-width="1" style="fill:var(--viz-muted);stroke:var(--bg)"/>
+<circle cx="177.4" cy="355.7" r="4.5" stroke-width="1" style="fill:var(--viz-muted);stroke:var(--bg)"/>
+<circle cx="215.1" cy="304.4" r="4.5" stroke-width="1" style="fill:var(--viz-muted);stroke:var(--bg)"/>
+<circle cx="242.5" cy="272.9" r="4.5" stroke-width="1" style="fill:var(--viz-muted);stroke:var(--bg)"/>
+<circle cx="267.0" cy="239.6" r="4.5" stroke-width="1" style="fill:var(--viz-muted);stroke:var(--bg)"/>
+</g>
+<g class="series">
+<path d="M107.7 407.0 L145.0 335.0 L180.4 278.3 L225.7 209.0 L244.7 173.0" fill="none" stroke-width="1" stroke-linejoin="round" stroke-linecap="round" style="stroke:var(--fig-focal)"/>
+<circle cx="107.7" cy="407.0" r="4.5" stroke-width="1" style="fill:var(--fig-focal);stroke:var(--bg)"/>
+<circle cx="145.0" cy="335.0" r="4.5" stroke-width="1" style="fill:var(--fig-focal);stroke:var(--bg)"/>
+<circle cx="180.4" cy="278.3" r="4.5" stroke-width="1" style="fill:var(--fig-focal);stroke:var(--bg)"/>
+<circle cx="225.7" cy="209.0" r="4.5" stroke-width="1" style="fill:var(--fig-focal);stroke:var(--bg)"/>
+<circle cx="244.7" cy="173.0" r="4.5" stroke-width="1" style="fill:var(--fig-focal);stroke:var(--bg)"/>
+</g>
+<g class="series">
+<path d="M61.0 365.6 L130.8 203.6 L163.4 164.9 L228.9 131.6 L279.0 103.7" fill="none" stroke-width="1" stroke-linejoin="round" stroke-linecap="round" style="stroke:var(--viz-m1)"/>
+<circle cx="61.0" cy="365.6" r="4.5" stroke-width="1" style="fill:var(--viz-m1);stroke:var(--bg)"/>
+<circle cx="130.8" cy="203.6" r="4.5" stroke-width="1" style="fill:var(--viz-m1);stroke:var(--bg)"/>
+<circle cx="163.4" cy="164.9" r="4.5" stroke-width="1" style="fill:var(--viz-m1);stroke:var(--bg)"/>
+<circle cx="228.9" cy="131.6" r="4.5" stroke-width="1" style="fill:var(--viz-m1);stroke:var(--bg)"/>
+<circle cx="279.0" cy="103.7" r="4.5" stroke-width="1" style="fill:var(--viz-m1);stroke:var(--bg)"/>
+</g>
+<text class="note" x="146.5" y="113" text-anchor="end" font-size="14" stroke-width="3" stroke-linejoin="round" paint-order="stroke" style="fill:var(--viz-m1);stroke:var(--bg)">
+<tspan x="147.96" dy="0">same score,</tspan>
+<tspan x="147.96" dy="18">half the tokens</tspan>
+</text>
+<g font-size="14" stroke-width="3" stroke-linejoin="round" paint-order="stroke" style="fill:var(--viz-muted);stroke:var(--bg)">
+<text x="91.2" y="495.6" text-anchor="end">low</text>
+<text x="201.9" y="292.4" text-anchor="middle">xhigh</text>
+<text x="137.1" y="456.9" text-anchor="start">low</text>
+<text x="188.3" y="371.7" text-anchor="start">medium</text>
+<text x="98.7" y="401.0" text-anchor="end">low</text>
+<text x="134.2" y="339.0" text-anchor="end">medium</text>
+<text x="169.6" y="282.3" text-anchor="end">high</text>
+<text x="214.8" y="213.0" text-anchor="end">xhigh</text>
+<text x="70.0" y="381.6" text-anchor="start">low</text>
+<text x="120.0" y="207.6" text-anchor="end">medium</text>
+<text x="163.4" y="152.9" text-anchor="middle">high</text>
+<text x="228.9" y="119.6" text-anchor="middle">xhigh</text>
+</g>
+<g class="mname">
+<text x="270.0" y="77.7" text-anchor="end" font-size="14" font-weight="500" stroke-width="3" stroke-linejoin="round" paint-order="stroke" style="fill:var(--ink);stroke:var(--bg)">Opus 5.5</text>
+<text x="270.0" y="94.7" text-anchor="end" font-size="14" stroke-width="3" stroke-linejoin="round" paint-order="stroke" style="fill:var(--viz-muted);stroke:var(--bg)">max</text>
+</g>
+<g class="mname">
+<text x="255.6" y="178.0" font-size="14" font-weight="500" stroke-width="3" stroke-linejoin="round" paint-order="stroke" style="fill:var(--ink);stroke:var(--bg)">Fable 5.1</text>
+<text x="255.6" y="195.0" font-size="14" stroke-width="3" stroke-linejoin="round" paint-order="stroke" style="fill:var(--viz-muted);stroke:var(--bg)">max</text>
+</g>
+<g class="mname">
+<text x="277.9" y="244.6" font-size="14" font-weight="500" stroke-width="3" stroke-linejoin="round" paint-order="stroke" style="fill:var(--ink);stroke:var(--bg)">Opus 5</text>
+<text x="277.9" y="261.6" font-size="14" stroke-width="3" stroke-linejoin="round" paint-order="stroke" style="fill:var(--viz-muted);stroke:var(--bg)">max</text>
+</g>
+<g class="mname">
+<text x="233.1" y="309.4" font-size="14" font-weight="500" stroke-width="3" stroke-linejoin="round" paint-order="stroke" style="fill:var(--ink);stroke:var(--bg)">Fable 5</text>
+<text x="233.1" y="326.4" font-size="14" stroke-width="3" stroke-linejoin="round" paint-order="stroke" style="fill:var(--viz-muted);stroke:var(--bg)">max</text>
+</g></g></svg>

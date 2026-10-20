@@ -1,0 +1,16 @@
+#!/bin/sh
+# fin [done|parked|swapped] ["note"]   close the session contract, log one line to ~/log.md
+F="$HOME/.now"; L="$HOME/log.md"
+st=${1:-done}; [ $# -gt 0 ] && shift
+case "$st" in done|parked|swapped) ;; *) echo "usage: fin [done|parked|swapped] [\"note\"]" >&2; exit 1 ;; esac
+[ -s "$F" ] || { echo "no contract to close"; exit 1; }
+pid=$(sed -n 's/^timer: //p' "$F"); [ -n "$pid" ] && kill "$pid" 2>/dev/null
+proj=$(sed -n 's/^project: //p' "$F"); deliv=$(sed -n 's/^deliverable: //p' "$F")
+rm "$F"
+loops
+tot=$(cat "$HOME/.loops")
+here=$(git status --porcelain 2>/dev/null | wc -l | tr -d ' ')
+printf -- '- %s [%s] %s: %s%s (loops %s, dirty here %s)\n' "$(date '+%Y-%m-%d %H:%M')" "$proj" "$st" "$deliv" "${1:+ | $1}" "$tot" "$here" >> "$L"
+tail -1 "$L"
+[ "$here" -gt 0 ] && echo "dirty here: $here paths. commit or stash before you leave."
+exit 0

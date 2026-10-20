@@ -1,0 +1,20 @@
+{
+  "name": "narrative-diagram-runtime",
+  "version": "1.0.0",
+  "description": "Standalone compiler for the narrative-diagram skill: DiagramIntent/v1 JSON to accessible static SVG, with a one-way Mermaid/Grammy bridge.",
+  "type": "module",
+  "bin": {
+    "diagram-runtime": "src/cli.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test test/"
+  },
+  "dependencies": {
+    "elkjs": "^0.11.1",
+    "svgo": "4.0.2"
+  },
+  "license": "MIT"
+}

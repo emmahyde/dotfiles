@@ -1,7 +1,7 @@
 {
   "eval_id": 1,
   "eval_name": "ambition-flip-coop-declared",
-  "prompt": "Audit the architecture of the project at $HOME/.claude/skills/audit-arch-workspace/fixtures/aster. Context: we're now planning to add online co-op and want it to hold up with many concurrent players. I want big-picture structural findings, not nitpicks.",
+  "prompt": "Audit the architecture of the project at ~/.claude/skills/audit-arch-workspace/fixtures/aster. Context: we're now planning to add online co-op and want it to hold up with many concurrent players. I want big-picture structural findings, not nitpicks.",
   "assertions": [
     "netsync-headlined: netsync.ts's architecture (busy-wait sync, full-state-per-tick broadcast, mutable module globals) IS one of the top numbered findings, because co-op ambition was declared",
     "ambition-acknowledged: The report explicitly states the declared co-op/concurrency ambition as part of its audit scope or archetype",

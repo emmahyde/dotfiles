@@ -1,0 +1,276 @@
+{
+ "theme": "paper",
+ "size": [
+  1200,
+  480
+ ],
+ "card": false,
+ "alt": "Two ways to pick eval cases: sampling where today's model fails puts every case in a trough; human judgment spreads cases across the curve and adds should-not-fire cases.",
+ "cards": [
+  {
+   "x": 40,
+   "y": 44,
+   "w": 548,
+   "h": 320
+  },
+  {
+   "x": 612,
+   "y": 44,
+   "w": 548,
+   "h": 320
+  },
+  {
+   "x": 886,
+   "y": 423,
+   "w": 278,
+   "h": 40,
+   "r": 14,
+   "fill": "chip"
+  }
+ ],
+ "shapes": [
+  {
+   "type": "wave",
+   "x0": 75,
+   "x1": 478,
+   "y": 146,
+   "amp": 5,
+   "periods": 1,
+   "phase": 3.6,
+   "stroke": "dark",
+   "stroke-width": 3
+  },
+  {
+   "type": "wave",
+   "x0": 75,
+   "x1": 478,
+   "y": 230,
+   "amp": 46,
+   "periods": 3,
+   "phase": 1.0,
+   "stroke": "gray",
+   "stroke-width": 3
+  },
+  {
+   "type": "arrow",
+   "x1": 75,
+   "y1": 378,
+   "x2": 537,
+   "y2": 378,
+   "stroke": "dark",
+   "stroke-width": 2
+  },
+  {
+   "type": "line",
+   "x1": 154.4,
+   "y1": 157.0,
+   "x2": 154.4,
+   "y2": 268.0,
+   "stroke": "accent",
+   "stroke-width": 1.5,
+   "stroke-dasharray": "5 4"
+  },
+  {
+   "type": "line",
+   "x1": 288.7,
+   "y1": 149.0,
+   "x2": 288.7,
+   "y2": 268.0,
+   "stroke": "accent",
+   "stroke-width": 1.5,
+   "stroke-dasharray": "5 4"
+  },
+  {
+   "type": "line",
+   "x1": 423.0,
+   "y1": 150.1,
+   "x2": 423.0,
+   "y2": 268.0,
+   "stroke": "accent",
+   "stroke-width": 1.5,
+   "stroke-dasharray": "5 4"
+  },
+  {
+   "type": "wave",
+   "x0": 647,
+   "x1": 1050,
+   "y": 146,
+   "amp": 5,
+   "periods": 1,
+   "phase": 3.6,
+   "stroke": "dark",
+   "stroke-width": 3
+  },
+  {
+   "type": "wave",
+   "x0": 647,
+   "x1": 1050,
+   "y": 230,
+   "amp": 46,
+   "periods": 3,
+   "phase": 1.0,
+   "stroke": "gray",
+   "stroke-width": 3
+  },
+  {
+   "type": "arrow",
+   "x1": 647,
+   "y1": 378,
+   "x2": 1109,
+   "y2": 378,
+   "stroke": "dark",
+   "stroke-width": 2
+  },
+  {
+   "type": "arrow",
+   "x1": 23,
+   "y1": 320,
+   "x2": 23,
+   "y2": 103,
+   "stroke": "dark",
+   "stroke-width": 2
+  }
+ ],
+ "dots": [
+  {
+   "x": 154.4,
+   "y": 276.0
+  },
+  {
+   "x": 288.7,
+   "y": 276.0
+  },
+  {
+   "x": 423.0,
+   "y": 276.0
+  },
+  {
+   "x": 671.2,
+   "y": 191.0
+  },
+  {
+   "x": 719.5,
+   "y": 273.7
+  },
+  {
+   "x": 751.8,
+   "y": 247.2,
+   "hollow": true
+  },
+  {
+   "x": 780.0,
+   "y": 192.9
+  },
+  {
+   "x": 824.3,
+   "y": 224.0
+  },
+  {
+   "x": 876.7,
+   "y": 263.7
+  },
+  {
+   "x": 909.0,
+   "y": 200.9,
+   "hollow": true
+  },
+  {
+   "x": 933.1,
+   "y": 185.4
+  },
+  {
+   "x": 993.6,
+   "y": 275.9
+  },
+  {
+   "x": 904,
+   "y": 443
+  },
+  {
+   "x": 1003,
+   "y": 443,
+   "hollow": true
+  }
+ ],
+ "texts": [
+  {
+   "x": 67,
+   "y": 81,
+   "text": "sampled where it fails",
+   "style": "node"
+  },
+  {
+   "x": 488,
+   "y": 143,
+   "text": "next model",
+   "style": "edge",
+   "color": "dark"
+  },
+  {
+   "x": 488,
+   "y": 207,
+   "text": "today's model",
+   "style": "edge",
+   "color": "muted"
+  },
+  {
+   "x": 306,
+   "y": 403,
+   "text": "task space",
+   "style": "edge",
+   "anchor": "middle",
+   "color": "dark"
+  },
+  {
+   "x": 639,
+   "y": 81,
+   "text": "judged hard by a person",
+   "style": "node"
+  },
+  {
+   "x": 1060,
+   "y": 143,
+   "text": "next model",
+   "style": "edge",
+   "color": "dark"
+  },
+  {
+   "x": 1060,
+   "y": 207,
+   "text": "today's model",
+   "style": "edge",
+   "color": "muted"
+  },
+  {
+   "x": 878,
+   "y": 403,
+   "text": "task space",
+   "style": "edge",
+   "anchor": "middle",
+   "color": "dark"
+  },
+  {
+   "x": 14,
+   "y": 212,
+   "text": "capability",
+   "style": "edge",
+   "anchor": "middle",
+   "rotate": -90,
+   "color": "dark"
+  },
+  {
+   "x": 918,
+   "y": 448,
+   "text": "eval case",
+   "style": "body",
+   "color": "ink"
+  },
+  {
+   "x": 1017,
+   "y": 448,
+   "text": "should-not-fire case",
+   "style": "body",
+   "color": "ink"
+  }
+ ]
+}

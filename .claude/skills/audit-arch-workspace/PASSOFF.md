@@ -25,11 +25,11 @@ now active   done finished   next upcoming   note decision   ref pointer
 ## REFS
 - code: @~/.claude/skills/audit-arch/SKILL.md — the skill under test
 - code: @~/.claude/skills/audit-arch-workspace/ — evals, fixtures, iteration-1 results
-- docs: @$HOME/.claude/plugins/cache/claude-plugins-official/skill-creator/unknown/skills/skill-creator/ — skill-creator scripts (aggregate_benchmark, generate_review, agents/grader.md)
-- prior: sector cwd $HOME/projects/sector #main, uncommitted mining-test changes present — unrelated to this task, do not touch
+- docs: @~/.claude/plugins/cache/claude-plugins-official/skill-creator/unknown/skills/skill-creator/ — skill-creator scripts (aggregate_benchmark, generate_review, agents/grader.md)
+- prior: sector cwd ~/projects/sector #main, uncommitted mining-test changes present — unrelated to this task, do not touch
 
 ## RESUME
-$ follow ~/.claude/skills/audit-arch-workspace/spinoff-task.md Phase 1 — invoke audit-arch skill on $HOME/projects/sector, no archetype arg
+$ follow ~/.claude/skills/audit-arch-workspace/spinoff-task.md Phase 1 — invoke audit-arch skill on ~/projects/sector, no archetype arg
 #main · sector repo read-only for this task · tests: n/a
 
 ## REHYDRATE TASKS

@@ -1,0 +1,32 @@
+{
+  "version": "diagram-intent/v1",
+  "kind": "schema",
+  "title": "Runtime schema delta",
+  "description": "The runtime namespace owns intents and entities; upstream sources seed them.",
+  "namespaces": [
+    {
+      "id": "runtime",
+      "label": "Runtime",
+      "entities": [
+        { "id": "diagram_intents", "stereotype": "diagram_intents", "fields": ["uuid id PK", "json payload", "uuid owner_id FK"], "role": "core" },
+        { "id": "diagram_entities", "stereotype": "diagram_entities", "fields": ["uuid id PK", "uuid intent_id FK"], "role": "secondary" },
+        { "id": "audit_log", "stereotype": "audit_log", "fields": ["uuid id PK", "timestamp at"], "role": "new" }
+      ]
+    },
+    {
+      "id": "external",
+      "label": "External",
+      "entities": [
+        { "id": "upstream_sources", "stereotype": "upstream_sources", "fields": ["uuid id PK", "string state"], "role": "dependency" },
+        { "id": "dispatcher_sessions", "stereotype": "dispatcher_sessions", "fields": ["uuid id PK", "uuid intent_id FK"], "role": "runtime" }
+      ]
+    }
+  ],
+  "relations": [
+    { "id": "r-intent-entity", "from": "diagram_intents", "to": "diagram_entities", "cardinality": "one-to-many", "label": "contains" },
+    { "id": "r-entity-audit", "from": "diagram_entities", "to": "audit_log", "cardinality": "one-to-one", "label": "audits" },
+    { "id": "r-upstream-intent", "from": "upstream_sources", "to": "diagram_intents", "cardinality": "one-to-many", "label": "seeds" },
+    { "id": "r-session-intent", "from": "dispatcher_sessions", "to": "diagram_intents", "cardinality": "many-to-one", "label": "uses" }
+  ],
+  "presentation": { "layout": { "source": "auto", "nodes": {} } }
+}

@@ -1,0 +1,14 @@
+# Managed skills published from ~/.omp/agent/managed-skills into this repo.
+# One name per line; blank lines and # comments ignored.
+# Anything not listed here stays local; review additions before publishing.
+# This repo is public — managed skills often quote live machine paths and hosts.
+
+activate-direct-omp-extension
+audit-bot-pr-human-touch-rate
+claude-dev-diagrams
+generative-feature-remediation
+github-pr-full-population-pull
+
+# EXCLUDED — do not add without re-checking (this repo is public):
+#   dotfiles-sync-skills-to-repo   quotes the leak-scan pattern names in prose
+#   most other managed skills      quote live host paths, LAN addresses, or project internals
