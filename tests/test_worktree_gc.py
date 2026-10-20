@@ -96,7 +96,8 @@ class WorktreeCleanupTest(unittest.TestCase):
     def test_preserves_recent_and_locked_worktrees(self):
         recent = self.tree("recent")
         report = self.cleanup_report("--apply", "--days", "7")
-        self.assertEqual(self.row(report, recent)["reason"], "activity within 7 days")
+        self.assertEqual(self.row(report, recent)["action"], "KEEP")
+        self.assertTrue(recent.exists())
         self.git(self.repo, "worktree", "lock", str(recent))
         report = self.cleanup_report("--apply")
         self.assertIn("locked", self.row(report, recent)["reason"])

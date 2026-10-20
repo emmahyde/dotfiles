@@ -100,20 +100,13 @@ def default_base(repo):
     return destination
 
 
-def latest_activity(path):
-    stat = path.stat()
-    latest = max(stat.st_mtime, getattr(stat, "st_birthtime", 0))
-    for directory, dirs, files in os.walk(path, followlinks=False):
-        base = Path(directory)
-        dirs[:] = [d for d in dirs if d not in SKIP_SCAN and not (base / d).is_symlink()]
-        for name in files:
-            item = base / name
-            latest = max(latest, item.lstat().st_mtime)
+def worktree_created_at(path):
     gitdir = Path(os.fsdecode(git(path, "rev-parse", "--absolute-git-dir")).strip())
-    for item in (gitdir / "HEAD", gitdir / "index", gitdir / "logs" / "HEAD"):
-        if item.exists():
-            latest = max(latest, item.stat().st_mtime)
-    return latest
+    timestamps = []
+    for item in (path, gitdir):
+        stat = item.stat()
+        timestamps.append(getattr(stat, "st_birthtime", stat.st_ctime))
+    return max(timestamps)
 
 
 def safety(repo, entry, base, roots, days, opened):
@@ -128,9 +121,8 @@ def safety(repo, entry, base, roots, days, opened):
         return "locked, prunable, or bare worktree"
     if busy(path, opened):
         return "files open or process active in worktree"
-    # Read activity before status: Git must not refresh the index during the audit.
-    if latest_activity(path) >= time.time() - days * 86400:
-        return f"activity within {days:g} days"
+    if worktree_created_at(path) >= time.time() - days * 86400:
+        return f"worktree younger than {days:g} days"
     status = git(path, "--no-optional-locks", "status", "--porcelain=v1", "-z",
                  "--untracked-files=all", "--ignored=matching", "--ignore-submodules=none")
     fields = iter(status.split(b"\0"))
@@ -221,8 +213,12 @@ def prune_colima(apply):
     for context in contexts:
         if context != "colima" and not context.startswith("colima-"):
             continue
-        for resource in ("image", "builder"):
-            command = ["docker", "--context", context, resource, "prune", "--all", "--force"]
+        profile = "default" if context == "colima" else context.removeprefix("colima-")
+        commands = [(resource, ["docker", "--context", context, resource, "prune", "--all", "--force"])
+                    for resource in ("image", "builder")]
+        commands.append(("trim", ["colima", "--profile", profile, "ssh", "--", "sudo", "fstrim",
+                                  "--all", "--verbose", "--quiet-unsupported"]))
+        for resource, command in commands:
             row = {"kind": "colima", "path": f"{context}/{resource}",
                    "action": "WOULD REMOVE", "reason": "unused only; containers and volumes retained"}
             if apply:
@@ -237,14 +233,14 @@ def prune_colima(apply):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--apply", action="store_true", help="delete eligible worktrees and caches")
-    parser.add_argument("--days", type=float, default=7, help="minimum worktree inactivity in days (default: 7)")
+    parser.add_argument("--days", type=float, default=7, help="minimum worktree age in days (default: 7)")
     parser.add_argument("--root", action="append", type=Path, help="worktree/repository discovery root; repeatable")
     parser.add_argument("--cache-root", action="append", type=Path, help="explicit regenerable cache directory; replaces defaults")
     parser.add_argument("--no-caches", action="store_true", help="inspect worktrees only")
     parser.add_argument("--no-worktrees", action="store_true", help="inspect caches only")
     parser.add_argument("--json", action="store_true", help="machine-readable report")
     parser.add_argument("--builds", action="store_true", help="also clear Cargo target and node_modules outputs")
-    parser.add_argument("--colima", action="store_true", help="also prune unused Colima images and build cache; never volumes")
+    parser.add_argument("--colima", action="store_true", help="prune unused Colima images/build cache and trim VM disks; never volumes")
     parser.add_argument("--delete-branches", action="store_true", help="after removing a worktree, try git branch -d; never force")
     args = parser.parse_args()
     if args.days < 0 or not args.days < float("inf"):
@@ -286,7 +282,7 @@ def main():
                         row["reason"] = reason
                     else:
                         row.update(bytes=allocated(path), action="REMOVE" if args.apply else "WOULD REMOVE",
-                                   reason=f"inactive >{args.days:g} days; clean; HEAD merged into {base}")
+                                   reason=f"age >{args.days:g} days; clean; HEAD merged into {base}")
                         if args.apply:
                             reason = safety(repo, entry, base, roots, args.days, open_paths())
                             if reason:

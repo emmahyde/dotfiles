@@ -43,7 +43,8 @@ groot-wt-gc --no-caches --delete-branches --apply
 groot-wt-gc --no-worktrees --json         # Cache report as JSON
 ```
 
-Worktree cleanup requires more than seven days without source or Git activity.
+Worktree cleanup requires a creation age of more than seven days. On systems
+without birth timestamps, newer metadata timestamps provide a conservative age.
 The command fetches the default branch from `origin`. The worktree HEAD must be
 an ancestor of that branch. Unproven squash merges remain untouched.
 Dirty worktrees, untracked files, stashes, locks, unknown ignored files, open
@@ -53,7 +54,7 @@ removal. Primary checkouts stay in place. Branch deletion needs
 
 Discovery covers `~/worktrees`, `~/work`, `~/src`, `~/projects`, and `~/personal`,
 through four directory levels. Use repeated `--root PATH` options for other locations.
-Use `--days N` to change the inactivity threshold.
+Use `--days N` to change the age threshold.
 
 Cache cleanup covers `~/Library/Caches`, `~/.cache`, npm and Bun download caches,
 OMP model/runtime caches, Hermes caches, Cargo archive caches, and Gradle caches.
@@ -67,6 +68,7 @@ repositories. Do not store unique untracked work in generated directories.
 Symlinks are not followed.
 
 `--colima` prunes unused images and build cache in each Colima Docker context.
+It also trims unused guest filesystem blocks so sparse VM disks can return space.
 It does not delete containers, volumes, VM disks, or database files. Runtime
 corruption returns an error; the command never resets a VM.
 
