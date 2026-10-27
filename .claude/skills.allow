@@ -68,6 +68,24 @@ writing-fragments
 writing-shape
 zoom-out
 
+# Reviewed additions, 2026-10-26.
+activate-direct-omp-extension
+audit-bot-pr-human-touch-rate
+eli5
+feedback-report
+generative-feature-remediation
+github-pr-full-population-pull
+idea-to-unity
+investigate
+pane-visual-debug
+procedural-celestial
+sector-design-port
+simple-english
+ste
+unity-first-principles
+unity-shaders-lighting
+unity-uitoolkit
+
 # EXCLUDED — do not add without re-checking, this repo is public:
 #   scriptify-workspace eval run artifacts, not a skill
 #   humanizer           empty directory
