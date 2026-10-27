@@ -25,14 +25,16 @@ import { cfgReadToolResultPreview } from "@oh-my-pi/pi-coding-agent/tools/settin
 import { cfgHideThinkingBlock } from "@oh-my-pi/pi-coding-agent/session/settings";
 import { cappedRenderPayload, collapseTextLines, decodeNestedJson, formatJsonOutput, formatFileExcerpt, isFileExcerpt, formatSearchOutput, formatCommandText, formatJsonWithFooter, markdownOutput, parseGrepOutput, parseYamlDocument, sanitizeTerminalText } from "./lib/tool-output";
 import { underlineLabel, underlinePathTokens } from "./lib/path-styling";
-import { booleanSetting, integerSetting, readSetting, settings, watchSetting } from "./lib/settings";
+import { booleanSetting, hostOverrideSettings, integerSetting, readSetting, settings, watchSetting } from "./lib/settings";
 import { refreshMyPrs, withPrDrawer, withVaultDrawer, type EditorProvider } from "./lib/url-drawers";
 import type { Setting } from "@oh-my-pi/pi-coding-agent/config/registry";
 import { execFile } from "node:child_process";
 import { detectStalls, defaultStallThresholds, type StallAlert } from "./lib/stall-watch";
-import { formatMonitorResult, MonitorRegistry, type MonitorResult, type MonitorSpec } from "./lib/monitors";
+import { formatMonitorEvent, formatMonitorResult, MonitorRegistry, type MonitorResult, type MonitorSpec } from "./lib/monitors";
+import { agentModel, callModel, EFFORTS, type AgentModelParams, type CallModelParams } from "./lib/model-tools";
 
 type MonitorMessageDetails = { spec: MonitorSpec; result: MonitorResult };
+type MonitorEventDetails = { spec: MonitorSpec; lines: string[] };
 const MONITOR_COLLAPSED_LINES = 8;
 import { runawayEdit } from "./lib/runaway-edit";
 
@@ -1662,6 +1664,23 @@ export default function hydemods(pi: ExtensionAPI): void {
 				{ customType: "hydemods-monitor", display: true, content: formatMonitorResult(spec, result), details: { spec, result } },
 				{ deliverAs: "steer", triggerTurn: true },
 			),
+		emit: (spec, lines) =>
+			pi.sendMessage<MonitorEventDetails>(
+				{ customType: "hydemods-monitor-event", display: true, content: formatMonitorEvent(spec, lines), details: { spec, lines } },
+				{ deliverAs: "steer", triggerTurn: true },
+			),
+	});
+	pi.registerMessageRenderer<MonitorEventDetails>("hydemods-monitor-event", (message, { expanded }, theme) => {
+		if (!message.details) return undefined;
+		const { spec, lines } = message.details;
+		const shown = expanded ? lines : lines.slice(0, MONITOR_COLLAPSED_LINES);
+		const hidden = lines.length - shown.length;
+		const rows = [
+			`${theme.fg("accent", "Monitor event:")} ${theme.fg("text", shown[0] ?? "")} ${theme.fg("dim", `· ${spec.name}`)}`,
+			...shown.slice(1).map(line => `  ${theme.fg("text", line)}`),
+			...(hidden > 0 ? [theme.fg("muted", `  … ${hidden} more line${hidden === 1 ? "" : "s"} (Ctrl+O)`)] : []),
+		];
+		return new Text(rows.join("\n"), 1, 0);
 	});
 	pi.registerMessageRenderer<MonitorMessageDetails>("hydemods-monitor", (message, { expanded }, theme) => {
 		if (!message.details) return undefined;
@@ -1693,27 +1712,28 @@ export default function hydemods(pi: ExtensionAPI): void {
 		label: "Monitor",
 		loadMode: "essential",
 		description: [
-			"Start, list, or cancel a background monitor: a shell check that runs without blocking you and wakes you with a message when it settles.",
-			"Use instead of sleep/poll loops (CI, PR reviews, deploys, long jobs). After `start`, end your turn or do other work; do not wait or poll — the result arrives as a new message.",
-			'mode "poll" (default) re-runs `command` every `intervalSec` until it exits 0, or until `until` (regex over stdout+stderr) matches. Make the command print the status you are waiting for.',
-			'mode "exit" runs `command` once (e.g. `gh pr checks 123 --watch`) and reports when it exits, whatever the code.',
-			"Every monitor reports once: condition met, exited, timed out (`timeoutMin`), or failed to run. Starting a monitor with an existing name replaces it. Monitors live in this session and stop on reload or session switch.",
+			"Start, list, or cancel a background monitor: a shell command that runs without blocking you and wakes you with a message when something happens.",
+			"Use instead of sleep/poll loops (CI, PR reviews, deploys, long jobs). After `start`, end your turn or do other work; do not wait or poll — events arrive as new messages.",
+			'mode "stream" (default) runs `command` once as a watcher: EVERY stdout line is an event that wakes you (lines within ~300ms share one event), and a final message reports when it exits or times out. Write the command to print only meaningful state changes, deduped, e.g. `prev=; while true; do s=$(gh pr checks 1787 2>&1 | sort); [ "$s" != "$prev" ] && echo "$s"; prev=$s; sleep 60; done`. Use stderr or `>/dev/null` for noise; exit the loop when finished.',
+			'mode "poll" re-runs `command` every `intervalSec` and reports once when it exits 0, or when `until` (regex over stdout+stderr) matches.',
+			'mode "exit" runs `command` once (e.g. `gh pr checks 123 --watch`) and reports only when it exits, whatever the code.',
+			"Starting a monitor with an existing name replaces it. Monitors live in this session and stop on reload or session switch.",
 		].join("\n"),
 		parameters: Type.Object({
 			op: Type.Union([Type.Literal("start"), Type.Literal("list"), Type.Literal("cancel")]),
-			name: Type.Optional(Type.String({ description: "Unique monitor name (required for start/cancel)." })),
-			command: Type.Optional(Type.String({ description: "Shell command (bash -lc). Required for start." })),
-			mode: Type.Optional(Type.Union([Type.Literal("poll"), Type.Literal("exit")])),
+			name: Type.Optional(Type.String({ description: "Unique monitor name (required for start/cancel); shown on every event." })),
+			command: Type.Optional(Type.String({ description: "Shell command (zsh -lc). Required for start." })),
+			mode: Type.Optional(Type.Union([Type.Literal("stream"), Type.Literal("poll"), Type.Literal("exit")], { description: 'Default "stream".' })),
 			until: Type.Optional(Type.String({ description: "Poll mode: regex over output that means done. Default: exit code 0." })),
-			intervalSec: Type.Optional(Type.Number({ description: "Poll interval, default 30, min 5." })),
-			timeoutMin: Type.Optional(Type.Number({ description: "Give up and report after this many minutes, default 60." })),
+			intervalSec: Type.Optional(Type.Number({ description: "Poll mode interval, default 30, min 5." })),
+			timeoutMin: Type.Optional(Type.Number({ description: "Kill the command and report after this many minutes, default 60." })),
 			cwd: Type.Optional(Type.String({ description: "Working directory, default the session cwd." })),
 		}),
 		async execute(_id, params, _signal, _onUpdate, ctx) {
 			const text = (body: string) => ({ content: [{ type: "text" as const, text: body }], details: undefined });
 			if (params.op === "list") {
 				const rows = monitors.list();
-				return text(rows.length ? rows.map(r => `${r.name} [${r.mode}] ${r.runs} runs, ${r.elapsedSec}s: ${r.command}${r.last ? `\n  last: ${r.last.split("\n").at(-1)}` : ""}`).join("\n") : "No monitors running.");
+				return text(rows.length ? rows.map(r => `${r.name} [${r.mode}] ${r.mode === "stream" ? `${r.events} events` : `${r.runs} runs`}, ${r.elapsedSec}s: ${r.command}${r.last ? `\n  last: ${r.last.split("\n").at(-1)}` : ""}`).join("\n") : "No monitors running.");
 			}
 			if (!params.name) throw new Error("`name` is required.");
 			if (params.op === "cancel") return text(monitors.cancel(params.name) ? `Cancelled monitor "${params.name}".` : `No monitor named "${params.name}".`);
@@ -1722,13 +1742,47 @@ export default function hydemods(pi: ExtensionAPI): void {
 				name: params.name,
 				command: params.command,
 				cwd: params.cwd ?? ctx.cwd,
-				mode: params.mode ?? "poll",
+				mode: params.mode ?? "stream",
 				until: params.until,
 				intervalSec: Math.max(5, params.intervalSec ?? 30),
 				timeoutMin: Math.max(0.1, params.timeoutMin ?? 60),
 			};
 			void monitors.start(spec);
-			return text(`Monitor "${spec.name}" started (${spec.mode}, timeout ${spec.timeoutMin}m). You will get a message when it settles; end your turn or continue other work — do not poll.`);
+			return text(
+				spec.mode === "stream"
+					? `Monitor "${spec.name}" started (stream, timeout ${spec.timeoutMin}m). Each output line arrives as a "Monitor event" message; end your turn or continue other work — do not poll.`
+					: `Monitor "${spec.name}" started (${spec.mode}, timeout ${spec.timeoutMin}m). You will get a message when it settles; end your turn or continue other work — do not poll.`,
+			);
+		},
+	});
+	pi.registerTool({
+		name: "call_model",
+		label: "Call Model",
+		description: "Call a configured model directly with a one-shot prompt and get its text back. `model` is provider/id, a bare id, or @role; an optional `:effort` suffix (minimal|low|medium|high|xhigh|max) sets thinking unless `thinking` is given.",
+		parameters: Type.Object({
+			model: Type.String({ description: "provider/id, bare id, or @role (e.g. @slow), optionally with :effort." }),
+			prompt: Type.String({ description: "User prompt sent to the model." }),
+			system: Type.Optional(Type.String({ description: "Optional system prompt." })),
+			thinking: Type.Optional(Type.Union(EFFORTS.map(e => Type.Literal(e)), { description: "Reasoning effort; omit for the model default." })),
+			maxTokens: Type.Optional(Type.Number({ description: "Maximum output tokens." })),
+		}),
+		async execute(_id, params, signal, _onUpdate, ctx) {
+			const { text, details } = await callModel(ctx, params as CallModelParams, signal);
+			return { content: [{ type: "text" as const, text }], details };
+		},
+	});
+	pi.registerTool({
+		name: "agent_model",
+		label: "Agent Model",
+		description: "Override which model a task subagent type runs on, for this session only. `list` shows overrides; `set` needs `agent` (e.g. reviewer, task, scout) and `model`; `clear` removes the session override for `agent`.",
+		parameters: Type.Object({
+			op: Type.Union([Type.Literal("list"), Type.Literal("set"), Type.Literal("clear")]),
+			agent: Type.Optional(Type.String({ description: "Agent name; required for set/clear." })),
+			model: Type.Optional(Type.String({ description: "Model selector (provider/id, bare id, @role, optional :effort); required for set." })),
+		}),
+		async execute(_id, params, _signal, _onUpdate, ctx) {
+			const text = agentModel(ctx, hostOverrideSettings(), params as AgentModelParams);
+			return { content: [{ type: "text" as const, text }], details: undefined };
 		},
 	});
 	// One handler per session event, each running the per-feature session work in a fixed order.
